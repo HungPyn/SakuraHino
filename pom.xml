@@ -1,0 +1,71 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.sakurahino</groupId>
+    <artifactId>microservice-sakurahino</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>Sakurahino Project</name>
+
+    <!-- BOM & Plugin versions -->
+    <properties>
+        <java.version>17</java.version>
+        <spring.boot.version>3.2.7</spring.boot.version>
+        <spring.cloud.version>2023.0.1</spring.cloud.version>
+    </properties>
+    <!-- Khai báo các module con -->
+    <modules>
+        <module>discovery-server</module>
+        <module>api-gateway</module>
+        <module>amqp-client</module>
+    </modules>
+    <!-- Spring Boot & Cloud BOM -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Boot & Cloud -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring.cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Netty BOM (để tránh các CVE từ netty-common, netty-handler) -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>4.1.113.Final</version> <!-- >=4.1.113 đã vá nhiều lỗ hổng -->
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
+    <!-- Plugin quản lý build -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+
+
+</project>
