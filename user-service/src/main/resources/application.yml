@@ -1,17 +1,60 @@
 server:
-  port: 8081
+  port: 8082
 
 spring:
+  application:
+    name: user-service
+
+  config:
+    import: optional:configserver:http://localhost:8888
+
+  cloud:
+    config:
+      fail-fast: false
+      retry:
+        max-attempts: 5
+        initial-interval: 2000
+        max-interval: 10000 # ⚠️ bắt buộc cần nếu dùng retry với fail-fast, nếu thiếu sẽ lỗi
+
+  main:
+    allow-bean-definition-overriding: true
+
+  jackson:
+    serialization:
+      FAIL_ON_EMPTY_BEANS: false
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        acknowledge-mode: auto
+
   datasource:
     url: jdbc:mysql://localhost:3306/user_service_db
     username: root
     password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
 
-jwt:
-  secret: sakurahino123456789012345678901234
-  expiration: 86400000 # 1 ng�y
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
 
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG
+    com.sakurahino.userservice: DEBUG

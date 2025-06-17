@@ -23,6 +23,8 @@
         <module>api-gateway</module>
         <module>amqp-client</module>
         <module>auth-service</module>
+        <module>email-service</module>
+        <module>clients</module>
     </modules>
     <!-- Spring Boot & Cloud BOM -->
     <dependencyManagement>

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LoginRequestDTO {
     @NotBlank(message = "Tài khoản không được trống")
-    private String phone;
+    private String username;
     @NotBlank(message = "Mật khẩu không được trống")
     private String password;
 }

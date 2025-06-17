@@ -19,6 +19,13 @@ spring:
           filters:
             - RewritePath=/api/auth/(?<remaining>.*),/auth/${remaining}
 
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - RewritePath=/api/users/(?<remaining>.*),/users/${remaining}
+
 jwt:
   secret: ${JWT_SECRET}
 

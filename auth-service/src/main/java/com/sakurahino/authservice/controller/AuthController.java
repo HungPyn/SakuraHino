@@ -30,4 +30,9 @@ public class AuthController {
     public SuccessResponse login( @Valid @RequestBody LoginRequestDTO dto) {
         return new SuccessResponse(authService.login(dto));
     }
+
+    @PostMapping("/verify-code")
+    public SuccessResponse verifyCode(){
+        return new SuccessResponse();
+    }
 }

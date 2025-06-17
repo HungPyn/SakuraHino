@@ -1,11 +1,11 @@
 package com.sakurahino.authservice.entity;
 
+import com.sakurahino.clients.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.apache.commons.lang.enums.Enum;
 
 import java.time.Instant;
 
@@ -27,8 +27,8 @@ public class User {
     @Column(name = "email")
     private String email;
 
-    @Column(name = "phone_number")
-    private String phone;
+    @Column(name = "username")
+    private String username;
 
     @Column(name = "password")
     private String password;

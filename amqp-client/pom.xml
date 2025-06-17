@@ -19,7 +19,8 @@
     </properties>
 
     <dependencies>
-        <!-- Spring AMQP để sử dụng RabbitMQ -->
+
+        <!-- spring-amqp và spring-rabbit -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>

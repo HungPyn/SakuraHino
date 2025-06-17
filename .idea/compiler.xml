@@ -6,11 +6,13 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="api-gateway" />
         <module name="auth-service" />
         <module name="discovery-server" />
-        <module name="user-service" />
+        <module name="clients" />
         <module name="lesson-service" />
+        <module name="email-service" />
+        <module name="api-gateway" />
+        <module name="user-service" />
         <module name="amqp-client" />
       </profile>
     </annotationProcessing>
@@ -20,6 +22,7 @@
       <module name="api-gateway" options="" />
       <module name="auth-service" options="" />
       <module name="discovery-server" options="" />
+      <module name="email-service" options="-parameters" />
       <module name="lesson-service" options="-parameters" />
       <module name="user-service" options="" />
     </option>

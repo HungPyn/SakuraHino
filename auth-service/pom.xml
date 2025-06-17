@@ -19,6 +19,14 @@
     <description>Authentication Service</description>
 
     <dependencies>
+
+        <!-- Gọi sang module clients -->
+        <dependency>
+            <groupId>com.sakurahino</groupId>
+            <artifactId>clients</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
         <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -99,6 +107,17 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+<!--        amqp-client thư viện để chạy đc-->
+        <dependency>
+            <groupId>com.sakurahino</groupId>
+            <artifactId>amqp-client</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
     </dependencies>

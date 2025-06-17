@@ -19,6 +19,16 @@ spring:
     serialization:
       FAIL_ON_EMPTY_BEANS: false
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        acknowledge-mode: auto
+
+
   datasource:
     url: jdbc:mysql://localhost:3306/auth_service_db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
     username: root

@@ -1,6 +1,6 @@
 package com.sakurahino.authservice.dto;
 
-import com.sakurahino.authservice.entity.Role;
+import com.sakurahino.clients.enums.Role;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -17,9 +17,8 @@ public class RegisterRequestDTO {
     @Email(message = "Email không đúng định dạng")
     private String email;
 
-    @NotBlank(message = "Số điện thoại không được để trống")
-    @Pattern(regexp = "^(0[0-9]{9})$", message = "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0)")
-    private String phone;
+    @NotBlank(message = "Tài khoản không được để trống")
+    private String username;
 
     @NotBlank(message = "Mật khẩu không được để trống")
     @Size(min = 6, max = 32, message = "Mật khẩu phải từ 6 đến 32 ký tự")
