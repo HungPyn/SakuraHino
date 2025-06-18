@@ -3,15 +3,13 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/amqp-client/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/amqp-client/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/api-gateway/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/auth-service/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/auth-service/src/main/resources/application.yml" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/clients/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/clients/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/discovery-server/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/email-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/lesson-service/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/user-service/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/user-service/src/main/resources/application.yml" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/notification-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/nottification-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/nottificationservice/src/main/java" charset="UTF-8" />
   </component>
 </project>

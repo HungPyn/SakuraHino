@@ -7,24 +7,27 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="auth-service" />
-        <module name="discovery-server" />
         <module name="clients" />
+        <module name="discovery-server" />
+        <module name="common" />
         <module name="lesson-service" />
-        <module name="email-service" />
         <module name="api-gateway" />
         <module name="user-service" />
         <module name="amqp-client" />
+        <module name="notification-service" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="nottification-service" target="17" />
+      <module name="nottificationservice" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="api-gateway" options="" />
-      <module name="auth-service" options="" />
-      <module name="discovery-server" options="" />
-      <module name="email-service" options="-parameters" />
       <module name="lesson-service" options="-parameters" />
-      <module name="user-service" options="" />
+      <module name="notification-service" options="" />
+      <module name="nottification-service" options="-parameters" />
+      <module name="nottificationservice" options="-parameters" />
     </option>
   </component>
 </project>

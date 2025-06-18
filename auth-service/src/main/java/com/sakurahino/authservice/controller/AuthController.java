@@ -2,15 +2,14 @@ package com.sakurahino.authservice.controller;
 
 import com.sakurahino.authservice.dto.LoginRequestDTO;
 import com.sakurahino.authservice.dto.RegisterRequestDTO;
-import com.sakurahino.authservice.retresponse.SuccessResponse;
+import com.sakurahino.authservice.dto.ResetPasswordDTO;
+import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.authservice.service.AuthService;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.GET;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -31,8 +30,17 @@ public class AuthController {
         return new SuccessResponse(authService.login(dto));
     }
 
+
+    // Xử lý controller về mật khẩu
+
+    @GetMapping("/{username}")
+    public SuccessResponse getEmailByUsername(@PathVariable("username") String username) {
+        return new SuccessResponse(authService.getEmailByUsername(username));
+    }
+
     @PostMapping("/verify-code")
-    public SuccessResponse verifyCode(){
-        return new SuccessResponse();
+    public SuccessResponse verifyCode(@RequestBody @Valid ResetPasswordDTO.ForgotPasswordRequest dto){
+        authService.sendResetCode(dto);
+        return new SuccessResponse("Gửi mã code thành công");
     }
 }

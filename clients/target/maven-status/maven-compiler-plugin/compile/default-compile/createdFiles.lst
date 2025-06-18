@@ -1,0 +1,4 @@
+com\sakurahino\clients\enums\Role.class
+com\sakurahino\clients\rabitmqModel\SendResetCodeMessage.class
+com\sakurahino\clients\commons\RabbitKey.class
+com\sakurahino\clients\rabitmqModel\RegisterSuccessDTO.class
