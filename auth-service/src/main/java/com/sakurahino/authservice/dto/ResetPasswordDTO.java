@@ -23,11 +23,15 @@ public class ResetPasswordDTO {
 
     @Data
     public static class ResetPasswordRequest {
-        @NotBlank(message = "Mã code không được để trống")
-        private String code;
+
+        private String username;
 
         @NotBlank(message = "Mật khẩu mới không được để trống")
         @Size(min = 8,max = 16, message = "Mật khẩu phải từ 8 đến 16 ký tự")
         private String newPassword;
+
+        @NotBlank(message = "Mật khẩu mới không được để trống")
+        @Size(min = 8,max = 16, message = "Mật khẩu phải từ 8 đến 16 ký tự")
+        private String confirmPassword;
     }
 }

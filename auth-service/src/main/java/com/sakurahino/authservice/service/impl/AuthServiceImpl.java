@@ -137,7 +137,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void resetPassword(ResetPasswordDTO.ResetPasswordRequest dto) {
+        User user = userRepository.findByUsername(dto.getUsername())
+                .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
 
+        if (!dto.getNewPassword().equals(dto.getConfirmPassword())){
+            throw new AppException(ExceptionCode.MAT_KHAU_COMFIRM_SAI);
+        }
+        String password = passwordEncoder.encode(dto.getNewPassword());
+        user.setPassword(password);
+        userRepository.save(user);
     }
 
 }

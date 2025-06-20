@@ -6,7 +6,6 @@ import com.sakurahino.authservice.dto.ResetPasswordDTO;
 import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.authservice.service.AuthService;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.GET;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +31,6 @@ public class AuthController {
 
 
     // Xử lý controller về mật khẩu
-
     @GetMapping("/{username}")
     public SuccessResponse getEmailByUsername(@PathVariable("username") String username) {
         return new SuccessResponse(authService.getEmailByUsername(username));
@@ -42,5 +40,11 @@ public class AuthController {
     public SuccessResponse verifyCode(@RequestBody @Valid ResetPasswordDTO.ForgotPasswordRequest dto){
         authService.sendResetCode(dto);
         return new SuccessResponse("Gửi mã code thành công");
+    }
+
+    @PostMapping("/reset-password")
+    public SuccessResponse resetPassword(@RequestBody @Valid ResetPasswordDTO.ResetPasswordRequest dto) {
+            authService.resetPassword(dto);
+            return new SuccessResponse("Đổi mật khẩu thành công");
     }
 }

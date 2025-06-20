@@ -10,7 +10,6 @@ import java.time.Instant;
 public class RegisterRequestDTO {
 
     @NotBlank(message = "Họ tên không được để trống")
-    @Size(min = 2, max = 50, message = "Họ tên phải từ 2 đến 50 ký tự")
     private String name;
 
     @NotBlank(message = "Email không được để trống")
