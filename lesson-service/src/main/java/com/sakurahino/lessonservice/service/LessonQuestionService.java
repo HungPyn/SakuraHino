@@ -1,2 +1,4 @@
-package com.sakurahino.lessonservice.service;public interface LessonQuestionService {
+package com.sakurahino.lessonservice.service;
+
+public interface LessonQuestionService {
 }

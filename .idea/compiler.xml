@@ -16,6 +16,9 @@
         <module name="amqp-client" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="lesson-service (1)" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
@@ -23,7 +26,7 @@
       <module name="auth-service" options="" />
       <module name="discovery-server" options="" />
       <module name="email-service" options="-parameters" />
-      <module name="lesson-service" options="-parameters" />
+      <module name="lesson-service" options="" />
       <module name="user-service" options="" />
     </option>
   </component>

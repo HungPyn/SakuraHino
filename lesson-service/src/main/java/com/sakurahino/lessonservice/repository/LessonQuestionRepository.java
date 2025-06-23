@@ -1,4 +1,9 @@
 package com.sakurahino.lessonservice.repository;
 
-public interface LessonQuestionRepository extends org.springframework.data.jpa.repository.JpaRepository<com.sakurahino.lessonservice.entity.LessonQuestion, java.lang.Integer> {
+import com.sakurahino.lessonservice.entity.LessonQuestion;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface LessonQuestionRepository extends JpaRepository<LessonQuestion, Integer> {
 }

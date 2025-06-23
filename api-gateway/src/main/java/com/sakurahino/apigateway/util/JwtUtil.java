@@ -34,10 +34,11 @@ public class JwtUtil {
     }
 
     // Trích xuất userId từ claim "userId"
-    public Long getUserId(String token) {
+    public String getUserId(String token) {
         Object id = getAllClaims(token).get("userId");
-        return id != null ? Long.parseLong(id.toString()) : null;
+        return id != null ? id.toString() : null;
     }
+
 
     // Trích xuất role từ claim "role"
     public String getRole(String token) {

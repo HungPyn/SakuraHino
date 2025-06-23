@@ -26,6 +26,14 @@ spring:
           filters:
             - RewritePath=/api/users/(?<remaining>.*),/users/${remaining}
 
+        - id: lesson-service
+          uri: lb://lesson-service
+          predicates:
+            - Path=/user/lesson/**
+          filters:
+            - RewritePath=/user/lesson/(?<remaining>.*),/user/lesson/${remaining}
+
+
 jwt:
   secret: ${JWT_SECRET}
 
