@@ -11,6 +11,7 @@
     <file url="file://$PROJECT_DIR$/discovery-server/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/email-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/lesson-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/lesson-service/toppic-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/user-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/user-service/src/main/resources/application.yml" charset="UTF-8" />
   </component>
