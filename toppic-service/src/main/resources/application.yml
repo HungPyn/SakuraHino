@@ -23,6 +23,12 @@ spring:
     serialization:
       FAIL_ON_EMPTY_BEANS: false
 
+  cloud:
+    gcp:
+      project-id: sakuranihongo-200e5
+      credentials:
+        location: file:///D:/sakuranihongo-200e5-fd43217e81bb.json
+
 eureka:
   client:
     service-url:
@@ -36,4 +42,8 @@ eureka:
 logging:
   level:
     org.springframework.security: DEBUG
-    com.sakurahino.lessonservice: DEBUG
+    com.sakurahino.toppicservice: DEBUG
+
+gcp:
+  storage:
+    bucket-name: sakuranihongo-200e5.firebasestorage.app

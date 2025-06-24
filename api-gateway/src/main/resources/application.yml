@@ -15,9 +15,9 @@ spring:
         - id: auth-service
           uri: lb://auth-service
           predicates:
-            - Path=/api/auth/**
+            - Path=/auth/**
           filters:
-            - RewritePath=/api/auth/(?<remaining>.*),/auth/${remaining}
+            - RewritePath=/auth/(?<remaining>.*),/auth/${remaining}
 
         - id: user-service
           uri: lb://user-service
@@ -33,6 +33,12 @@ spring:
           filters:
             - RewritePath=/user/lesson/(?<remaining>.*),/user/lesson/${remaining}
 
+        - id: toppic-service
+          uri: lb://toppic-service
+          predicates:
+            - Path=/user/toppic/**
+          filters:
+            - RewritePath=/user/toppic/(?<remaining>.*),/user/toppic/${remaining}
 
 jwt:
   secret: ${JWT_SECRET}
