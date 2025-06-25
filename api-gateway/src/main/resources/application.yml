@@ -33,6 +33,13 @@ spring:
           filters:
             - RewritePath=/user/lesson/(?<remaining>.*),/user/lesson/${remaining}
 
+        - id: lesson-service-admin
+          uri: lb://lesson-service
+          predicates:
+            - Path=/admin/lesson/**
+          filters:
+            - RewritePath=/admin/lesson/(?<remaining>.*),/admin/lesson/${remaining}
+
         - id: toppic-service-user
           uri: lb://toppic-service
           predicates:

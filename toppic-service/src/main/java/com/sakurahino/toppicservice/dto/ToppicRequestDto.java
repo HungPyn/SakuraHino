@@ -1,4 +1,4 @@
-package com.sakurahino.toppicservice.entity.dto;
+package com.sakurahino.toppicservice.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

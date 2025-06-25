@@ -1,12 +1,10 @@
 package com.sakurahino.toppicservice.controller.user;
 
-import com.sakurahino.toppicservice.entity.dto.ToppicResponseDto;
+import com.sakurahino.toppicservice.dto.ToppicResponseDto;
 import com.sakurahino.toppicservice.service.ToppicService;
-import com.sakurahino.toppicservice.service.impl.ToppicServiceIplm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 

@@ -1,8 +1,9 @@
-package com.sakurahino.lessonservice.controller;
+package com.sakurahino.lessonservice.controller.user;
 
 import com.sakurahino.lessonservice.dto.lesson.LessonResponseDto;
 import com.sakurahino.lessonservice.service.LessonService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,4 +24,9 @@ public class LessonController {
         return lessonService.getLessonsByIdToppic(idToppic);
     }
 
+    @GetMapping("/getLesson/{id}")
+    public ResponseEntity<LessonResponseDto> getLessonByid(@PathVariable("id") Integer id){
+        LessonResponseDto responseDto = lessonService.getlesonById(id);
+        return ResponseEntity.ok(responseDto);
+    }
 }

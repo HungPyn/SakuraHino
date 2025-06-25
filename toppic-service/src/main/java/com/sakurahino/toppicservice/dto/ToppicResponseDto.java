@@ -1,4 +1,4 @@
-package com.sakurahino.toppicservice.entity.dto;
+package com.sakurahino.toppicservice.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

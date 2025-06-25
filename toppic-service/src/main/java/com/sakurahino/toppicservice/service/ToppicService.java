@@ -1,7 +1,7 @@
 package com.sakurahino.toppicservice.service;
 
-import com.sakurahino.toppicservice.entity.dto.ToppicRequestDto;
-import com.sakurahino.toppicservice.entity.dto.ToppicResponseDto;
+import com.sakurahino.toppicservice.dto.ToppicRequestDto;
+import com.sakurahino.toppicservice.dto.ToppicResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

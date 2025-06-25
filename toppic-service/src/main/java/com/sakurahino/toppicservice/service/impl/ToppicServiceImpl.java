@@ -1,14 +1,13 @@
 package com.sakurahino.toppicservice.service.impl;
 
 import com.sakurahino.toppicservice.entity.Toppic;
-import com.sakurahino.toppicservice.entity.dto.ToppicRequestDto;
-import com.sakurahino.toppicservice.entity.dto.ToppicResponseDto;
+import com.sakurahino.toppicservice.dto.ToppicRequestDto;
+import com.sakurahino.toppicservice.dto.ToppicResponseDto;
 import com.sakurahino.toppicservice.repositorys.ToppicRepository;
 import com.sakurahino.toppicservice.service.GcsStorageService;
 import com.sakurahino.toppicservice.service.ToppicService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,7 +21,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ToppicServiceIplm implements ToppicService {
+public class ToppicServiceImpl implements ToppicService {
     private final ToppicRepository toppicRepository;
 
     private final GcsStorageService gcsStorageService;

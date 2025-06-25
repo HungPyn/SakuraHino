@@ -11,8 +11,8 @@ public interface LessonService {
      List<LessonResponseDto> getLessonsByIdToppic(Integer idTopic) ;
      LessonResponseDto getlesonById(Integer idLesson);
      void delete (Integer idLesson);
-     void update (Integer idLesson, LessonRequestDto lessonRequestDto);
-     void create (LessonRequestDto lessonRequestDto);
+     LessonResponseDto update (LessonRequestDto lessonRequestDto);
+     LessonResponseDto create (LessonRequestDto lessonRequestDto);
 
 
 }

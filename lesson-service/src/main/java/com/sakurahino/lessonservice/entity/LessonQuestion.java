@@ -12,12 +12,18 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Table(name = "lesson_questions")
 public class LessonQuestion {
     @Id
@@ -53,5 +59,9 @@ public class LessonQuestion {
     @NotNull
     @Column(name = "options_language_code", nullable = false, length = 10)
     private String optionsLanguageCode;
+
+    @Size(max = 255)
+    @Column(name = "audio_url_questions")
+    private String audioUrlQuestions;
 
 }

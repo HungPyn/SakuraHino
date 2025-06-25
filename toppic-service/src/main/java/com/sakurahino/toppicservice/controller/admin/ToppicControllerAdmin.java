@@ -3,14 +3,15 @@ package com.sakurahino.toppicservice.controller.admin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sakurahino.toppicservice.entity.dto.ToppicRequestDto;
-import com.sakurahino.toppicservice.entity.dto.ToppicResponseDto;
+import com.sakurahino.toppicservice.dto.ToppicRequestDto;
+import com.sakurahino.toppicservice.dto.ToppicResponseDto;
 import com.sakurahino.toppicservice.service.ToppicService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -67,4 +68,19 @@ public class ToppicControllerAdmin {
         toppicService.deteteToppic(id);
         return ResponseEntity.ok("Xóa toppic thành công");
     }
+
+    @GetMapping("/getToppicForLesson/{id}")
+    public boolean getToppicByIdForLesson(@PathVariable("id") Integer id){
+        try {
+            toppicService.getToppicById(id);
+            return true;
+        } catch (ResponseStatusException e) {
+            // Bắt ResponseStatusException (ví dụ 404 NOT FOUND) được ném từ service
+            if (e.getStatusCode() == org.springframework.http.HttpStatus.NOT_FOUND) {
+                return false;
+            }
+            throw e;
+        }
+    }
+
 }

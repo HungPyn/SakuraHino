@@ -1,7 +1,6 @@
 package com.sakurahino.toppicservice.repositorys;
 
 import com.sakurahino.toppicservice.entity.Toppic;
-import com.sakurahino.toppicservice.entity.dto.ToppicResponseDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -16,4 +16,6 @@ public class LessonResponseDto {
     private String lessonName;
     private Instant dayCreation;
     private Integer topicId;
+    private boolean isComplete;
+
 }
