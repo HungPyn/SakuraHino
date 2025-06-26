@@ -12,7 +12,7 @@ public interface ToppicService {
     ToppicResponseDto getToppicById (Integer id);
 
     ToppicResponseDto createToppic (ToppicRequestDto toppicRequestDto, MultipartFile multipartFile);
-    ToppicResponseDto updateToppic (ToppicRequestDto toppicRequestDto, MultipartFile multipartFile);
+    ToppicResponseDto updateToppic (Integer id, ToppicRequestDto toppicRequestDto, MultipartFile multipartFile);
 
     void deteteToppic (Integer toppicId);
 

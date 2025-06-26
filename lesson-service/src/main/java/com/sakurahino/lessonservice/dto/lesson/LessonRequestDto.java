@@ -13,7 +13,6 @@ import java.time.Instant;
 @NoArgsConstructor
 @Builder
 public class LessonRequestDto {
-        private Integer id;
 
         @NotBlank(message = "Không được để trống tên lession")
         private String lessonName;

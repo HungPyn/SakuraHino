@@ -1,15 +1,21 @@
 package com.sakurahino.lessonservice.service.impl;
 
 
+import com.sakurahino.lessonservice.dto.LessonQuestionResponse.LessonQuestionRequestDto;
 import com.sakurahino.lessonservice.dto.LessonQuestionResponse.LessonQuestionResponseDto;
+import com.sakurahino.lessonservice.dto.questionChoice.QuestionChoiceRequestDto;
 import com.sakurahino.lessonservice.dto.questionChoice.QuestionChoiceResponseDto;
+import com.sakurahino.lessonservice.entity.Lesson;
 import com.sakurahino.lessonservice.entity.LessonQuestion;
+import com.sakurahino.lessonservice.entity.enums.QuestionType;
 import com.sakurahino.lessonservice.repository.LessonQuestionRepository;
+import com.sakurahino.lessonservice.repository.LessonRepository;
 import com.sakurahino.lessonservice.service.LessonQuestionService;
 import com.sakurahino.lessonservice.service.QuestionChoiceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -21,6 +27,7 @@ import java.util.stream.Collectors;
 public class LessonQuestionServiceImpl implements LessonQuestionService {
     private final LessonQuestionRepository lessonQuestionRepository;
     private final QuestionChoiceService questionChoiceService;
+    private final LessonRepository lessonRepository;
 
     @Override
     public List<LessonQuestionResponseDto> getAllQuestionByLessonId(Integer lessonId) {
@@ -48,8 +55,8 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
     @Override
     public LessonQuestionResponseDto getQuestionById(Integer id) {
         Optional<LessonQuestion> questionOptional = lessonQuestionRepository.findById(id);
-        if(questionOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Question không tồn tại");
+        if (questionOptional.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Question không tồn tại");
         }
         List<QuestionChoiceResponseDto> choiceResponseDtos = questionChoiceService.getAllChoiceByIdLessonQuestion(questionOptional.get().getId());
 
@@ -66,6 +73,113 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
         questionResponseDto.setQuestionChoices(choiceResponseDtos);
 
         return questionResponseDto;
+    }
+
+    @Override
+    @Transactional
+    public void create(LessonQuestionRequestDto lessonQuestionRequestDto) {
+        Lesson lesson = lessonRepository.findById(lessonQuestionRequestDto.getLessonId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson không tồn tại"));
+        LessonQuestion lessonQuestion = new LessonQuestion();
+
+        lessonQuestion.setLesson(lesson);
+        lessonQuestion.setQuestionType(QuestionType.valueOf(lessonQuestionRequestDto.getQuestionType()));
+        lessonQuestion.setPromptTextTemplate(lessonQuestionRequestDto.getPromptTextTemplate());
+        lessonQuestion.setTargetWordNative(lessonQuestionRequestDto.getTargetWordNative());
+        lessonQuestion.setTargetLanguageCode(lessonQuestionRequestDto.getTargetLanguageCode());
+        lessonQuestion.setOptionsLanguageCode(lessonQuestionRequestDto.getOptionsLanguageCode());
+        lessonQuestion.setAudioUrlQuestions(lessonQuestionRequestDto.getAudioUrlQuestions());
+
+        //lưu câu hỏi
+        lessonQuestionRepository.save(lessonQuestion);
+
+
+        //lưu choices
+        List<QuestionChoiceRequestDto> choiceDtos = null;
+        Integer lessonQuetionId = lessonQuestion.getId();
+        if (lessonQuestionRequestDto.getQuestionChoices() != null && !lessonQuestionRequestDto.getQuestionChoices().isEmpty()) {
+
+            choiceDtos = lessonQuestionRequestDto.getQuestionChoices().stream().
+                    map(questionChoiceRequestDto -> {
+                                if ((questionChoiceRequestDto.getImageFile() == null || questionChoiceRequestDto.getImageFile().isEmpty())
+                                        && lessonQuestion.getQuestionType() == QuestionType.MULTIPLE_CHOICE_VOCAB_IMAGE) {
+                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm file ảnh cho câu hỏi dạng hình ảnh");
+                                }
+
+                                QuestionChoiceRequestDto choice = new QuestionChoiceRequestDto();
+                                choice.setExamQuestionId(questionChoiceRequestDto.getExamQuestionId());
+                                choice.setTextForeign(questionChoiceRequestDto.getTextForeign());
+                                choice.setTextRomaji(questionChoiceRequestDto.getTextRomaji());
+                                choice.setImageFile(questionChoiceRequestDto.getImageFile());
+                                choice.setAudioUrlForeign(questionChoiceRequestDto.getAudioUrlForeign());
+                                choice.setIsCorrect(questionChoiceRequestDto.getIsCorrect());
+                                choice.setTextBlock(questionChoiceRequestDto.getTextBlock());
+                                choice.setMeaning(questionChoiceRequestDto.getMeaning());
+                                return choice;
+                            }
+                    ).collect(Collectors.toList());
+        }
+        questionChoiceService.saveChoices(choiceDtos, lessonQuetionId);
+    }
+
+    @Override
+    public void delete(Integer id) {
+        lessonQuestionRepository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson không tồn tại"));
+        lessonQuestionRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void update(Integer id, LessonQuestionRequestDto lessonQuestionRequestDto) {
+        LessonQuestion lessonQuestion = lessonQuestionRepository.findById(id).orElseThrow(()
+                -> new ResponseStatusException(HttpStatus.NOT_FOUND, "question không tồn tại"));
+
+        Lesson lesson = lessonRepository.findById(lessonQuestionRequestDto.getLessonId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson không tồn tại"));
+
+        lessonQuestion.setLesson(lesson);
+        lessonQuestion.setQuestionType(QuestionType.valueOf(lessonQuestionRequestDto.getQuestionType()));
+        lessonQuestion.setPromptTextTemplate(lessonQuestionRequestDto.getPromptTextTemplate());
+        lessonQuestion.setTargetWordNative(lessonQuestionRequestDto.getTargetWordNative());
+        lessonQuestion.setTargetLanguageCode(lessonQuestionRequestDto.getTargetLanguageCode());
+        lessonQuestion.setOptionsLanguageCode(lessonQuestionRequestDto.getOptionsLanguageCode());
+        lessonQuestion.setAudioUrlQuestions(lessonQuestionRequestDto.getAudioUrlQuestions());
+
+        //lưu câu hỏi
+        lessonQuestionRepository.save(lessonQuestion);
+
+        //lưu choices
+        List<QuestionChoiceRequestDto> choiceDtos = null;
+        Integer lessonQuetionId = lessonQuestion.getId();
+        if (lessonQuestionRequestDto.getQuestionChoices() != null && !lessonQuestionRequestDto.getQuestionChoices().isEmpty()) {
+
+            choiceDtos = lessonQuestionRequestDto.getQuestionChoices().stream().
+                    map(questionChoiceRequestDto -> {
+                                if (questionChoiceRequestDto.getId() == null) {
+                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "id choice đang trống không thể update");
+
+                                }
+
+                                if ((questionChoiceRequestDto.getImageFile() == null || questionChoiceRequestDto.getImageFile().isEmpty())
+                                        && lessonQuestion.getQuestionType() == QuestionType.MULTIPLE_CHOICE_VOCAB_IMAGE) {
+                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm file ảnh cho câu hỏi dạng hình ảnh");
+                                }
+                                QuestionChoiceRequestDto choice = new QuestionChoiceRequestDto();
+                                choice.setId(questionChoiceRequestDto.getId());
+                                choice.setExamQuestionId(questionChoiceRequestDto.getExamQuestionId());
+                                choice.setTextForeign(questionChoiceRequestDto.getTextForeign());
+                                choice.setTextRomaji(questionChoiceRequestDto.getTextRomaji());
+                                choice.setImageFile(questionChoiceRequestDto.getImageFile());
+                                choice.setAudioUrlForeign(questionChoiceRequestDto.getAudioUrlForeign());
+                                choice.setIsCorrect(questionChoiceRequestDto.getIsCorrect());
+                                choice.setTextBlock(questionChoiceRequestDto.getTextBlock());
+                                choice.setMeaning(questionChoiceRequestDto.getMeaning());
+                                return choice;
+                            }
+                    ).collect(Collectors.toList());
+        }
+        questionChoiceService.saveChoices(choiceDtos, lessonQuetionId);
     }
 
 }

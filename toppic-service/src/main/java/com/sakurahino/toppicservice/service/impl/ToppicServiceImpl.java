@@ -92,12 +92,13 @@ public class ToppicServiceImpl implements ToppicService {
     }
 
     @Override
-    public ToppicResponseDto updateToppic(ToppicRequestDto toppicRequestDto, MultipartFile avatarToppic) {
-        Optional<Toppic> toppicOptional = toppicRepository.findById(toppicRequestDto.getId());
+    public ToppicResponseDto updateToppic(Integer id, ToppicRequestDto toppicRequestDto, MultipartFile avatarToppic) {
+        Optional<Toppic> toppicOptional = toppicRepository.findById(id);
         if(toppicOptional.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Toppic không tồn tại");
         }
         Toppic toppic = toppicOptional.get();
+        toppic.setId(id);
         toppic.setTopicName(toppicRequestDto.getTopicName());
         //Sau phải kiểm tra idLevel của LevelId DTO gửi lên có hợp lí và tồn tại không trước khi thêm vào
         toppic.setLevelId(toppicRequestDto.getLevelId());
@@ -126,6 +127,7 @@ public class ToppicServiceImpl implements ToppicService {
             String publicUrl = gcsStorageService.getPublicFileUrl(objectName);
             toppic.setAvatarUrl(publicUrl);
         }
+
         toppicRepository.save(toppic);
 
         return new ToppicResponseDto(toppic.getId(), toppic.getTopicName(),toppic.getAvatarUrl(),

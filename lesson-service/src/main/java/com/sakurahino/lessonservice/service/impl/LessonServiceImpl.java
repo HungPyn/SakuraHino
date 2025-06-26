@@ -89,13 +89,13 @@ public class LessonServiceImpl implements LessonService {
     }
 
     @Override
-    public LessonResponseDto update(LessonRequestDto lessonRequestDto) {
+    public LessonResponseDto update(Integer id,LessonRequestDto lessonRequestDto) {
         boolean isToppic = toppicServiceClient.isToppic(lessonRequestDto.getTopicId());
         if (isToppic == false) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Toppic không tồn tại");
         }
 
-        Optional<Lesson> lessonOptional = lessonRepository.findById(lessonRequestDto.getId());
+        Optional<Lesson> lessonOptional = lessonRepository.findById(id);
         if (lessonOptional.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson không tồn tại");
         }

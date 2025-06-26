@@ -34,7 +34,7 @@ public class ToppicControllerAdmin {
     ) {
         ToppicRequestDto toppicRequestDto;
         try {
-            toppicRequestDto = objectMapper.readValue(toppicStr,ToppicRequestDto.class);
+            toppicRequestDto = objectMapper.readValue(toppicStr, ToppicRequestDto.class);
         } catch (JsonProcessingException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu toppic không hợp lệ: " + e.getMessage());
         }
@@ -43,34 +43,37 @@ public class ToppicControllerAdmin {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu toppic không được để trống");
         }
 
-      ToppicResponseDto responseDto = toppicService.createToppic(toppicRequestDto,avatarFile);
+        ToppicResponseDto responseDto = toppicService.createToppic(toppicRequestDto, avatarFile);
 
         return ResponseEntity.ok(responseDto);
     }
 
-    @PutMapping(value = "/update", consumes = {"multipart/form-data"})
-    public ResponseEntity<ToppicResponseDto> updateToppic(@RequestPart("toppic") String toppicStr,
-                                                          @RequestPart("avatarFile") MultipartFile avatarFile
+    @PutMapping(value = "/update/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<ToppicResponseDto> updateToppic(
+            @PathVariable("id") Integer id,
+            @RequestPart("toppic") String toppicStr,
+            @RequestPart("avatarFile") MultipartFile avatarFile
     ) {
         ToppicRequestDto toppicRequestDto;
         try {
-            toppicRequestDto = objectMapper.readValue(toppicStr,ToppicRequestDto.class);
+            //đổi string của body sang json
+            toppicRequestDto = objectMapper.readValue(toppicStr, ToppicRequestDto.class);
         } catch (JsonProcessingException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu toppic không hợp lệ: " + e.getMessage());
         }
-        ToppicResponseDto responseDto = toppicService.updateToppic(toppicRequestDto,avatarFile);
+        ToppicResponseDto responseDto = toppicService.updateToppic(id, toppicRequestDto, avatarFile);
 
         return ResponseEntity.ok(responseDto);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> delete(@PathVariable("id") Integer id){
+    public ResponseEntity<String> delete(@PathVariable("id") Integer id) {
         toppicService.deteteToppic(id);
         return ResponseEntity.ok("Xóa toppic thành công");
     }
 
     @GetMapping("/getToppicForLesson/{id}")
-    public boolean getToppicByIdForLesson(@PathVariable("id") Integer id){
+    public boolean getToppicByIdForLesson(@PathVariable("id") Integer id) {
         try {
             toppicService.getToppicById(id);
             return true;

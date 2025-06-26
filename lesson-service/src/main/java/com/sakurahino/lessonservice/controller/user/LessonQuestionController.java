@@ -13,10 +13,10 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/user/lesson/question")
+@RequestMapping("/user/lesson")
 public class LessonQuestionController {
     private  final LessonQuestionService lessonQuestionService;
-    @GetMapping("/{id}")
+    @GetMapping("/question/{id}")
     public List<LessonQuestionResponseDto> getQuestionsByIdLesson(@PathVariable("id") Integer idLesson){
         return lessonQuestionService.getAllQuestionByLessonId(idLesson);
     }

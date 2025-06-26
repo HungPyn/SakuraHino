@@ -3,6 +3,7 @@ package com.sakurahino.lessonservice.dto.LessonQuestionResponse;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sakurahino.lessonservice.dto.questionChoice.QuestionChoiceResponseDto;
 import com.sakurahino.lessonservice.entity.Lesson;
+import com.sakurahino.lessonservice.entity.enums.QuestionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -43,7 +44,7 @@ public class LessonQuestionResponseDto {
 
     private String audioUrlQuestions;
 
-    private String questionType;
+    private QuestionType questionType;
 
 
     private String promptTextTemplate;

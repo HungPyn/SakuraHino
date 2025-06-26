@@ -15,10 +15,10 @@ import java.time.Instant;
 @NoArgsConstructor
 @Builder
 public class ToppicRequestDto {
-    private Integer id;
+
     @NotBlank(message = "Tên Toppic không được để trống")
     private String topicName;
-    private Instant dayCreation;
+
     @NotNull(message = "Level ID không được để trống")
     private Integer levelId;
 }

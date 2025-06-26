@@ -27,9 +27,11 @@ public class LessonAdminController {
         return ResponseEntity.ok(lessonResponseDto);
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<LessonResponseDto> updateLesson(@Valid @RequestBody LessonRequestDto lessonRequestDto){
-        LessonResponseDto lessonResponseDto = lessonService.update(lessonRequestDto);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<LessonResponseDto> updateLesson(
+            @PathVariable("id") Integer id,
+            @Valid @RequestBody LessonRequestDto lessonRequestDto){
+        LessonResponseDto lessonResponseDto = lessonService.update(id,lessonRequestDto);
         return ResponseEntity.ok(lessonResponseDto);
     }
 
