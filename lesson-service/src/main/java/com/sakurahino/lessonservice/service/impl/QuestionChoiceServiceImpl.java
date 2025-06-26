@@ -151,7 +151,18 @@ public class QuestionChoiceServiceImpl implements QuestionChoiceService {
                     }
                 }
             }
+
+
             choicesToSave.add(questionChoice);
+        }
+        if (lessonQuestion.getQuestionType() == QuestionType.MULTIPLE_CHOICE_VOCAB_IMAGE) {
+            for (QuestionChoice choice : choicesToSave) {
+                boolean chuaCoAnhMoi = (choice.getImageUrl() == null || choice.getImageUrl().isEmpty());
+
+                if (chuaCoAnhMoi) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng chọn lại đủ ảnh cho các lựa chọn");
+                }
+            }
         }
         questionChoiceRepository.saveAll(choicesToSave);
         return true;
@@ -198,6 +209,7 @@ public class QuestionChoiceServiceImpl implements QuestionChoiceService {
             String publicUrl = gcsStorageService.getPublicFileUrl(objectName);
             questionChoice.setImageUrl(publicUrl);
         }
+
 
         questionChoiceRepository.save(questionChoice);
          QuestionChoiceResponseDto responseDto = QuestionChoiceResponseDto.builder()

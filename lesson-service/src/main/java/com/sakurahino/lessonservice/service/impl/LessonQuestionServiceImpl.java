@@ -158,13 +158,8 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
                     map(questionChoiceRequestDto -> {
                                 if (questionChoiceRequestDto.getId() == null) {
                                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "id choice đang trống không thể update");
-
                                 }
 
-                                if ((questionChoiceRequestDto.getImageFile() == null || questionChoiceRequestDto.getImageFile().isEmpty())
-                                        && lessonQuestion.getQuestionType() == QuestionType.MULTIPLE_CHOICE_VOCAB_IMAGE) {
-                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm file ảnh cho câu hỏi dạng hình ảnh");
-                                }
                                 QuestionChoiceRequestDto choice = new QuestionChoiceRequestDto();
                                 choice.setId(questionChoiceRequestDto.getId());
                                 choice.setExamQuestionId(questionChoiceRequestDto.getExamQuestionId());
@@ -178,6 +173,8 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
                                 return choice;
                             }
                     ).collect(Collectors.toList());
+
+
         }
         questionChoiceService.saveChoices(choiceDtos, lessonQuetionId);
     }
