@@ -58,6 +58,8 @@ public class QuestionChoiceServiceImpl implements QuestionChoiceService {
         return responseDtos;
     }
 
+
+
     @Override
     public void deleteChoice(Integer id) {
         Optional<QuestionChoice> questionChoiceOptional = questionChoiceRepository.findById(id);
@@ -225,6 +227,45 @@ public class QuestionChoiceServiceImpl implements QuestionChoiceService {
                 .meaning(questionChoice.getMeaning())
                 .build();
         return responseDto;
+    }
+
+
+    //cho exam
+    @Override
+    public List<QuestionChoiceResponseDto> getAllChoiceByExamId(Integer examId) {
+        List<QuestionChoice> questionChoices = questionChoiceRepository.findQuestionChoicesByExamQuestionId(examId);
+        List<QuestionChoiceResponseDto> responseDtos = questionChoices.stream().map(questionChoice ->
+                QuestionChoiceResponseDto.builder()
+                        .id(questionChoice.getId())
+                        .lessonQuestionId(questionChoice.getLessonQuestion().getId())
+                        .examQuestionId(questionChoice.getExamQuestionId())
+                        .textForeign(questionChoice.getTextForeign())
+                        .textRomaji(questionChoice.getTextRomaji())
+                        .imageUrl(questionChoice.getImageUrl())
+                        .audioUrlForeign(questionChoice.getAudioUrlForeign())
+                        .isCorrect(questionChoice.getIsCorrect())
+                        .textBlock(questionChoice.getTextBlock())
+                        .meaning(questionChoice.getMeaning())
+                        .build()
+        ).collect(Collectors.toList());
+
+        return responseDtos;
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteChoiceByExamId(Integer examId) {
+      if(examId == null){
+          throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Chưa truyền examId");
+      }
+        List<QuestionChoice> existingChoices = questionChoiceRepository.findQuestionChoicesByExamQuestionId(examId);
+        if (existingChoices.isEmpty()) {
+            return false;
+        }
+        questionChoiceRepository.deleteQuestionChoicesByExamQuestionId(examId);
+        List<QuestionChoice> remainingChoices = questionChoiceRepository.findQuestionChoicesByExamQuestionId(examId);
+
+        return remainingChoices.isEmpty();
     }
 
 }

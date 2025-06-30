@@ -25,6 +25,7 @@
         <module>auth-service</module>
         <module>email-service</module>
         <module>lesson-service</module>
+        <module>exam-service</module>
         <module>toppic-service</module>
         <module>clients</module>
     </modules>

@@ -15,6 +15,7 @@
         <module name="toppic-service" />
         <module name="user-service" />
         <module name="amqp-client" />
+        <module name="exam-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -27,6 +28,7 @@
       <module name="auth-service" options="" />
       <module name="discovery-server" options="" />
       <module name="email-service" options="-parameters" />
+      <module name="exam-service" options="" />
       <module name="lesson-service" options="" />
       <module name="toppic-service" options="" />
       <module name="user-service" options="" />

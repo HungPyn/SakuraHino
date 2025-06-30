@@ -26,7 +26,7 @@ spring:
           filters:
             - RewritePath=/api/users/(?<remaining>.*),/users/${remaining}
 
-        - id: lesson-service
+        - id: lesson-service-user
           uri: lb://lesson-service
           predicates:
             - Path=/user/lesson/**
@@ -54,6 +54,19 @@ spring:
           filters:
             - RewritePath=/admin/toppic/(?<remaining>.*),/admin/toppic/${remaining}
 
+        - id: exam-service-user
+          uri: lb://exam-service
+          predicates:
+            - Path=/user/exam/**
+          filters:
+            - RewritePath=/user/exam/(?<remaining>.*),/user/exam/${remaining}
+
+        - id: exam-service-admin
+          uri: lb://exam-service
+          predicates:
+            - Path=/admin/exam/**
+          filters:
+            - RewritePath=/admin/exam/(?<remaining>.*),/admin/exam/${remaining}
 jwt:
   secret: ${JWT_SECRET}
 

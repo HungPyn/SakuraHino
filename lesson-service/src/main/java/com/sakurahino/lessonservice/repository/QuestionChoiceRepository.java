@@ -9,4 +9,9 @@ import java.util.List;
 @Repository
 public interface QuestionChoiceRepository extends JpaRepository<QuestionChoice, Integer> {
     List<QuestionChoice> findByLessonQuestion_Id(Integer idLessonQuestion);
+
+    List<QuestionChoice> findQuestionChoicesByExamQuestionId(Integer examId);
+
+    void deleteQuestionChoicesByExamQuestionId(Integer examId);
+
 }

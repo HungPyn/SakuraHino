@@ -20,7 +20,7 @@ public class LessonQuestionController {
     public List<LessonQuestionResponseDto> getQuestionsByIdLesson(@PathVariable("id") Integer idLesson){
         return lessonQuestionService.getAllQuestionByLessonId(idLesson);
     }
-    @GetMapping("/getQuestion/{id}")
+    @GetMapping("/getquestion/{id}")
     public ResponseEntity<LessonQuestionResponseDto> getQuestionById(@PathVariable("id") Integer idLesson){
          LessonQuestionResponseDto lessonQuestionResponseDto =  lessonQuestionService.getQuestionById(idLesson);
         return ResponseEntity.ok(lessonQuestionResponseDto);
