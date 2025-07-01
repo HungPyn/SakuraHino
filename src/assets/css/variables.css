@@ -1,0 +1,53 @@
+/* src/assets/css/variables.css */
+:root {
+  /* Main Colors */
+  --primary-color: #1a73e8; /* Google Blue */
+  --primary-light: #e8f0fe; /* Light blue for backgrounds, active states */
+  --secondary-color: #00bcd4; /* Cyan */
+  --accent-color: #ff9800; /* Orange */
+
+  /* Text Colors */
+  --text-dark: #3c4043; /* Headings, main content */
+  --text-medium: #5f6368; /* Descriptions, labels */
+  --text-light: #80868b; /* Hints, timestamps */
+  --text-white: #ffffff;
+
+  /* Background Colors */
+  --background-light: #fbe9e7; /* Light Pastel Pink - Updated */
+  --card-background: #ffffff; /* Card backgrounds remain white */
+
+  /* Border Colors */
+  --border-color: #dadce0; /* General borders */
+  --border-dashed: #e0e0e0; /* Dashed lines */
+
+  /* Shadow Properties */
+  --shadow-light: rgba(60, 64, 67, 0.1); /* Subtle shadow */
+  --shadow-medium: rgba(0, 0, 0, 0.15); /* Stronger shadow for hover */
+
+  /* Border Radii */
+  --border-radius-card: 12px;
+  --border-radius-button: 8px;
+  --border-radius-tag: 5px;
+  --border-radius-circle: 50%;
+
+  /* Font Family */
+  --font-family-sans: 'Roboto', sans-serif;
+
+  /* Button Default Styles */
+  --button-default-bg: #e9ecef;
+  --button-hover-bg: #d9d9d9;
+
+  /* Status Tag Colors (inspired by images) */
+  --status-active-bg: #28a745;   /* Green for Active/Published */
+  --status-pending-bg: #ffc107;  /* Yellow for Pending/Draft */
+  --status-blocked-bg: #dc3545;  /* Red for Blocked/Rejected/High priority */
+  --status-review-bg: #00bcd4;   /* Cyan for Under Review */
+  --status-low-bg: #90ee90;      /* Light green for Low priority */
+
+  /* Level Tag Colors (JLPT inspired) */
+  --level-n5-bg: #4CAF50;
+  --level-n4-bg: #2196F3;
+  --level-n3-bg: #FFC107;
+  --level-n2-bg: #FF9800;
+  --level-n1-bg: #F44336;
+}
