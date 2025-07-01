@@ -23,6 +23,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+    packages-to-scan: com.sakurahino.lessonservice.entity
 
   jackson:
     serialization:

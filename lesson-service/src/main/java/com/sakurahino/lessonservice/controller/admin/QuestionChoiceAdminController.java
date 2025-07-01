@@ -3,9 +3,9 @@ package com.sakurahino.lessonservice.controller.admin;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sakurahino.lessonservice.dto.questionChoice.ChoiceRequestCreateDto;
+import com.sakurahino.lessonservice.dto.questionChoice.QuestionChoiceRequestDto;
 import com.sakurahino.lessonservice.dto.questionChoice.QuestionChoiceResponseDto;
 import com.sakurahino.lessonservice.service.QuestionChoiceService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,9 +58,19 @@ public class QuestionChoiceAdminController {
         boolean isDeleted = questionChoiceService.deleteChoiceByExamId(examId);
         return isDeleted;
     }
+
     @GetMapping("/{id}")
     public List<QuestionChoiceResponseDto> getChoicesByExamId(@PathVariable("id") Integer examId) {
         return questionChoiceService.getAllChoiceByExamId(examId);
+    }
+
+    @PostMapping("/createxam/{id}")
+    public boolean creatateExam(@RequestBody List<QuestionChoiceRequestDto> questionChoiceRequestDto,
+                                @PathVariable("id") Integer idExam) {
+
+
+
+      return  questionChoiceService.saveChoicesExam(questionChoiceRequestDto,idExam);
     }
 
 }

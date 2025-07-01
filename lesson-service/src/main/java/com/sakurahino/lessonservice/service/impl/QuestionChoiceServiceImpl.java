@@ -1,6 +1,5 @@
 package com.sakurahino.lessonservice.service.impl;
 
-import com.sakurahino.lessonservice.dto.LessonQuestionResponse.LessonQuestionResponseDto;
 import com.sakurahino.lessonservice.dto.questionChoice.ChoiceRequestCreateDto;
 import com.sakurahino.lessonservice.dto.questionChoice.QuestionChoiceRequestDto;
 import com.sakurahino.lessonservice.dto.questionChoice.QuestionChoiceResponseDto;
@@ -10,7 +9,6 @@ import com.sakurahino.lessonservice.entity.enums.QuestionType;
 import com.sakurahino.lessonservice.repository.LessonQuestionRepository;
 import com.sakurahino.lessonservice.repository.QuestionChoiceRepository;
 import com.sakurahino.lessonservice.service.GcsStorageService;
-import com.sakurahino.lessonservice.service.LessonQuestionService;
 import com.sakurahino.lessonservice.service.QuestionChoiceService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -170,6 +167,7 @@ public class QuestionChoiceServiceImpl implements QuestionChoiceService {
         return true;
     }
 
+
     @Override
     public QuestionChoiceResponseDto create(ChoiceRequestCreateDto choiceRequestCreateDto, MultipartFile avatarChoice) {
         LessonQuestion question = lessonQuestionRepository.findById(choiceRequestCreateDto.getLessonQuestionId()).orElseThrow(() ->
@@ -267,5 +265,82 @@ public class QuestionChoiceServiceImpl implements QuestionChoiceService {
 
         return remainingChoices.isEmpty();
     }
+
+    @Override
+    public boolean saveChoicesExam(List<QuestionChoiceRequestDto> questionChoiceRequestDtos,Integer idExamQuestion) {
+
+        //bổ sung tìm lại toppic xem phải không trước khi thêm hoặc sửa----------------------------------------------------
+//        LessonQuestion lessonQuestion = lessonQuestionRepository.findById(idQuestion)
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "LessonQuestion không tồn tại với id: " + idQuestion));
+
+        List<QuestionChoice> choicesToSave = new ArrayList<>();
+
+        for (QuestionChoiceRequestDto requestDto : questionChoiceRequestDtos) {
+            QuestionChoice questionChoice;
+            if (requestDto.getId() != null) {
+                questionChoice = questionChoiceRepository.findById(requestDto.getId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Choice không tồn tại với id: " + requestDto.getId()));
+
+                MultipartFile imageFile = requestDto.getImageFile();
+                if (imageFile != null && !imageFile.isEmpty()) {
+                    String oldImageUrl = questionChoice.getImageUrl();
+                    if (oldImageUrl != null && !oldImageUrl.isBlank()) {
+                        String oldObjectName = oldImageUrl.substring(oldImageUrl.lastIndexOf("/") + 1);
+                        try {
+                            gcsStorageService.deleteFile(oldObjectName);
+                        } catch (Exception e) {
+                            System.err.println("Cảnh báo: Không thể xóa ảnh cũ trên GCS: " + oldObjectName + ". Lỗi: " + e.getMessage());
+                        }
+                    }
+                }
+            } else {
+                // Tạo mới choice
+                questionChoice = new QuestionChoice();
+            }
+            questionChoice.setLessonQuestion(null);
+            questionChoice.setExamQuestionId(requestDto.getExamQuestionId());
+            questionChoice.setTextForeign(requestDto.getTextForeign());
+            questionChoice.setTextRomaji(requestDto.getTextRomaji());
+            questionChoice.setIsCorrect(requestDto.getIsCorrect());
+            questionChoice.setTextBlock(requestDto.getTextBlock());
+            questionChoice.setMeaning(requestDto.getMeaning());
+
+            questionChoice.setAudioUrlForeign(requestDto.getAudioUrlForeign()); // Cập nhật audio URL nếu có
+
+            MultipartFile imageFile = requestDto.getImageFile();
+            if (imageFile != null && !imageFile.isEmpty()) {
+                String originalFilename = imageFile.getOriginalFilename();
+                String fileExtension = "";
+                if (originalFilename != null && originalFilename.contains(".")) {
+                    fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                }
+                String objectName = UUID.randomUUID() + fileExtension;
+                try {
+                    gcsStorageService.uploadFileToPublicBucket(imageFile, objectName);
+                } catch (IOException e) {
+                    throw new RuntimeException("Tải ảnh lên thất bại cho choice: " + requestDto.getId() + ". Lỗi: " + e.getMessage(), e);
+                }
+                String publicUrl = gcsStorageService.getPublicFileUrl(objectName);
+                questionChoice.setImageUrl(publicUrl);
+            } else if (requestDto.getId() != null && requestDto.getImageFile() == null) {
+                String oldImageUrl = questionChoice.getImageUrl();
+                if (oldImageUrl != null && !oldImageUrl.isBlank()) {
+                    String oldObjectName = oldImageUrl.substring(oldImageUrl.lastIndexOf("/") + 1);
+                    try {
+                        gcsStorageService.deleteFile(oldObjectName);
+                        questionChoice.setImageUrl(null);
+                    } catch (Exception e) {
+                        System.err.println("Cảnh báo: Không thể xóa ảnh cũ khi cập nhật choice: " + oldObjectName + ". Lỗi: " + e.getMessage());
+                    }
+                }
+            }
+
+
+            choicesToSave.add(questionChoice);
+        }
+        questionChoiceRepository.saveAll(choicesToSave);
+        return true;
+    }
+
 
 }

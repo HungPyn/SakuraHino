@@ -1,13 +1,24 @@
 package com.example.examservice.controller.admin;
 
 import com.example.examservice.clients.LessonServiceClient;
+import com.example.examservice.dto.ExamQuestionRequestDto;
 import com.example.examservice.service.ExamQuestionService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 
 @RestController
@@ -16,10 +27,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ExamAdminController {
     private final ExamQuestionService examQuestionService;
     private final LessonServiceClient lessonServiceClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deletebyId(@PathVariable("id") Integer id){
         examQuestionService.delete(id);
-        return ResponseEntity.ok("Xóa thành công");
+        return ResponseEntity.ok("Xóa exam thành công");
     }
 
     @DeleteMapping("/deletechoice/{id}")
@@ -28,5 +40,49 @@ public class ExamAdminController {
         return ResponseEntity.ok("Xóa đáp án thành công");
     }
 
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> createExamQuestion(@RequestPart("examQuestion") String examQuestionStr,
+                                                 @RequestPart("choiceImages") List<MultipartFile> choiceImages
+    ) {
+        ExamQuestionRequestDto requestDto;
+        try {
+            requestDto = objectMapper.readValue(examQuestionStr, ExamQuestionRequestDto.class);
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu cho exam question không hợp lệ: " + e.getMessage());
+        }
+
+        if (choiceImages != null && !choiceImages.isEmpty()) {
+            for (int i = 0; i < choiceImages.size() && i < requestDto.getQuestionChoices().size(); i++) {
+                requestDto.getQuestionChoices().get(i).setImageFile(choiceImages.get(i));
+            }
+        }
+
+        examQuestionService.create(requestDto);
+
+        return ResponseEntity.ok("Thêm exam question thành công <3");
+
+    }
+
+    @PostMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> updateExamQuestion(
+            @PathVariable("id") Integer id, @RequestPart("examQuestion") String examQuestionStr,
+            @RequestPart("choiceImages") List<MultipartFile> choiceImages
+    ) {
+        ExamQuestionRequestDto requestDto;
+        try {
+            requestDto = objectMapper.readValue(examQuestionStr, ExamQuestionRequestDto.class);
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu question không hợp lệ: " + e.getMessage());
+        }
+
+        if (choiceImages != null && !choiceImages.isEmpty()) {
+            for (int i = 0; i < choiceImages.size() && i < requestDto.getQuestionChoices().size(); i++) {
+                requestDto.getQuestionChoices().get(i).setImageFile(choiceImages.get(i));
+            }
+        }
+        examQuestionService.update(id, requestDto);
+
+        return ResponseEntity.ok("Cập nhật exam question thành công <3");
+    }
 
 }

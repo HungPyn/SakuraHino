@@ -3,8 +3,10 @@ package com.example.examservice.service.impl;
 import com.example.examservice.clients.LessonServiceClient;
 import com.example.examservice.dto.ExamQuestionRequestDto;
 import com.example.examservice.dto.ExamQuestionResponseDto;
+import com.example.examservice.dto.QuestionChoiceRequestDto;
 import com.example.examservice.dto.QuestionChoiceResponseDto;
 import com.example.examservice.entity.ExamQuestion;
+import com.example.examservice.entity.enums.QuestionType;
 import com.example.examservice.repositories.ExamQuestionRepository;
 import com.example.examservice.service.ExamQuestionService;
 import lombok.RequiredArgsConstructor;
@@ -93,14 +95,103 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
     }
 
     @Override
+    @Transactional
     public void create(ExamQuestionRequestDto examQuestionRequestDto) {
+        //sau bổ sung kiểm tra toppic tồn tại không trươcs khi thêm--------------------------------------
 
+        ExamQuestion examQuestion = new ExamQuestion();
+
+        examQuestion.setToppicId(examQuestionRequestDto.getToppicId());
+        examQuestion.setQuestionType(QuestionType.valueOf(examQuestionRequestDto.getQuestionType()));
+        examQuestion.setPromptTextTemplate(examQuestionRequestDto.getPromptTextTemplate());
+        examQuestion.setTargetWordNative(examQuestionRequestDto.getTargetWordNative());
+        examQuestion.setTargetLanguageCode(examQuestionRequestDto.getTargetLanguageCode());
+        examQuestion.setOptionsLanguageCode(examQuestionRequestDto.getOptionsLanguageCode());
+        examQuestion.setAudioUrlQuestions(examQuestionRequestDto.getAudioUrlQuestions());
+
+        //lưu câu hỏi
+        examQuestionRepository.save(examQuestion);
+
+
+        //lưu choices
+        List<QuestionChoiceRequestDto> choiceDtos = null;
+        Integer examId = examQuestion.getId();
+        if (examQuestionRequestDto.getQuestionChoices() != null && !examQuestionRequestDto.getQuestionChoices().isEmpty()) {
+
+            choiceDtos = examQuestionRequestDto.getQuestionChoices().stream().
+                    map(questionChoiceRequestDto -> {
+                                if ((questionChoiceRequestDto.getImageFile() == null || questionChoiceRequestDto.getImageFile().isEmpty())
+                                        && examQuestion.getQuestionType() == QuestionType.MULTIPLE_CHOICE_VOCAB_IMAGE) {
+                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm file ảnh cho câu hỏi dạng hình ảnh");
+                                }
+
+                                QuestionChoiceRequestDto choice = new QuestionChoiceRequestDto();
+                                choice.setExamQuestionId(questionChoiceRequestDto.getExamQuestionId());
+                                choice.setTextForeign(questionChoiceRequestDto.getTextForeign());
+                                choice.setTextRomaji(questionChoiceRequestDto.getTextRomaji());
+                                choice.setImageFile(questionChoiceRequestDto.getImageFile());
+                                choice.setAudioUrlForeign(questionChoiceRequestDto.getAudioUrlForeign());
+                                choice.setIsCorrect(questionChoiceRequestDto.getIsCorrect());
+                                choice.setTextBlock(questionChoiceRequestDto.getTextBlock());
+                                choice.setMeaning(questionChoiceRequestDto.getMeaning());
+                                return choice;
+                            }
+                    ).collect(Collectors.toList());
+        }
+
+        lessonServiceClient.saveChoicesExam(choiceDtos, examId);
     }
 
 
-
     @Override
+    @Transactional
     public void update(Integer id, ExamQuestionRequestDto examQuestionRequestDto) {
+        //sau bổ sung kiểm tra toppic tồn tại không trươcs khi thêm, sửa--------------------------------------
 
+        Optional<ExamQuestion> examQuestionOptional = examQuestionRepository.findById(id);
+        if(examQuestionOptional.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"exam không tồn tại id: "+id);
+        }
+
+        ExamQuestion examQuestion = examQuestionOptional.get();
+
+        examQuestion.setToppicId(examQuestionRequestDto.getToppicId());
+        examQuestion.setQuestionType(QuestionType.valueOf(examQuestionRequestDto.getQuestionType()));
+        examQuestion.setPromptTextTemplate(examQuestionRequestDto.getPromptTextTemplate());
+        examQuestion.setTargetWordNative(examQuestionRequestDto.getTargetWordNative());
+        examQuestion.setTargetLanguageCode(examQuestionRequestDto.getTargetLanguageCode());
+        examQuestion.setOptionsLanguageCode(examQuestionRequestDto.getOptionsLanguageCode());
+        examQuestion.setAudioUrlQuestions(examQuestionRequestDto.getAudioUrlQuestions());
+
+        //lưu câu hỏi
+        examQuestionRepository.save(examQuestion);
+
+
+        //lưu choices
+        List<QuestionChoiceRequestDto> choiceDtos = null;
+        Integer examId = examQuestion.getId();
+        if (examQuestionRequestDto.getQuestionChoices() != null && !examQuestionRequestDto.getQuestionChoices().isEmpty()) {
+
+            choiceDtos = examQuestionRequestDto.getQuestionChoices().stream().
+                    map(questionChoiceRequestDto -> {
+                                if ((questionChoiceRequestDto.getImageFile() == null || questionChoiceRequestDto.getImageFile().isEmpty())
+                                        && examQuestion.getQuestionType() == QuestionType.MULTIPLE_CHOICE_VOCAB_IMAGE) {
+                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm file ảnh cho câu hỏi dạng hình ảnh");
+                                }
+
+                                QuestionChoiceRequestDto choice = new QuestionChoiceRequestDto();
+                                choice.setExamQuestionId(questionChoiceRequestDto.getExamQuestionId());
+                                choice.setTextForeign(questionChoiceRequestDto.getTextForeign());
+                                choice.setTextRomaji(questionChoiceRequestDto.getTextRomaji());
+                                choice.setImageFile(questionChoiceRequestDto.getImageFile());
+                                choice.setAudioUrlForeign(questionChoiceRequestDto.getAudioUrlForeign());
+                                choice.setIsCorrect(questionChoiceRequestDto.getIsCorrect());
+                                choice.setTextBlock(questionChoiceRequestDto.getTextBlock());
+                                choice.setMeaning(questionChoiceRequestDto.getMeaning());
+                                return choice;
+                            }
+                    ).collect(Collectors.toList());
+        }
+        lessonServiceClient.saveChoicesExam(choiceDtos, examId);
     }
 }
