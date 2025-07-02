@@ -30,6 +30,8 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="email-service" target="17" />
+      <module name="exam-service" target="17" />
       <module name="nottification-service" target="17" />
       <module name="nottificationservice" target="17" />
     </bytecodeTargetLevel>
