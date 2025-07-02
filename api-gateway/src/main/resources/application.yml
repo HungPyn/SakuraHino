@@ -15,9 +15,9 @@ spring:
         - id: auth-service
           uri: lb://auth-service
           predicates:
-            - Path=/api/auth/**
+            - Path=/auth/**
           filters:
-            - RewritePath=/api/auth/(?<remaining>.*),/auth/${remaining}
+            - RewritePath=/auth/(?<remaining>.*),/auth/${remaining}
 
         - id: user-service
           uri: lb://user-service
@@ -32,6 +32,33 @@ spring:
           filters:
             - RewritePath=/api/topic/(?<remaining>.*),/topic/${remaining}
 
+        - id: lesson-service-user
+          uri: lb://lesson-service
+          predicates:
+            - Path=/user/lesson/**
+          filters:
+            - RewritePath=/user/lesson/(?<remaining>.*),/user/lesson/${remaining}
+
+        - id: lesson-service-admin
+          uri: lb://lesson-service
+          predicates:
+            - Path=/admin/lesson/**
+          filters:
+            - RewritePath=/admin/lesson/(?<remaining>.*),/admin/lesson/${remaining}
+
+        - id: exam-service-user
+          uri: lb://exam-service
+          predicates:
+            - Path=/user/exam/**
+          filters:
+            - RewritePath=/user/exam/(?<remaining>.*),/user/exam/${remaining}
+
+        - id: exam-service-admin
+          uri: lb://exam-service
+          predicates:
+            - Path=/admin/exam/**
+          filters:
+            - RewritePath=/admin/exam/(?<remaining>.*),/admin/exam/${remaining}
 jwt:
   secret: ${JWT_SECRET}
 

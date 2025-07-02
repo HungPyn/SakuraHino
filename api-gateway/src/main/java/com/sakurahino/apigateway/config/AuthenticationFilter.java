@@ -55,7 +55,7 @@ public class AuthenticationFilter implements WebFilter {
         }
 
         // Trích xuất thông tin người dùng
-        Long userId = jwtUtil.getUserId(token);
+        String userId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token);
         System.out.println("Filtering path: " + path);
         if (userId == null || role == null) {
