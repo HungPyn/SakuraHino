@@ -11,5 +11,7 @@
     <file url="file://$PROJECT_DIR$/notification-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/nottification-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/nottificationservice/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/topic-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/upload-service/src/main/java" charset="UTF-8" />
   </component>
 </project>

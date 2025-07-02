@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  upload-service:
+    build: .
+    ports:
+      - "8083:8083"
+    volumes:
+      - ./config/firebase-key.json:/config/firebase-key.json
+    environment:
+      - FIREBASE_CREDENTIALS_PATH=/config/firebase-key.json

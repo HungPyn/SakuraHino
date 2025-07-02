@@ -8,6 +8,8 @@
         <option value="$PROJECT_DIR$/nottificationservice/pom.xml" />
         <option value="$PROJECT_DIR$/nottification-service/pom.xml" />
         <option value="$PROJECT_DIR$/notification-service/pom.xml" />
+        <option value="$PROJECT_DIR$/topic-service/pom.xml" />
+        <option value="$PROJECT_DIR$/upload-service/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">

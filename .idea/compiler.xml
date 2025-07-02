@@ -6,12 +6,24 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="lesson-service" />
+      </profile>
+      <profile name="Annotation profile for Sakurahino Project" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.5.5.Final/mapstruct-processor-1.5.5.Final.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct/1.5.5.Final/mapstruct-1.5.5.Final.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.32/lombok-1.18.32.jar" />
+        </processorPath>
         <module name="auth-service" />
         <module name="clients" />
         <module name="discovery-server" />
         <module name="common" />
-        <module name="lesson-service" />
+        <module name="topic-service" />
         <module name="api-gateway" />
+        <module name="upload-service" />
         <module name="user-service" />
         <module name="amqp-client" />
         <module name="notification-service" />
@@ -28,6 +40,8 @@
       <module name="notification-service" options="" />
       <module name="nottification-service" options="-parameters" />
       <module name="nottificationservice" options="-parameters" />
+      <module name="topic-service" options="" />
+      <module name="upload-service" options="" />
     </option>
   </component>
 </project>
