@@ -46,20 +46,6 @@ spring:
           filters:
             - RewritePath=/admin/lesson/(?<remaining>.*),/admin/lesson/${remaining}
 
-        - id: toppic-service-user
-          uri: lb://toppic-service
-          predicates:
-            - Path=/user/toppic/**
-          filters:
-            - RewritePath=/user/toppic/(?<remaining>.*),/user/toppic/${remaining}
-
-        - id: toppic-service-admin
-          uri: lb://toppic-service
-          predicates:
-            - Path=/admin/toppic/**
-          filters:
-            - RewritePath=/admin/toppic/(?<remaining>.*),/admin/toppic/${remaining}
-
         - id: exam-service-user
           uri: lb://exam-service
           predicates:

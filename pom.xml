@@ -26,7 +26,6 @@
         <module>discovery-server</module>
         <module>api-gateway</module>
         <module>amqp-client</module>
-        <module>email-service</module>
         <module>lesson-service</module>
         <module>exam-service</module>
         <module>result-service</module>

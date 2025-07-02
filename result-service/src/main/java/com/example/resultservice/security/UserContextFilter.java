@@ -17,7 +17,7 @@ import java.util.Collections;
 
 public class UserContextFilter extends OncePerRequestFilter {
     private static final String HEADER_USER_ID = "X-User-Id";
-    private static final String HEADER_ROLE = "X-User-Role"; // ← Đổi lại cho đúng với gateway
+    private static final String HEADER_ROLE = "X-Role"; // ← Đổi lại cho đúng với gateway
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
