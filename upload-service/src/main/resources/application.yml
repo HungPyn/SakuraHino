@@ -1,0 +1,34 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: upload-service
+
+  config:
+    import: optional:configserver:http://localhost:8888
+
+  cloud:
+    gcp:
+      project-id: sakuranihongo-200e5
+      credentials:
+        location: file:///D:/DATN/keys/sakuranihongo-200e5-fd43217e81bb.json
+
+gcp:
+  storage:
+    bucket-name: sakuranihongo-200e5.appspot.com
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+logging:
+  level:
+    root: INFO
+    com.sakurahino.uploadservice: DEBUG

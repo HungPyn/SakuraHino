@@ -68,7 +68,7 @@ public class AuthenticationFilter implements WebFilter {
         // Thêm thông tin vào header
         ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                 .header("X-User-Id", userId.toString())
-                .header("X-User-Role", role)
+                .header("X-Role", role)
                 .build();
 
         return chain.filter(exchange.mutate().request(mutatedRequest).build());

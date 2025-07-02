@@ -25,7 +25,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/register",
                                 "/auth/login",
-                                "/auth/**"
+                                "/auth/**",
+                                "/error"
                         ).permitAll()
                         .anyRequest().authenticated()
                 );

@@ -25,6 +25,12 @@ spring:
             - Path=/api/users/**
           filters:
             - RewritePath=/api/users/(?<remaining>.*),/users/${remaining}
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/topic/**
+          filters:
+            - RewritePath=/api/topic/(?<remaining>.*),/topic/${remaining}
 
         - id: lesson-service-user
           uri: lb://lesson-service

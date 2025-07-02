@@ -114,7 +114,12 @@
             <artifactId>amqp-client</artifactId>
             <version>1.0.0</version>
         </dependency>
-
+        <!--        common thư viện -->
+        <dependency>
+            <groupId>com.sakurahino</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0.0</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
