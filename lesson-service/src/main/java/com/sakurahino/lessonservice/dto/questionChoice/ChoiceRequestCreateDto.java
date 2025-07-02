@@ -17,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Builder
 public class ChoiceRequestCreateDto {
 
-    private Integer examQuestionId;
     private Integer lessonQuestionId;
 
     private String textForeign;

@@ -1,4 +1,4 @@
-package com.example.examservice.dto;
+package com.example.examservice.dto.choiceExam;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,8 +14,6 @@ import org.hibernate.type.SqlTypes;
 public class QuestionChoiceResponseDto {
 
     private Integer id;
-
-    private Integer lessonQuestionId;
 
     private Integer examQuestionId;
 

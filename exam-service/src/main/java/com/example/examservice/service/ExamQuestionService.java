@@ -1,6 +1,6 @@
 package com.example.examservice.service;
-import com.example.examservice.dto.ExamQuestionRequestDto;
-import com.example.examservice.dto.ExamQuestionResponseDto;
+import com.example.examservice.dto.exam.ExamQuestionRequestDto;
+import com.example.examservice.dto.exam.ExamQuestionResponseDto;
 
 import java.util.List;
 

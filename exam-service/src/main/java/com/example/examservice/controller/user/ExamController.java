@@ -1,10 +1,9 @@
 package com.example.examservice.controller.user;
 
-import com.example.examservice.dto.ExamQuestionResponseDto;
+import com.example.examservice.dto.exam.ExamQuestionResponseDto;
 import com.example.examservice.service.ExamQuestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;

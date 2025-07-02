@@ -1,4 +1,4 @@
-package com.sakurahino.lessonservice.entity;
+package com.example.examservice.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,10 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
@@ -27,9 +24,6 @@ import java.util.Map;
 @Getter
 @Setter
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 @Table(name = "question_choices")
 public class QuestionChoice {
     @Id
@@ -39,8 +33,8 @@ public class QuestionChoice {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "lesson_question_id")
-    private LessonQuestion lessonQuestion;
+    @JoinColumn(name = "exam_question_id")
+    private ExamQuestion examQuestion;
 
     @NotNull
     @Lob

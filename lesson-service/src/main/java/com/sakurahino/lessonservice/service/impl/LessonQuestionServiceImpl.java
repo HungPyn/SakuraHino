@@ -32,6 +32,7 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
     @Override
     public List<LessonQuestionResponseDto> getAllQuestionByLessonId(Integer lessonId) {
         List<LessonQuestion> lessonQuestions = lessonQuestionRepository.findByLesson_Id(lessonId);
+
         List<LessonQuestionResponseDto> responseDtos = lessonQuestions.stream().map(lessonQuestion -> {
             LessonQuestionResponseDto responseDto = LessonQuestionResponseDto.builder()
                     .id(lessonQuestion.getId())
@@ -90,6 +91,10 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
         lessonQuestion.setOptionsLanguageCode(lessonQuestionRequestDto.getOptionsLanguageCode());
         lessonQuestion.setAudioUrlQuestions(lessonQuestionRequestDto.getAudioUrlQuestions());
 
+        if ((lessonQuestion.getAudioUrlQuestions() == null)
+                && lessonQuestion.getQuestionType() == QuestionType.AUDIO_CHOICE) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm âm thanh cho câu hỏi dạng nghe");
+        }
         //lưu câu hỏi
         lessonQuestionRepository.save(lessonQuestion);
 
@@ -103,11 +108,14 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
                     map(questionChoiceRequestDto -> {
                                 if ((questionChoiceRequestDto.getImageFile() == null || questionChoiceRequestDto.getImageFile().isEmpty())
                                         && lessonQuestion.getQuestionType() == QuestionType.MULTIPLE_CHOICE_VOCAB_IMAGE) {
-                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm file ảnh cho câu hỏi dạng hình ảnh");
+                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm đủ file ảnh cho các lựa chọn dạng hình ảnh");
+                                }
+                                if ((questionChoiceRequestDto.getTextBlock() == null)
+                                        && lessonQuestion.getQuestionType() == QuestionType.WORD_ORDER) {
+                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm đáp án cho câu dạng xắp xếp");
                                 }
 
                                 QuestionChoiceRequestDto choice = new QuestionChoiceRequestDto();
-                                choice.setExamQuestionId(questionChoiceRequestDto.getExamQuestionId());
                                 choice.setTextForeign(questionChoiceRequestDto.getTextForeign());
                                 choice.setTextRomaji(questionChoiceRequestDto.getTextRomaji());
                                 choice.setImageFile(questionChoiceRequestDto.getImageFile());
@@ -146,6 +154,11 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
         lessonQuestion.setOptionsLanguageCode(lessonQuestionRequestDto.getOptionsLanguageCode());
         lessonQuestion.setAudioUrlQuestions(lessonQuestionRequestDto.getAudioUrlQuestions());
 
+
+        if ((lessonQuestion.getAudioUrlQuestions() == null)
+                && lessonQuestion.getQuestionType() == QuestionType.AUDIO_CHOICE) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm âm thanh cho câu hỏi dạng nghe");
+        }
         //lưu câu hỏi
         lessonQuestionRepository.save(lessonQuestion);
 
@@ -162,7 +175,6 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
 
                                 QuestionChoiceRequestDto choice = new QuestionChoiceRequestDto();
                                 choice.setId(questionChoiceRequestDto.getId());
-                                choice.setExamQuestionId(questionChoiceRequestDto.getExamQuestionId());
                                 choice.setTextForeign(questionChoiceRequestDto.getTextForeign());
                                 choice.setTextRomaji(questionChoiceRequestDto.getTextRomaji());
                                 choice.setImageFile(questionChoiceRequestDto.getImageFile());

@@ -1,6 +1,6 @@
-package com.example.examservice.dto;
+package com.example.examservice.dto.exam;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.example.examservice.dto.choiceExam.QuestionChoiceRequestDto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

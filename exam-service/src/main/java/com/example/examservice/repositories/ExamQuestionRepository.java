@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface ExamQuestionRepository extends JpaRepository<ExamQuestion, Integer> {
-    List<ExamQuestion> findExamQuestionsByToppicId (Integer toppicId);
+    List<ExamQuestion> findExamQuestionsByToppicId(Integer toppicId);
 
 }

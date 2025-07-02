@@ -1,4 +1,4 @@
-package com.sakurahino.lessonservice.dto.questionChoice;
+package com.example.examservice.dto.choiceExam;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,10 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class QuestionChoiceRequestDto {
-
-
-    private Integer id;    //bỏ id ở fontend nếu là tạo mới
+public class ChoiceRequestCreateDto {
+    private Integer examQuestionId;
 
     private String textForeign;
 

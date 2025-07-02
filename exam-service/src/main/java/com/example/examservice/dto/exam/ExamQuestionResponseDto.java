@@ -1,5 +1,6 @@
-package com.example.examservice.dto;
+package com.example.examservice.dto.exam;
 
+import com.example.examservice.dto.choiceExam.QuestionChoiceResponseDto;
 import com.example.examservice.entity.enums.QuestionType;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 

@@ -1,4 +1,4 @@
-package com.example.examservice.dto;
+package com.example.examservice.dto.choiceExam;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

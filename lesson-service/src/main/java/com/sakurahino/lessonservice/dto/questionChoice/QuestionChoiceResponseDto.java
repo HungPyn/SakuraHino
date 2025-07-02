@@ -17,7 +17,6 @@ public class QuestionChoiceResponseDto {
 
     private Integer lessonQuestionId;
 
-    private Integer examQuestionId;
 
     private String textForeign;
 

@@ -1,14 +1,13 @@
-package com.sakurahino.lessonservice.repository;
+package com.example.examservice.repositories;
 
-import com.sakurahino.lessonservice.entity.QuestionChoice;
+import com.example.examservice.entity.QuestionChoice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+
 @Repository
 public interface QuestionChoiceRepository extends JpaRepository<QuestionChoice, Integer> {
-    List<QuestionChoice> findByLessonQuestion_Id(Integer idLessonQuestion);
-
-
+List<QuestionChoice> findQuestionChoicesByExamQuestionId(Integer idExamQuestion);
 }

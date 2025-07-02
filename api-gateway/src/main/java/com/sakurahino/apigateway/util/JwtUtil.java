@@ -38,8 +38,6 @@ public class JwtUtil {
         Object id = getAllClaims(token).get("userId");
         return id != null ? id.toString() : null;
     }
-
-
     // Trích xuất role từ claim "role"
     public String getRole(String token) {
         Object role = getAllClaims(token).get("role");

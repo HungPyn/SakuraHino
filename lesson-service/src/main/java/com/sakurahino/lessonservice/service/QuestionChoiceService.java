@@ -9,15 +9,11 @@ import java.util.List;
 
 public interface QuestionChoiceService {
     List<QuestionChoiceResponseDto> getAllChoiceByIdLessonQuestion(Integer lessonQuestionId);
-    List<QuestionChoiceResponseDto> getAllChoiceByExamId(Integer examId);
-    boolean deleteChoiceByExamId (Integer examId);
 
     void deleteChoice(Integer id);
 
-
     boolean saveChoices(List<QuestionChoiceRequestDto> questionChoiceRequestDto, Integer idQuestion);
 
-    boolean saveChoicesExam(List<QuestionChoiceRequestDto> questionChoiceRequestDto, Integer idQuestionExam);
 
     QuestionChoiceResponseDto create(ChoiceRequestCreateDto choiceRequestCreateDto, MultipartFile avatarChoice);
 
