@@ -8,13 +8,21 @@
       <ul>
         <!-- General Overview Category -->
         <li class="nav-item">
-          <router-link to="/admin/dashboard" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/dashboard"
+            class="nav-link"
+            active-class="active"
+          >
             <font-awesome-icon icon="fas fa-tachometer-alt" class="nav-icon" />
             Tổng quan
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/statistics" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/statistics"
+            class="nav-link"
+            active-class="active"
+          >
             <font-awesome-icon icon="fas fa-chart-bar" class="nav-icon" />
             Thống kê
           </router-link>
@@ -23,25 +31,41 @@
         <!-- Content Management Section -->
         <li class="nav-item category-title">Quản lý nội dung</li>
         <li class="nav-item">
-          <router-link to="/admin/vocabulary" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/vocabulary"
+            class="nav-link"
+            active-class="active"
+          >
             <font-awesome-icon icon="fas fa-language" class="nav-icon" />
             Từ vựng & Flashcard
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/grammar" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/grammar"
+            class="nav-link"
+            active-class="active"
+          >
             <font-awesome-icon icon="fas fa-pencil-alt" class="nav-icon" />
             Bài giảng Ngữ pháp
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/exercises" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/exercises"
+            class="nav-link"
+            active-class="active"
+          >
             <font-awesome-icon icon="fas fa-dumbbell" class="nav-icon" />
             Bài tập & Luyện tập
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/listening" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/listening"
+            class="nav-link"
+            active-class="active"
+          >
             <font-awesome-icon icon="fas fa-headphones-alt" class="nav-icon" />
             Audio & Luyện nghe
           </router-link>
@@ -53,9 +77,23 @@
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/manga-dialogue" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/manga-dialogue"
+            class="nav-link"
+            active-class="active"
+          >
             <font-awesome-icon icon="fas fa-comments" class="nav-icon" />
             Giải trí
+          </router-link>
+        </li>
+        <li class="nav-item">
+          <router-link
+            to="/admin/vocabulary-difficult"
+            class="nav-link"
+            active-class="active"
+          >
+            <font-awesome-icon icon="fas fa-star" class="nav-icon" />
+            Từ vựng khó nhớ
           </router-link>
         </li>
 
@@ -68,7 +106,11 @@
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/packages" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/packages"
+            class="nav-link"
+            active-class="active"
+          >
             <font-awesome-icon icon="fas fa-box-open" class="nav-icon" />
             Quản lý Gói & Đăng ký
           </router-link>
@@ -77,19 +119,37 @@
         <!-- Reports & Statistics Section -->
         <li class="nav-item category-title">Báo cáo & Thống kê</li>
         <li class="nav-item">
-            <router-link to="/admin/reports/general" class="nav-link" active-class="active">
-                <font-awesome-icon icon="fas fa-chart-line" class="nav-icon" />
-                Báo cáo tổng quan
-            </router-link>
+          <router-link
+            to="/admin/reports/general"
+            class="nav-link"
+            active-class="active"
+          >
+            <font-awesome-icon icon="fas fa-chart-line" class="nav-icon" />
+            Báo cáo tổng quan
+          </router-link>
         </li>
 
         <!-- System Settings Section -->
         <li class="nav-item category-title">Cài đặt hệ thống</li>
         <li class="nav-item">
-            <router-link to="/admin/settings/general" class="nav-link" active-class="active">
-                <font-awesome-icon icon="fas fa-cog" class="nav-icon" />
-                Cài đặt chung
-            </router-link>
+          <router-link
+            to="/admin/settings/general"
+            class="nav-link"
+            active-class="active"
+          >
+            <font-awesome-icon icon="fas fa-cog" class="nav-icon" />
+            Cài đặt chung
+          </router-link>
+        </li>
+        <li class="nav-item">
+          <router-link
+            to="/admin/reminders"
+            class="nav-link"
+            active-class="active"
+          >
+            <font-awesome-icon icon="fas fa-bell" class="nav-icon" />
+            Quản lý Nhắc nhở
+          </router-link>
         </li>
       </ul>
     </nav>
@@ -97,10 +157,10 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: 'Sidebar',
+  name: "Sidebar",
 });
 </script>
 
@@ -130,7 +190,9 @@ export default defineComponent({
   height: 45px;
   width: auto;
   margin-right: 15px;
-  border-radius: var(--border-radius-tag); /* Small radius for logo background */
+  border-radius: var(
+    --border-radius-tag
+  ); /* Small radius for logo background */
 }
 
 .app-name {
