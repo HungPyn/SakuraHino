@@ -1,5 +1,7 @@
 package com.sakurahino.lessonservice.service.impl;
 
+import com.sakurahino.common.ex.ExceptionCode;
+import com.sakurahino.common.ex.ResourceException;
 import com.sakurahino.lessonservice.clients.ToppicServiceClient;
 import com.sakurahino.lessonservice.dto.lesson.LessonRequestDto;
 import com.sakurahino.lessonservice.dto.lesson.LessonResponseDto;
@@ -66,7 +68,7 @@ public class LessonServiceImpl implements LessonService {
     public LessonResponseDto getlesonById(Integer idLesson) {
         Optional<Lesson> lessonOptional = lessonRepository.findById(idLesson);
         if (lessonOptional.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy lesson");
+            throw new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Không tìm thấy lesson");
         }
         //cần bổ sung isComplete gọi đến service result để lấy kết quả.
 
@@ -83,7 +85,7 @@ public class LessonServiceImpl implements LessonService {
     public void delete(Integer idLesson) {
         Optional<Lesson> lesson = lessonRepository.findById(idLesson);
         if (lesson.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy lesson");
+            throw new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Không tìm thấy lesson");
         }
         lessonRepository.deleteById(idLesson);
     }
@@ -92,12 +94,12 @@ public class LessonServiceImpl implements LessonService {
     public LessonResponseDto update(Integer id,LessonRequestDto lessonRequestDto) {
         boolean isToppic = toppicServiceClient.isToppic(lessonRequestDto.getTopicId());
         if (isToppic == false) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Toppic không tồn tại");
+            throw new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Toppic không tồn tại");
         }
 
         Optional<Lesson> lessonOptional = lessonRepository.findById(id);
         if (lessonOptional.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson không tồn tại");
+            throw new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Lesson không tồn tại");
         }
         Lesson lesson = Lesson.builder()
                 .id(lessonOptional.get().getId())
@@ -121,7 +123,7 @@ public class LessonServiceImpl implements LessonService {
     public LessonResponseDto create(LessonRequestDto lessonRequestDto) {
         boolean isToppic = toppicServiceClient.isToppic(lessonRequestDto.getTopicId());
         if (isToppic == false) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Toppic không tồn tại");
+            throw new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Toppic không tồn tại");
         }
         Lesson lesson = Lesson.builder()
                 .lessonName(lessonRequestDto.getLessonName())

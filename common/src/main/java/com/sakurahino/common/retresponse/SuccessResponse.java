@@ -10,4 +10,5 @@ public class SuccessResponse extends ApiResponse{
     public SuccessResponse(Object data) {
         super(HttpStatus.OK, data);
     }
+
 }

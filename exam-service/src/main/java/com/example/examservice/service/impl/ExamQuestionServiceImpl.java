@@ -10,6 +10,8 @@ import com.example.examservice.repositories.ExamQuestionRepository;
 import com.example.examservice.repositories.QuestionChoiceRepository;
 import com.example.examservice.service.ExamQuestionService;
 import com.example.examservice.service.QuestionChoiceService;
+import com.sakurahino.common.ex.ExceptionCode;
+import com.sakurahino.common.ex.ResourceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -61,7 +63,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
     public ExamQuestionResponseDto getExamQuestionById(Integer id) {
         Optional<ExamQuestion> questionOptional = examQuestionRepository.findById(id);
         if(questionOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"exam không tồn tại");
+            throw new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(),"exam không tồn tại");
         }
         ExamQuestion examQuestion = questionOptional.get();
 
@@ -85,7 +87,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
     public void delete(Integer id) {
         Optional<ExamQuestion> questionOptional = examQuestionRepository.findById(id);
         if(questionOptional.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"exam không tồn tại");
+            throw new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(),"exam không tồn tại");
         }
         examQuestionRepository.deleteById(questionOptional.get().getId());
     }
@@ -110,7 +112,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
 
         if ((examQuestion.getAudioUrlQuestions() == null)
                 && examQuestion.getQuestionType() == QuestionType.AUDIO_CHOICE) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm âm thanh cho câu hỏi dạng nghe");
+            throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "Chưa thêm âm thanh cho câu hỏi dạng nghe");
         }
         //lưu câu hỏi
         examQuestionRepository.save(examQuestion);
@@ -125,11 +127,11 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
                     map(questionChoiceRequestDto -> {
                                 if ((questionChoiceRequestDto.getImageFile() == null || questionChoiceRequestDto.getImageFile().isEmpty())
                                         && examQuestion.getQuestionType() == QuestionType.MULTIPLE_CHOICE_VOCAB_IMAGE) {
-                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm đủ file ảnh cho các lựa chọn dạng hình ảnh");
+                                    throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "Chưa thêm đủ file ảnh cho các lựa chọn dạng hình ảnh");
                                 }
                                 if ((questionChoiceRequestDto.getTextBlock() == null)
                                         && examQuestion.getQuestionType() == QuestionType.WORD_ORDER) {
-                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm đáp án cho câu dạng xắp xếp");
+                                    throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "Chưa thêm đáp án cho câu dạng xắp xếp");
                                 }
 
                                 QuestionChoiceRequestDto choice = new QuestionChoiceRequestDto();
@@ -153,7 +155,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
     public void update(Integer id, ExamQuestionRequestDto examQuestionRequestDto) {
 
         ExamQuestion examQuestion = examQuestionRepository.findById(id).orElseThrow(()
-                -> new ResponseStatusException(HttpStatus.NOT_FOUND, "exam không tồn tại"));
+                -> new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "exam không tồn tại"));
 
         //sau bổ sung kiểm tra toppic tồn tại không trươcs khi thêm--------------------------------------
             // tìm toppic xem có tồn tại exam không
@@ -169,7 +171,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
 
         if ((examQuestion.getAudioUrlQuestions() == null)
                 && examQuestion.getQuestionType() == QuestionType.AUDIO_CHOICE) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm âm thanh cho câu hỏi dạng nghe");
+            throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "Chưa thêm âm thanh cho câu hỏi dạng nghe");
         }
         //lưu câu hỏi
         examQuestionRepository.save(examQuestion);
@@ -182,7 +184,7 @@ public class ExamQuestionServiceImpl implements ExamQuestionService {
             choiceDtos = examQuestionRequestDto.getQuestionChoices().stream().
                     map(questionChoiceRequestDto -> {
                                 if (questionChoiceRequestDto.getId() == null) {
-                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "id choice đang trống không thể update");
+                                    throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "id choice đang trống không thể update");
                                 }
 
                                 QuestionChoiceRequestDto choice = new QuestionChoiceRequestDto();

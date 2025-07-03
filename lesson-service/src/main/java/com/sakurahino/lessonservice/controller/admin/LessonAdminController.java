@@ -1,5 +1,6 @@
 package com.sakurahino.lessonservice.controller.admin;
 
+import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.lessonservice.dto.lesson.LessonRequestDto;
 import com.sakurahino.lessonservice.dto.lesson.LessonResponseDto;
 import com.sakurahino.lessonservice.service.LessonService;
@@ -22,23 +23,23 @@ public class LessonAdminController {
     private final LessonService lessonService;
 
     @PostMapping("/create")
-    public ResponseEntity<LessonResponseDto> createLesson(@Valid @RequestBody LessonRequestDto lessonRequestDto){
+    public SuccessResponse createLesson(@Valid @RequestBody LessonRequestDto lessonRequestDto){
         LessonResponseDto lessonResponseDto = lessonService.create(lessonRequestDto);
-        return ResponseEntity.ok(lessonResponseDto);
+        return new SuccessResponse(lessonResponseDto);
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<LessonResponseDto> updateLesson(
+    public SuccessResponse updateLesson(
             @PathVariable("id") Integer id,
             @Valid @RequestBody LessonRequestDto lessonRequestDto){
         LessonResponseDto lessonResponseDto = lessonService.update(id,lessonRequestDto);
-        return ResponseEntity.ok(lessonResponseDto);
+        return new SuccessResponse(lessonResponseDto);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> delete (@PathVariable("id") Integer id){
+    public SuccessResponse delete (@PathVariable("id") Integer id){
         lessonService.delete(id);
-        return ResponseEntity.ok("Xóa thành công");
+        return new SuccessResponse("Xóa thành công");
     }
 
 }

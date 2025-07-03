@@ -25,8 +25,8 @@
         <module name="common" />
         <module name="topic-service" />
         <module name="api-gateway" />
-        <module name="result-service" />
         <module name="upload-service" />
+        <module name="result-service" />
         <module name="amqp-client" />
         <module name="exam-service" />
       </profile>

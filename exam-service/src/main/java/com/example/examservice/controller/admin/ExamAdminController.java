@@ -4,6 +4,7 @@ import com.example.examservice.dto.exam.ExamQuestionRequestDto;
 import com.example.examservice.service.ExamQuestionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sakurahino.common.retresponse.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,14 +30,14 @@ public class ExamAdminController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deletebyId(@PathVariable("id") Integer id){
+    public SuccessResponse deletebyId(@PathVariable("id") Integer id){
         examQuestionService.delete(id);
-        return ResponseEntity.ok("Xóa exam thành công");
+        return new SuccessResponse("Xóa exam thành công");
     }
 
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> createQuestion(@RequestPart("examQuestion") String lessonQuestionStr,
+    public SuccessResponse createQuestion(@RequestPart("examQuestion") String lessonQuestionStr,
                                                  @RequestPart("choiceImages") List<MultipartFile> choiceImages
     ) {
         ExamQuestionRequestDto requestDto;
@@ -54,12 +55,12 @@ public class ExamAdminController {
 
         examQuestionService.create(requestDto);
 
-        return ResponseEntity.ok("Thêm exam thành công <3");
+        return new SuccessResponse("Thêm exam thành công <3");
 
     }
 
     @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> updateQuestion(
+    public SuccessResponse updateQuestion(
             @PathVariable("id") Integer id, @RequestPart("examQuestion") String lessonQuestionStr,
             @RequestPart("choiceImages") List<MultipartFile> choiceImages
     ) {
@@ -78,7 +79,7 @@ public class ExamAdminController {
 
         examQuestionService.update(id, requestDto);
 
-        return ResponseEntity.ok("Cập nhật exam thành công <3");
+        return new SuccessResponse("Cập nhật exam thành công <3");
     }
 
 }

@@ -1,6 +1,8 @@
 package com.sakurahino.lessonservice.service.impl;
 
 
+import com.sakurahino.common.ex.ExceptionCode;
+import com.sakurahino.common.ex.ResourceException;
 import com.sakurahino.lessonservice.dto.LessonQuestionResponse.LessonQuestionRequestDto;
 import com.sakurahino.lessonservice.dto.LessonQuestionResponse.LessonQuestionResponseDto;
 import com.sakurahino.lessonservice.dto.questionChoice.QuestionChoiceRequestDto;
@@ -57,7 +59,7 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
     public LessonQuestionResponseDto getQuestionById(Integer id) {
         Optional<LessonQuestion> questionOptional = lessonQuestionRepository.findById(id);
         if (questionOptional.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Question không tồn tại");
+            throw new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Question không tồn tại");
         }
         List<QuestionChoiceResponseDto> choiceResponseDtos = questionChoiceService.getAllChoiceByIdLessonQuestion(questionOptional.get().getId());
 
@@ -80,7 +82,7 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
     @Transactional
     public void create(LessonQuestionRequestDto lessonQuestionRequestDto) {
         Lesson lesson = lessonRepository.findById(lessonQuestionRequestDto.getLessonId()).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson không tồn tại"));
+                () -> new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Lesson không tồn tại"));
         LessonQuestion lessonQuestion = new LessonQuestion();
 
         lessonQuestion.setLesson(lesson);
@@ -93,7 +95,7 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
 
         if ((lessonQuestion.getAudioUrlQuestions() == null)
                 && lessonQuestion.getQuestionType() == QuestionType.AUDIO_CHOICE) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm âm thanh cho câu hỏi dạng nghe");
+            throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "Chưa thêm âm thanh cho câu hỏi dạng nghe");
         }
         //lưu câu hỏi
         lessonQuestionRepository.save(lessonQuestion);
@@ -108,11 +110,11 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
                     map(questionChoiceRequestDto -> {
                                 if ((questionChoiceRequestDto.getImageFile() == null || questionChoiceRequestDto.getImageFile().isEmpty())
                                         && lessonQuestion.getQuestionType() == QuestionType.MULTIPLE_CHOICE_VOCAB_IMAGE) {
-                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm đủ file ảnh cho các lựa chọn dạng hình ảnh");
+                                    throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "Chưa thêm đủ file ảnh cho các lựa chọn dạng hình ảnh");
                                 }
                                 if ((questionChoiceRequestDto.getTextBlock() == null)
                                         && lessonQuestion.getQuestionType() == QuestionType.WORD_ORDER) {
-                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm đáp án cho câu dạng xắp xếp");
+                                    throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "Chưa thêm đáp án cho câu dạng xắp xếp");
                                 }
 
                                 QuestionChoiceRequestDto choice = new QuestionChoiceRequestDto();
@@ -133,7 +135,7 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
     @Override
     public void delete(Integer id) {
         lessonQuestionRepository.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson không tồn tại"));
+                new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Lesson không tồn tại"));
         lessonQuestionRepository.deleteById(id);
     }
 
@@ -141,10 +143,10 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
     @Transactional
     public void update(Integer id, LessonQuestionRequestDto lessonQuestionRequestDto) {
         LessonQuestion lessonQuestion = lessonQuestionRepository.findById(id).orElseThrow(()
-                -> new ResponseStatusException(HttpStatus.NOT_FOUND, "question không tồn tại"));
+                -> new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "question không tồn tại"));
 
         Lesson lesson = lessonRepository.findById(lessonQuestionRequestDto.getLessonId()).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson không tồn tại"));
+                () -> new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Lesson không tồn tại"));
 
         lessonQuestion.setLesson(lesson);
         lessonQuestion.setQuestionType(QuestionType.valueOf(lessonQuestionRequestDto.getQuestionType()));
@@ -157,7 +159,7 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
 
         if ((lessonQuestion.getAudioUrlQuestions() == null)
                 && lessonQuestion.getQuestionType() == QuestionType.AUDIO_CHOICE) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa thêm âm thanh cho câu hỏi dạng nghe");
+            throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "Chưa thêm âm thanh cho câu hỏi dạng nghe");
         }
         //lưu câu hỏi
         lessonQuestionRepository.save(lessonQuestion);
@@ -170,7 +172,7 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
             choiceDtos = lessonQuestionRequestDto.getQuestionChoices().stream().
                     map(questionChoiceRequestDto -> {
                                 if (questionChoiceRequestDto.getId() == null) {
-                                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "id choice đang trống không thể update");
+                                    throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "id choice đang trống không thể update");
                                 }
 
                                 QuestionChoiceRequestDto choice = new QuestionChoiceRequestDto();

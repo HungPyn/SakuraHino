@@ -40,6 +40,12 @@
         </dependencies>
     </dependencyManagement>
     <dependencies>
+        <!-- Common thư viện nội bộ -->
+        <dependency>
+            <groupId>com.sakurahino</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 
         <dependency>
             <groupId>com.google.cloud</groupId>

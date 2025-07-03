@@ -1,5 +1,6 @@
 package com.sakurahino.lessonservice.controller.user;
 
+import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.lessonservice.dto.lesson.LessonResponseDto;
 import com.sakurahino.lessonservice.service.LessonService;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +21,13 @@ import java.util.List;
 public class LessonController {
     private final LessonService lessonService;
     @GetMapping("/{idToppic}")
-    public List<LessonResponseDto> getLessionsByIdToppic(@PathVariable("idToppic") Integer idToppic){
-        return lessonService.getLessonsByIdToppic(idToppic);
+    public SuccessResponse getLessionsByIdToppic(@PathVariable("idToppic") Integer idToppic){
+        return new SuccessResponse(lessonService.getLessonsByIdToppic(idToppic)) ;
     }
 
     @GetMapping("/getLesson/{id}")
-    public ResponseEntity<LessonResponseDto> getLessonByid(@PathVariable("id") Integer id){
+    public SuccessResponse  getLessonByid(@PathVariable("id") Integer id){
         LessonResponseDto responseDto = lessonService.getlesonById(id);
-        return ResponseEntity.ok(responseDto);
+        return new SuccessResponse(responseDto);
     }
 }
