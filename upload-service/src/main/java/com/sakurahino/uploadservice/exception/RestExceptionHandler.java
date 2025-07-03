@@ -1,10 +1,8 @@
-package com.sakurahino.topicservice.retresponse;
+package com.sakurahino.uploadservice.exception;
 
 import com.sakurahino.common.ex.ResourceException;
 import com.sakurahino.common.retresponse.ApiResponse;
 import com.sakurahino.common.retresponse.BaseExceptionHandler;
-import com.sakurahino.common.retresponse.ErrorResponse;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -16,13 +14,10 @@ public class RestExceptionHandler extends BaseExceptionHandler {
         return super.handleResourceException(e);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ErrorResponse handleValidation(MethodArgumentNotValidException e) {
-        return super.handleValidationError(e);
-    }
-
     @ExceptionHandler(Exception.class)
-    public ApiResponse handleOther(Exception e) {
+    public ApiResponse handleAll(Exception e) {
         return super.handleAllException(e);
     }
 }
+
+

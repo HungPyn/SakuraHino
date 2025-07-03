@@ -11,7 +11,7 @@ import java.time.Instant;
 @NoArgsConstructor
 public class TopicResponse {
 
-    private Integer id;
+    private String id;
 
     private String name;
 

@@ -15,9 +15,6 @@ public class TopicRequest {
     @NotBlank(message = "Tên chủ đề không được trống")
     private String name;
 
-    @NotBlank(message = "Ảnh chủ đề không được trống")
-    private String urlImage;
-
-    @NotNull
+    @NotBlank(message = "Cấp độ không được trống")
     private Integer levelId;
 }

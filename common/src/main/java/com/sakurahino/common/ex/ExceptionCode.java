@@ -12,8 +12,17 @@ public enum ExceptionCode {
     MAT_KHAU_KHONG_DUNG(1003, "Mật khẩu không đúng"),
     MAT_KHAU_COMFIRM_SAI(1006,"Mật khẩu xác nhận không đúng"),
     MA_XAC_NHAN_KHONG_HOP_LE(1004, "Mã xác nhận không hợp lệ"),
-    MA_XAC_NHAN_HET_HAN(1005, "Mã xác nhận đã hết hạn");
+    MA_XAC_NHAN_HET_HAN(1005, "Mã xác nhận đã hết hạn"),
 
+    // dùng ỏ topic service
+    CHU_DE_KHONG_TON_TAI(2001, "Chủ đề không tồn tại"),
+    LEVEL_KHONG_TON_TAI(2002,"Cấp độ không tôn tại"),
+
+
+    //Upload-serivce
+    FILE_NOT_NULL(3001,"Ảnh không được trống"),
+    FILE_MAX(3002,"Ảnh vượt quá 5MB"),
+    FILE_NOT_SUPPORT(3004,"File ảnh là jpg,png");
     private final int status;
     private final String error;
 
