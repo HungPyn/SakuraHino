@@ -78,7 +78,7 @@
         </li>
         <li class="nav-item">
           <router-link
-            to="/admin/manga-dialogue"
+            to="/admin/entertainment"
             class="nav-link"
             active-class="active"
           >
