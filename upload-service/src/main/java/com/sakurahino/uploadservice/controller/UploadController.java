@@ -1,5 +1,7 @@
 package com.sakurahino.uploadservice.controller;
 
+import com.sakurahino.common.ex.AppException;
+import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.ex.ResourceException;
 import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.uploadservice.service.UploadService;
@@ -58,17 +60,17 @@ public class UploadController {
 
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("File is empty");
+            throw new AppException(ExceptionCode.FILE_NOT_NULL);
         }
 
         if (!ALLOWED_CONTENT_TYPES.contains(file.getContentType())) {
-            throw new IllegalArgumentException("Unsupported file type: " + file.getContentType());
+            throw new AppException(ExceptionCode.FILE_NOT_SUPPORT);
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("File size exceeds 5MB limit");
+            throw new AppException(ExceptionCode.FILE_MAX);
         }
     }
 
-    private record UploadResponse(String url) {}
+    private record UploadResponse(String urlImage) {}
 }

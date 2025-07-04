@@ -1,4 +1,4 @@
-package com.sakurahino.uploadservice.retresponse;
+package com.sakurahino.topicservice.ex;
 
 import com.sakurahino.common.ex.ResourceException;
 import com.sakurahino.common.retresponse.ApiResponse;
@@ -22,8 +22,7 @@ public class RestExceptionHandler extends BaseExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ApiResponse handleAll(Exception e) {
+    public ApiResponse handleOther(Exception e) {
         return super.handleAllException(e);
     }
 }
-
