@@ -2,6 +2,7 @@ package com.sakurahino.lessonservice.controller.admin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.lessonservice.dto.LessonQuestionResponse.LessonQuestionRequestDto;
 import com.sakurahino.lessonservice.service.LessonQuestionService;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,8 @@ public class LessonQuestionAdminController {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> createQuestion(@RequestPart("lessonQuestion") String lessonQuestionStr,
-                                                 @RequestPart("choiceImages") List<MultipartFile> choiceImages
+    public SuccessResponse createQuestion(@RequestPart("lessonQuestion") String lessonQuestionStr,
+                                          @RequestPart("choiceImages") List<MultipartFile> choiceImages
     ) {
         LessonQuestionRequestDto requestDto;
         try {
@@ -46,12 +47,12 @@ public class LessonQuestionAdminController {
 
         lessonQuestionService.create(requestDto);
 
-        return ResponseEntity.ok("Thêm quesstion thành công <3");
+        return new SuccessResponse("Thêm question thành công <3");
 
     }
 
     @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> updateQuestion(
+    public SuccessResponse updateQuestion(
             @PathVariable("id") Integer id, @RequestPart("lessonQuestion") String lessonQuestionStr,
             @RequestPart("choiceImages") List<MultipartFile> choiceImages
     ) {
@@ -70,13 +71,15 @@ public class LessonQuestionAdminController {
 
         lessonQuestionService.update(id, requestDto);
 
-        return ResponseEntity.ok("Cập nhật quesstion thành công <3");
+
+        return new SuccessResponse("Cập nhật question thành công <3");
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteQuestion(@PathVariable("id") Integer id) {
+    public SuccessResponse deleteQuestion(@PathVariable("id") Integer id) {
         lessonQuestionService.delete(id);
-        return ResponseEntity.ok("Xóa question thành công");
+
+        return new SuccessResponse("Xóa thành công");
     }
 
 }

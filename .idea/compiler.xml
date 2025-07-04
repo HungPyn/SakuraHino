@@ -33,6 +33,9 @@
         <module name="common" />
         <module name="lesson-service" />
         <module name="api-gateway" />
+        <module name="topic-service" />
+        <module name="api-gateway" />
+        <module name="amqp-client" />
         <module name="result-service" />
         <module name="upload-service" />
         <module name="user-service" />

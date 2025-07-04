@@ -2,6 +2,7 @@ package com.example.examservice.controller.user;
 
 import com.example.examservice.dto.exam.ExamQuestionResponseDto;
 import com.example.examservice.service.ExamQuestionService;
+import com.sakurahino.common.retresponse.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,14 +18,14 @@ import java.util.List;
 public class ExamController {
     private final ExamQuestionService examQuestionService;
     @GetMapping("/{id}")
-    public List<ExamQuestionResponseDto> getExamsByToppicId(@PathVariable("id")Integer toppicId){
-        return examQuestionService.getAllExamQuestionByToppicId(toppicId);
+    public SuccessResponse getExamsByToppicId(@PathVariable("id")Integer toppicId){
+        return new SuccessResponse(examQuestionService.getAllExamQuestionByToppicId(toppicId));
     }
 
     @GetMapping("/getexam/{id}")
-    public ResponseEntity<ExamQuestionResponseDto> getExamById(@PathVariable("id")Integer id){
+    public SuccessResponse getExamById(@PathVariable("id")Integer id){
          ExamQuestionResponseDto responseDto = examQuestionService.getExamQuestionById(id);
-        return ResponseEntity.ok(responseDto);
+        return new SuccessResponse(responseDto);
     }
 
 }

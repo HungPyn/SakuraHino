@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -20,24 +21,23 @@ import java.time.Instant;
 public class ResultRequestDto {
 
     @NotNull(message = "Không được để trống id user")
-    private Integer userId;
+    private UUID userId;
 
     private Integer toppicId;
 
     private Integer lessonId;
 
-    @NotNull
+    @NotNull(message = "Không được để trống thời gian bắt đầu")
     private Instant startDatetime;
 
     @NotNull(message = "Không được để trống thời gian bắt đầu")
-    @Column(name = "end_datetime", nullable = false)
     private Instant endDatetime;
 
     @NotNull(message = "Không được để trống thời gian làm bài")
-    @Column(name = "study_time")
+
     private Integer studyTime;
     @NotNull(message = "Không được để trống câu đúng")
-    @Column(name = "correct_answers")
+
     private Integer correctAnswers;
 
     @NotNull(message = "Không được để trống tổng số câu")
@@ -46,5 +46,4 @@ public class ResultRequestDto {
     @NotNull(message = "Không được để trống phần trăm")
     private BigDecimal scorePercent;
 
-    private Boolean isComplete = false;
 }

@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +16,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -29,9 +31,9 @@ public class Result {
     @Column(name = "result_id", nullable = false)
     private Integer id;
 
-    @NotNull
+    @NotNull(message = "Không được để trống userid")
     @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    private UUID userId;
 
     @Column(name = "toppic_id")
     private Integer toppicId;

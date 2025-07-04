@@ -12,7 +12,7 @@ public class FeignClientInterceptor implements RequestInterceptor {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String HEADER_USER_ID = "X-User-Id"; // Thêm hằng số cho X-User-Id
-    private static final String HEADER_USER_ROLE = "X-User-Role"; // Thêm hằng số cho X-User-Role
+    private static final String HEADER_USER_ROLE = "X-Role"; // Thêm hằng số cho X-User-Role
 
     @Override
     public void apply(RequestTemplate template) {

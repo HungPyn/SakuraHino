@@ -60,6 +60,22 @@ spring:
             - Path=/admin/exam/**
           filters:
             - RewritePath=/admin/exam/(?<remaining>.*),/admin/exam/${remaining}
+
+        - id: result-service-user
+          uri: lb://result-service
+          predicates:
+            - Path=/user/result/**
+          filters:
+            - RewritePath=/user/result/(?<remaining>.*),/user/result/${remaining}
+
+        - id: result-service-admin
+          uri: lb://result-service
+          predicates:
+            - Path=/admin/result/**
+          filters:
+            - RewritePath=/admin/result/(?<remaining>.*),/admin/result/${remaining}
+
+
 jwt:
   secret: ${JWT_SECRET}
 

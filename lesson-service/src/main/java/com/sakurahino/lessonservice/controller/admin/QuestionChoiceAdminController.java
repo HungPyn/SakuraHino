@@ -2,6 +2,7 @@ package com.sakurahino.lessonservice.controller.admin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.lessonservice.dto.questionChoice.ChoiceRequestCreateDto;
 import com.sakurahino.lessonservice.dto.questionChoice.QuestionChoiceRequestDto;
 import com.sakurahino.lessonservice.dto.questionChoice.QuestionChoiceResponseDto;
@@ -31,13 +32,13 @@ public class QuestionChoiceAdminController {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteChoice(@PathVariable("id") Integer id) {
+    public SuccessResponse deleteChoice(@PathVariable("id") Integer id) {
         questionChoiceService.deleteChoice(id);
-        return ResponseEntity.ok("xóa đáp án thành công");
+        return new SuccessResponse("Xóa choice thành công");
     }
 
     @PostMapping(value = "/create", consumes = {"multipart/form-data"})
-    public ResponseEntity<QuestionChoiceResponseDto> createChoice(@RequestPart("choice") String choiceStr,
+    public SuccessResponse createChoice(@RequestPart("choice") String choiceStr,
                                                                   @RequestPart("choiceImage") MultipartFile choiceImage) {
 
         ChoiceRequestCreateDto choiceRequestCreateDto;
@@ -47,7 +48,7 @@ public class QuestionChoiceAdminController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu đáp án không hợp lệ: " + e.getMessage());
         }
         QuestionChoiceResponseDto response = questionChoiceService.create(choiceRequestCreateDto, choiceImage);
-        return ResponseEntity.ok(response);
+        return new SuccessResponse(response);
     }
 
 

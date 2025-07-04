@@ -13,12 +13,12 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ResultResponseDto {
+public class ResultResponseLessonDto {
     private Integer id;
 
     private UUID userId;
 
-    private Integer toppicId;
+
     private Integer lessonId;
 
     private Instant startDatetime;

@@ -1,0 +1,8 @@
+# Bỏ qua thư mục biên dịch
+target/
+
+# Bỏ qua file class
+*.class
+
+# Bỏ qua các file log tạm
+*.log
