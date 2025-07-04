@@ -9,17 +9,17 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ResultResponseDto {
+public class ResultResponseExamDto {
     private Integer id;
 
     private UUID userId;
 
     private Integer toppicId;
-    private Integer lessonId;
 
     private Instant startDatetime;
 

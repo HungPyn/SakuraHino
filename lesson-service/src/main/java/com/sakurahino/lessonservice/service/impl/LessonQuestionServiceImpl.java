@@ -3,6 +3,7 @@ package com.sakurahino.lessonservice.service.impl;
 
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.ex.ResourceException;
+import com.sakurahino.lessonservice.clients.UploadServiceClient;
 import com.sakurahino.lessonservice.dto.LessonQuestionResponse.LessonQuestionRequestDto;
 import com.sakurahino.lessonservice.dto.LessonQuestionResponse.LessonQuestionResponseDto;
 import com.sakurahino.lessonservice.dto.questionChoice.QuestionChoiceRequestDto;
@@ -30,6 +31,7 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
     private final LessonQuestionRepository lessonQuestionRepository;
     private final QuestionChoiceService questionChoiceService;
     private final LessonRepository lessonRepository;
+    private final UploadServiceClient uploadServiceClient;
 
     @Override
     public List<LessonQuestionResponseDto> getAllQuestionByLessonId(Integer lessonId) {
@@ -92,11 +94,14 @@ public class LessonQuestionServiceImpl implements LessonQuestionService {
         lessonQuestion.setTargetLanguageCode(lessonQuestionRequestDto.getTargetLanguageCode());
         lessonQuestion.setOptionsLanguageCode(lessonQuestionRequestDto.getOptionsLanguageCode());
         lessonQuestion.setAudioUrlQuestions(lessonQuestionRequestDto.getAudioUrlQuestions());
-
-        if ((lessonQuestion.getAudioUrlQuestions() == null)
-                && lessonQuestion.getQuestionType() == QuestionType.AUDIO_CHOICE) {
-            throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "Chưa thêm âm thanh cho câu hỏi dạng nghe");
-        }
+//
+//        uploadServiceClient.textToSpeech(lessonQuestionRequestDto.getAudioUrlQuestions());
+//
+//        if ((lessonQuestion.getAudioUrlQuestions() == null)
+//                && lessonQuestion.getQuestionType() == QuestionType.AUDIO_CHOICE) {
+//            throw new ResourceException(ExceptionCode.KHONG_CO_DU_LIEU_TRUYEN_VAO.getStatus(), "Chưa thêm âm thanh cho câu hỏi dạng nghe");
+//        }
+//
         //lưu câu hỏi
         lessonQuestionRepository.save(lessonQuestion);
 

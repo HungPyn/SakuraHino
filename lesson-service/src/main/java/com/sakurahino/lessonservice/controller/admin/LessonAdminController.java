@@ -42,4 +42,10 @@ public class LessonAdminController {
         return new SuccessResponse("Xóa thành công");
     }
 
+    //api cho các service nội bộ
+    @GetMapping("/getLesson/{id}")
+    public boolean getLessonByid(@PathVariable("id") Integer id) {
+        LessonResponseDto responseDto = lessonService.getlesonById(id);
+        return responseDto != null;
+    }
 }
