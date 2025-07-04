@@ -4,8 +4,8 @@ package com.sakurahino.topicservice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.rmi.server.UID;
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @NoArgsConstructor
@@ -16,8 +16,9 @@ import java.time.Instant;
 public class Topic {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UID id;
+    @GeneratedValue
+    @Column(name = "id", columnDefinition = "CHAR(36)")
+    private UUID id;
 
     @Column(name = "topic_name")
     private String name;

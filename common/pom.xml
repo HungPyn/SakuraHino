@@ -29,6 +29,10 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
         <!-- Jackson để serialize/deserialize DTO -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

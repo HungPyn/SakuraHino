@@ -12,11 +12,11 @@ spring:
     gcp:
       project-id: sakuranihongo-200e5
       credentials:
-        location: file:///D:/DATN/keys/sakuranihongo-200e5-fd43217e81bb.json
+        location: file://D:/DATN/keys/sakuranihongo-200e5-fd43217e81bb.json
 
 gcp:
   storage:
-    bucket-name: sakuranihongo-200e5.appspot.com
+    bucket-name:  sakuranihongo-200e5.firebasestorage.app
 
 eureka:
   client:

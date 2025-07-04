@@ -11,9 +11,9 @@ spring:
       max-request-size: 10MB
 
   datasource:
-    url: jdbc:mysql://localhost:3306/exam?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/exam_service_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
-    password: vuong
+    password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -27,12 +27,6 @@ spring:
   jackson:
     serialization:
       FAIL_ON_EMPTY_BEANS: false
-
-  cloud:
-    gcp:
-      project-id: sakuranihongo-200e5
-      credentials:
-        location: file:///D:/sakuranihongo-200e5-fd43217e81bb.json
 
 eureka:
   client:

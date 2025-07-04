@@ -1,5 +1,5 @@
 server:
-  port: 80823
+  port: 8083
 spring:
   application:
     name: topic-service

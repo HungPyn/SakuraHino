@@ -5,19 +5,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class TopicResponse {
 
-    private String id;
+    private UUID id;
 
     private String name;
 
     private String urlImage;
 
-    private Instant createdAt;
+    private Instant createAt;
 
-    private LevelResponse level;
+    private Integer levelId;
 }

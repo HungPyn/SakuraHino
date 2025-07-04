@@ -16,11 +16,15 @@ import com.sakurahino.topicservice.service.TopicService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -34,13 +38,53 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     public PaginatedResponse<TopicResponse> getAllForUser(Integer levelId, int page, int size) {
-        return null;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Topic> topicPage;
+
+        if (levelId != null) {
+            topicPage = topicRepository.findAllByLevel_IdOrderByCreateAtAsc(levelId, pageable);
+        } else {
+            topicPage = topicRepository.findAll(pageable);
+        }
+
+        List<TopicResponse> responseList = topicPage.getContent().stream()
+                .map(topicServiceMapper::maptoTopicResponse)
+                .toList();
+
+        return new PaginatedResponse<>(
+                responseList,                          // items
+                topicPage.getNumber(),                 // page
+                (int) topicPage.getTotalElements(),    // totalItems (cast từ long → int)
+                topicPage.getTotalPages(),             // totalPages
+                topicPage.hasNext()                    // hasNext
+        );
     }
 
     @Override
     public PaginatedResponse<TopicResponse> getAllForAdmin(Integer levelId, int page, int size) {
-        return null;
+        // Có thể giống như getAllForUser nếu logic phân biệt quyền nằm ở controller
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Topic> topicPage;
+
+        if (levelId != null) {
+            topicPage = topicRepository.findAllByLevel_IdOrderByCreateAtDesc(levelId, pageable);
+        } else {
+            topicPage = topicRepository.findAll(pageable);
+        }
+
+        List<TopicResponse> responseList = topicPage.getContent().stream()
+                .map(topicServiceMapper::maptoTopicResponse)
+                .toList();
+
+        return new PaginatedResponse<>(
+                responseList,                          // items
+                topicPage.getNumber(),                 // page
+                (int) topicPage.getTotalElements(),    // totalItems (cast từ long → int)
+                topicPage.getTotalPages(),             // totalPages
+                topicPage.hasNext()                    // hasNext
+        );
     }
+
 
     @Override
     @Transactional
@@ -48,6 +92,9 @@ public class TopicServiceImpl implements TopicService {
         log.info("Bắt đầu tạo chủ đề: {}", dto.getName());
 
         String urlImage = uploadServiceClients.uploadFile(file).getUrlImage();
+        var response = uploadServiceClients.uploadFile(file);
+        log.info("Upload response từ Feign: {}", response);
+        log.info("urlImage = {}", response.getUrlImage());
         log.debug("Ảnh đã upload thành công, url: {}", urlImage);
 
         Level level = levelRepository.findById(dto.getLevelId())
@@ -70,9 +117,8 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     @Transactional
-    public TopicResponse update(String id, TopicRequest dto, MultipartFile file) {
+    public TopicResponse update(UUID id, TopicRequest dto, MultipartFile file) {
         log.info("Bắt đầu cập nhật chủ đề: {}", id);
-
         Topic topic = topicRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Chủ đề không tồn tại: {}", id);
@@ -106,7 +152,7 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public TopicResponse getById(String id) {
+    public TopicResponse getById(UUID id) {
         Topic topic = topicRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Không tìm thấy chủ đề để xóa: {}", id);
@@ -117,7 +163,7 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     @Transactional
-    public void delete(String id) {
+    public void delete(UUID id) {
         log.info("Bắt đầu xóa chủ đề: {}", id);
 
         Topic topic = topicRepository.findById(id)

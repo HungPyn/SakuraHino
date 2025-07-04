@@ -1,11 +1,13 @@
 package com.sakurahino.uploadservice.controller;
 
+import com.sakurahino.clients.dto.UploadResponse;
 import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.ex.ResourceException;
 import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.uploadservice.service.UploadService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,22 +30,22 @@ public class UploadController {
      * Upload ảnh hoặc file mp3
      */
     @PostMapping("/upload")
-    public SuccessResponse uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
         validateFile(file);
         String url = uploadService.uploadAvoidDuplicate(file);
-        return new SuccessResponse(new UploadResponse(url));
+        return ResponseEntity.ok(new UploadResponse(url));
     }
 
     /**
      * Text to Speech (Google TTS) -> sinh audio và upload
      */
     @PostMapping("/tts")
-    public SuccessResponse synthesizeAndUpload(@RequestParam("text") String text) {
+    public ResponseEntity<?> synthesizeAndUpload(@RequestParam("text") String text) {
         if (text == null || text.trim().isEmpty()) {
             throw new IllegalArgumentException("Text is required for synthesis");
         }
         String url = uploadService.synthesizeAndUpload(text);
-        return new SuccessResponse(new UploadResponse(url));
+        return ResponseEntity.ok(new UploadResponse(url));
     }
 
     /**
@@ -55,7 +57,7 @@ public class UploadController {
         if (!deleted) {
             throw new ResourceException(404, "File not found or already deleted: " + objectName);
         }
-        return new SuccessResponse("File deleted successfully");
+        return new SuccessResponse();
     }
 
     private void validateFile(MultipartFile file) {
@@ -71,6 +73,4 @@ public class UploadController {
             throw new AppException(ExceptionCode.FILE_MAX);
         }
     }
-
-    private record UploadResponse(String urlImage) {}
 }

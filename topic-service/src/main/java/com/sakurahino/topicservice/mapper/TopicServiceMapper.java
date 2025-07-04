@@ -8,5 +8,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface TopicServiceMapper {
 
+    @Mapping(source = "level.id", target = "levelId")
     TopicResponse maptoTopicResponse(Topic topic);
+
 }

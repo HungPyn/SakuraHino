@@ -1,4 +1,7 @@
 D:\SakuraHino\Sakurahino-Appmobile-Develop\clients\src\main\java\com\sakurahino\clients\commons\RabbitKey.java
 D:\SakuraHino\Sakurahino-Appmobile-Develop\clients\src\main\java\com\sakurahino\clients\rabitmqModel\SendResetCodeMessage.java
+D:\SakuraHino\Sakurahino-Appmobile-Develop\clients\src\main\java\com\sakurahino\clients\dto\UploadResponse.java
+D:\SakuraHino\Sakurahino-Appmobile-Develop\clients\src\main\java\com\sakurahino\clients\config\FeignMultipartSupportConfig.java
 D:\SakuraHino\Sakurahino-Appmobile-Develop\clients\src\main\java\com\sakurahino\clients\rabitmqModel\RegisterSuccessDTO.java
 D:\SakuraHino\Sakurahino-Appmobile-Develop\clients\src\main\java\com\sakurahino\clients\enums\Role.java
+D:\SakuraHino\Sakurahino-Appmobile-Develop\clients\src\main\java\com\sakurahino\clients\feign\UploadServiceClients.java
