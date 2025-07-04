@@ -82,6 +82,15 @@ public class LessonServiceImpl implements LessonService {
     }
 
     @Override
+    public boolean isLesson(Integer idLesson) {
+        Optional<Lesson> lessonOptional = lessonRepository.findById(idLesson);
+        if (lessonOptional.isEmpty()) {
+           return false;
+        }
+        return true;
+    }
+
+    @Override
     public void delete(Integer idLesson) {
         Optional<Lesson> lesson = lessonRepository.findById(idLesson);
         if (lesson.isEmpty()) {

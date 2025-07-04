@@ -45,7 +45,6 @@ public class LessonAdminController {
     //api cho các service nội bộ
     @GetMapping("/getLesson/{id}")
     public boolean getLessonByid(@PathVariable("id") Integer id) {
-        LessonResponseDto responseDto = lessonService.getlesonById(id);
-        return responseDto != null;
+        return lessonService.isLesson(id);
     }
 }
