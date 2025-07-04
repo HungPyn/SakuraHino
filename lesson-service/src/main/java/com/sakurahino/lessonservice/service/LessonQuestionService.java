@@ -4,6 +4,7 @@ import com.sakurahino.lessonservice.dto.LessonQuestionResponse.LessonQuestionReq
 import com.sakurahino.lessonservice.dto.LessonQuestionResponse.LessonQuestionResponseDto;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface LessonQuestionService {
     List<LessonQuestionResponseDto> getAllQuestionByLessonId(Integer lessonId);

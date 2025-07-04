@@ -17,4 +17,11 @@ public interface ResultService {
 
     ResultResponseDto saveResult(ResultRequestDto resultRequestDto);
 
+
+    //Nội bộ
+
+    ResultResponseExamDto getResultExamByUserForFeign(Integer toppicId, UUID userId);
+
+    ResultResponseLessonDto getResuleLessonByUserForFeign(Integer lessonId, UUID userId);
+
 }

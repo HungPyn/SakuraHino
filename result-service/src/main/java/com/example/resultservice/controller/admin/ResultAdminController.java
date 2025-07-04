@@ -30,10 +30,10 @@ public class ResultAdminController {
 //api nội bộ cho các service khác
     @GetMapping("/lesson")
     public ResultResponseLessonDto getResultLesson(@RequestParam("lessonId") Integer lessonId, @RequestParam("userId") UUID userId){
-        return resultService.getResuleLessonByUser(lessonId, userId);
+        return resultService.getResuleLessonByUserForFeign(lessonId, userId);
     }
     @GetMapping("/exam")
     public ResultResponseExamDto getResultExam(@RequestParam("toppicId") Integer toppicId, @RequestParam("userId")UUID userId){
-        return resultService.getResultExamByUser(toppicId, userId);
+        return resultService.getResultExamByUserForFeign(toppicId, userId);
     }
 }

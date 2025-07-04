@@ -205,6 +205,74 @@ public class ResultServiceImpl implements ResultService {
                 .build();
     }
 
+    @Override
+    public ResultResponseExamDto getResultExamByUserForFeign(Integer toppicId, UUID userId) {
+        if (toppicId == null || userId == null) {
+            ResultResponseExamDto examDto = new ResultResponseExamDto();
+            return examDto;
+        }
+
+        Optional<Result> resultExamOptional = resultRepository.findResultByToppicIdAndUserId(toppicId, userId);
+        if (resultExamOptional.isEmpty()) {
+            ResultResponseExamDto examDto = new ResultResponseExamDto();
+            return examDto;
+        }
+        Result examResult = resultExamOptional.get();
+
+        ResultResponseExamDto examDto = ResultResponseExamDto.builder()
+                .id(examResult.getId())
+                .userId(examResult.getUserId())
+                .toppicId(examResult.getToppicId())
+                .startDatetime(examResult.getStartDatetime())
+                .endDatetime(examResult.getEndDatetime())
+                .studyTime(examResult.getStudyTime())
+                .correctAnswers(examResult.getCorrectAnswers())
+                .totalQuestions(examResult.getTotalQuestions())
+                .scorePercent(examResult.getScorePercent())
+                .isComplete(examResult.getIsComplete())
+                .build();
+
+        if(examDto.getScorePercent().intValue()<100){
+            examDto.setIsComplete(false);
+        }
+
+        return examDto;
+
+    }
+
+    @Override
+    public ResultResponseLessonDto getResuleLessonByUserForFeign(Integer LessonId, UUID userId) {
+        if (LessonId == null || userId == null) {
+            ResultResponseLessonDto lessonDto = new ResultResponseLessonDto();
+            return lessonDto;
+                }
+        Optional<Result> resultExamOptional = resultRepository.findResultByLessonIdAndUserId(LessonId, userId);
+        if (resultExamOptional.isEmpty()) {
+            ResultResponseLessonDto lessonDto = new ResultResponseLessonDto();
+            return lessonDto;        }
+        Result examResult = resultExamOptional.get();
+
+        ResultResponseLessonDto lessonDto = ResultResponseLessonDto.builder()
+                .id(examResult.getId())
+                .userId(examResult.getUserId())
+                .lessonId(examResult.getLessonId())
+                .startDatetime(examResult.getStartDatetime())
+                .endDatetime(examResult.getEndDatetime())
+                .studyTime(examResult.getStudyTime())
+                .correctAnswers(examResult.getCorrectAnswers())
+                .totalQuestions(examResult.getTotalQuestions())
+                .scorePercent(examResult.getScorePercent())
+                .isComplete(examResult.getIsComplete())
+                .build();
+
+
+        if(lessonDto.getScorePercent().intValue()<100){
+            lessonDto.setIsComplete(false);
+        }
+
+        return lessonDto;
+    }
+
 }
 
 

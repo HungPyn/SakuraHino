@@ -10,9 +10,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,14 +22,16 @@ import java.util.List;
 @RequestMapping("/user/lesson")
 public class LessonController {
     private final LessonService lessonService;
-    @GetMapping("/{idToppic}")
-    public SuccessResponse getLessionsByIdToppic(@PathVariable("idToppic") Integer idToppic){
-        return new SuccessResponse(lessonService.getLessonsByIdToppic(idToppic)) ;
+    @GetMapping("/lessons")
+    public SuccessResponse getLessionsById(@RequestParam("toppicId") Integer toppicId,
+                                           @RequestParam("userId") UUID userId){
+        return new SuccessResponse(lessonService.getLessonsByIdToppic(toppicId,  userId)) ;
     }
 
-    @GetMapping("/getLesson/{id}")
-    public SuccessResponse  getLessonByid(@PathVariable("id") Integer id){
-        LessonResponseDto responseDto = lessonService.getlesonById(id);
+    @GetMapping("/lesson")
+    public SuccessResponse  getLessonByid(@RequestParam("id") Integer lesonId,
+                                          @RequestParam("userId") UUID userId){
+        LessonResponseDto responseDto = lessonService.getlesonById(lesonId,userId);
         return new SuccessResponse(responseDto);
     }
 }
