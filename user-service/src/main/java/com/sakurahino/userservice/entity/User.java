@@ -1,6 +1,7 @@
 package com.sakurahino.userservice.entity;
 
 import com.sakurahino.clients.enums.Role;
+import com.sakurahino.userservice.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,13 +28,17 @@ public class User {
     @Column(name = "username")
     private String username;
 
-    @Column(name = "password")
-    private String password;
+    @Column(name = "avatar_url")
+    private String avatarUrl;
 
-    @Column(name = "day_creattion")
+    @Column(name = "day_creation")
     private Instant dayCreation;
 
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private UserStatus status;
 }

@@ -4,6 +4,8 @@ import com.sakurahino.ampqclient.RabbitMQMessageProducer;
 import com.sakurahino.authservice.dto.*;
 import com.sakurahino.authservice.entity.ResetPassword;
 import com.sakurahino.authservice.entity.User;
+import com.sakurahino.clients.enums.Role;
+import com.sakurahino.clients.rabitmqModel.UserLoggedInDTO;
 import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.authservice.repository.PasswordRepository;
@@ -34,10 +36,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void register(RegisterRequestDTO dto) {
-        if (userRepository.existsByEmail(dto.getEmail())){
+        if (userRepository.existsByEmail(dto.getEmail())) {
             throw new AppException(ExceptionCode.EMAIL_TON_TAI);
         }
-        if (userRepository.existsByUsername(dto.getUsername())){
+        if (userRepository.existsByUsername(dto.getUsername())) {
             throw new AppException(ExceptionCode.USERNAME_TON_TAI);
         }
 
@@ -52,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(password);
         user.setRole(dto.getRole());
         user.setDayCreation(dayCreation);
-
+        user.setStatus("ACTIVE");
         userRepository.save(user);
 
         // đăng ký gửi message rabbit mq
@@ -61,10 +63,9 @@ public class AuthServiceImpl implements AuthService {
         registerSuccessDTO.setName(user.getName());
         registerSuccessDTO.setEmail(user.getEmail());
         registerSuccessDTO.setUsername(user.getUsername());
-        registerSuccessDTO.setPassword(user.getPassword());
         registerSuccessDTO.setRole(user.getRole());
         registerSuccessDTO.setDayCreation(user.getDayCreation());
-
+        registerSuccessDTO.setStatus(user.getStatus());
         rabbitMQProducer.publish(
                 registerSuccessDTO,
                 RabbitKey.EXCHANGE_AUTH,
@@ -75,23 +76,31 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponseDTO login(LoginRequestDTO dto) {
-     User user = userRepository.findByUsername(dto.getUsername())
-             .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
+        User user = userRepository.findByUsername(dto.getUsername())
+                .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
 
-     if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())){
-         throw new AppException(ExceptionCode.MAT_KHAU_KHONG_DUNG);
-     }
-     String token = jwtUtil.generateToken(user.getId(),user.getRole().toString());
-     LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
-     loginResponseDTO.setUsername(user.getUsername());
-     loginResponseDTO.setToken(token);
-     return loginResponseDTO;
+        if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
+            throw new AppException(ExceptionCode.MAT_KHAU_KHONG_DUNG);
+        }
+        String token = jwtUtil.generateToken(user.getId(), user.getRole().toString());
+        LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
+        loginResponseDTO.setUsername(user.getUsername());
+        loginResponseDTO.setToken(token);
+
+        if (user.getRole() == Role.USER) {
+            UserLoggedInDTO loggedInDTO = new UserLoggedInDTO();
+            loggedInDTO.setUserId(user.getId());
+            rabbitMQProducer.publish(loggedInDTO,
+                    RabbitKey.EXCHANGE_AUTH,
+                    RabbitKey.ROUTING_USER_LOGGED_IN);
+        }
+        return loginResponseDTO;
 
     }
 
     @Override
     public ForgotPasswordEmailResponse getEmailByUsername(String username) {
-        User user  = userRepository.findByUsername(username)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
         return new ForgotPasswordEmailResponse(user.getEmail());
     }
@@ -116,20 +125,20 @@ public class AuthServiceImpl implements AuthService {
         SendResetCodeMessage sendResetCodeMessage = new SendResetCodeMessage();
         sendResetCodeMessage.setEmail(user.getEmail());
         sendResetCodeMessage.setCode(resetPassword.getCode());
-        rabbitMQProducer.publish(sendResetCodeMessage,RabbitKey.EXCHANGE_AUTH,RabbitKey.ROUTING_SEND_FORGOT_PASSWORD);
+        rabbitMQProducer.publish(sendResetCodeMessage, RabbitKey.EXCHANGE_AUTH, RabbitKey.ROUTING_SEND_FORGOT_PASSWORD);
 
     }
 
     @Override
     public boolean checkCode(ResetPasswordDTO.VerifyCodeRequest verifyCodeRequest) {
         ResetPassword resetPassword = passwordRepository.findByUsername(verifyCodeRequest.getUsername())
-                .orElseThrow(()-> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
-        if (!resetPassword.getCode().equals(verifyCodeRequest.getCode())){
+                .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
+        if (!resetPassword.getCode().equals(verifyCodeRequest.getCode())) {
             throw new AppException(ExceptionCode.MA_XAC_NHAN_KHONG_HOP_LE);
         }
         Instant now = Instant.now();
         Instant expiredAt = resetPassword.getExpiresAt();
-        if (expiredAt.isAfter(now)){
+        if (expiredAt.isAfter(now)) {
             throw new AppException(ExceptionCode.MA_XAC_NHAN_HET_HAN);
         }
         return true;
@@ -140,7 +149,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByUsername(dto.getUsername())
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
 
-        if (!dto.getNewPassword().equals(dto.getConfirmPassword())){
+        if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
             throw new AppException(ExceptionCode.MAT_KHAU_COMFIRM_SAI);
         }
         String password = passwordEncoder.encode(dto.getNewPassword());

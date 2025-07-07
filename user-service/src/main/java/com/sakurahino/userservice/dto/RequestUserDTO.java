@@ -1,6 +1,7 @@
-package com.sakurahino.clients.rabitmqModel;
+package com.sakurahino.userservice.dto;
 
 import com.sakurahino.clients.enums.Role;
+import com.sakurahino.userservice.enums.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,12 +11,20 @@ import java.time.Instant;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterSuccessDTO {
+public class RequestUserDTO {
     private String id;
+
     private String name;
+
     private String email;
+
     private String username;
-    private Role role;
+
+    private String avatarUrl;
+
     private Instant dayCreation;
-    private String status;
+
+    private Role role;
+
+    private UserStatus status;
 }
