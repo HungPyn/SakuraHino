@@ -26,10 +26,12 @@
     </properties>
 
     <dependencies>
+
+        <!-- https://mvnrepository.com/artifact/io.github.openfeign.form/feign-form -->
         <dependency>
             <groupId>io.github.openfeign.form</groupId>
-            <artifactId>feign-form-spring</artifactId>
-            <version>3.8.0</version> <!-- hoặc bản mới hơn -->
+            <artifactId>feign-form</artifactId>
+            <version>3.8.0</version>
         </dependency>
 
         <!-- Lombok (chỉ cần ở compile time) -->
