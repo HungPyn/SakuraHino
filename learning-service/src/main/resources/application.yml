@@ -2,7 +2,12 @@ server:
   port: 8083
 spring:
   application:
-    name: topic-service
+    name: learning-service
+
+  servlet: # Thêm phần này vào dưới 'spring:'
+    multipart:
+      max-file-size: 10MB   # Ví dụ: cho phép mỗi file lên đến 10 MB
+      max-request-size: 10MB
 
   config:
     import: optional:configserver:http://localhost:8888

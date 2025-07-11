@@ -9,11 +9,11 @@ import java.util.UUID;
 
 public interface TopicService {
 
-    PaginatedResponse<TopicResponse> getAllForUser(Integer levelId, int page, int size);
-    PaginatedResponse<TopicResponse> getAllForAdmin(Integer levelId,int page, int size);
+    PaginatedResponse<TopicResponse> getAllForUser( int page, int size);
+    PaginatedResponse<TopicResponse> getAllForAdmin(int page, int size);
 
     TopicResponse create(TopicRequest dto, MultipartFile file);
-    TopicResponse update(UUID id, TopicRequest dto, MultipartFile file);
-    TopicResponse getById(UUID id);
-    void delete(UUID id);
+    TopicResponse update(Integer id, TopicRequest dto, MultipartFile file);
+    TopicResponse getById(Integer id);
+    void delete(Integer id);
 }

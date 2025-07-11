@@ -3,7 +3,7 @@
   <component name="JpaBuddyIdeaProjectConfig" newRepositoryParent="org.springframework.data.jpa.repository.JpaRepository">
     <option name="defaultUnitInitialized" value="true" />
     <option name="renamerInitialized" value="true" />
-    <option name="reverseEngineeringLastDbConnectionId" value="078910f5-a19f-45a6-9e0f-80e6be46b423__exam" />
-    <option name="reLastEntityCreationPackage" value="exam-service/src/main/java/com/example/examservice/entity" />
+    <option name="reverseEngineeringLastDbConnectionId" value="8908d7ee-6ba8-46fb-adee-970a279bdda2__topic_service_db" />
+    <option name="reLastEntityCreationPackage" value="learning-service/src/main/java/com/sakurahino/learningservice/entity" />
   </component>
 </project>

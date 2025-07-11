@@ -7,10 +7,8 @@ import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.util.FileUtils;
 import com.sakurahino.learningservice.dto.TopicRequest;
 import com.sakurahino.learningservice.dto.TopicResponse;
-import com.sakurahino.learningservice.entity.Level;
 import com.sakurahino.learningservice.entity.Topic;
 import com.sakurahino.learningservice.mapper.TopicServiceMapper;
-import com.sakurahino.learningservice.repository.LevelRepository;
 import com.sakurahino.learningservice.repository.TopicRepository;
 import com.sakurahino.learningservice.service.TopicService;
 import jakarta.transaction.Transactional;
@@ -32,24 +30,28 @@ import java.util.UUID;
 public class TopicServiceImpl implements TopicService {
 
     private final TopicRepository topicRepository;
-    private final LevelRepository levelRepository;
     private final UploadServiceClients uploadServiceClients;
     private final TopicServiceMapper topicServiceMapper;
 
     @Override
-    public PaginatedResponse<TopicResponse> getAllForUser(Integer levelId, int page, int size) {
+    public PaginatedResponse<TopicResponse> getAllForUser(int page, int size) {
+
+        // sau bổ sung thêm láy idUser để check tiến độ
+
+
+
         Pageable pageable = PageRequest.of(page, size);
         Page<Topic> topicPage;
 
-        if (levelId != null) {
-            topicPage = topicRepository.findAllByLevel_IdOrderByCreateAtAsc(levelId, pageable);
-        } else {
-            topicPage = topicRepository.findAll(pageable);
-        }
+        topicPage = topicRepository.findAll(pageable);
 
         List<TopicResponse> responseList = topicPage.getContent().stream()
                 .map(topicServiceMapper::maptoTopicResponse)
                 .toList();
+
+        if (!responseList.isEmpty()) {
+            responseList.get(0).setComplete(true); // Set true cho topic đầu tiên của trang hiện tại
+        }
 
         return new PaginatedResponse<>(
                 responseList,                          // items
@@ -61,16 +63,12 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public PaginatedResponse<TopicResponse> getAllForAdmin(Integer levelId, int page, int size) {
+    public PaginatedResponse<TopicResponse> getAllForAdmin( int page, int size) {
         // Có thể giống như getAllForUser nếu logic phân biệt quyền nằm ở controller
         Pageable pageable = PageRequest.of(page, size);
         Page<Topic> topicPage;
+            topicPage = topicRepository.findTopicsByOrderByCreateAtDesc(pageable);
 
-        if (levelId != null) {
-            topicPage = topicRepository.findAllByLevel_IdOrderByCreateAtDesc(levelId, pageable);
-        } else {
-            topicPage = topicRepository.findAll(pageable);
-        }
 
         List<TopicResponse> responseList = topicPage.getContent().stream()
                 .map(topicServiceMapper::maptoTopicResponse)
@@ -97,17 +95,12 @@ public class TopicServiceImpl implements TopicService {
         log.info("urlImage = {}", response.getUrlImage());
         log.debug("Ảnh đã upload thành công, url: {}", urlImage);
 
-        Level level = levelRepository.findById(dto.getLevelId())
-                .orElseThrow(() -> {
-                    log.warn("Level không tồn tại: {}", dto.getLevelId());
-                    return new AppException(ExceptionCode.LEVEL_KHONG_TON_TAI);
-                });
 
         Topic topic = new Topic();
-        topic.setLevel(level);
         topic.setUrlImage(urlImage);
         topic.setCreateAt(Instant.now());
         topic.setName(dto.getName());
+        topic.setComplete(false);
 
         topicRepository.save(topic);
         log.info("Chủ đề đã được tạo thành công với id = {}", topic.getId());
@@ -117,7 +110,7 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     @Transactional
-    public TopicResponse update(UUID id, TopicRequest dto, MultipartFile file) {
+    public TopicResponse update(Integer id, TopicRequest dto, MultipartFile file) {
         log.info("Bắt đầu cập nhật chủ đề: {}", id);
         Topic topic = topicRepository.findById(id)
                 .orElseThrow(() -> {
@@ -125,11 +118,6 @@ public class TopicServiceImpl implements TopicService {
                     return new AppException(ExceptionCode.CHU_DE_KHONG_TON_TAI);
                 });
 
-        Level level = levelRepository.findById(dto.getLevelId())
-                .orElseThrow(() -> {
-                    log.warn("Level không tồn tại: {}", dto.getLevelId());
-                    return new AppException(ExceptionCode.LEVEL_KHONG_TON_TAI);
-                });
 
         if (file != null && !file.isEmpty()) {
             String oldUrl = topic.getUrlImage();
@@ -143,7 +131,6 @@ public class TopicServiceImpl implements TopicService {
         }
 
         topic.setName(dto.getName());
-        topic.setLevel(level);
 
         topicRepository.save(topic);
         log.info("Cập nhật chủ đề thành công: {}", id);
@@ -152,7 +139,7 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public TopicResponse getById(UUID id) {
+    public TopicResponse getById(Integer id) {
         Topic topic = topicRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Không tìm thấy chủ đề để xóa: {}", id);
@@ -163,7 +150,7 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     @Transactional
-    public void delete(UUID id) {
+    public void delete(Integer id) {
         log.info("Bắt đầu xóa chủ đề: {}", id);
 
         Topic topic = topicRepository.findById(id)

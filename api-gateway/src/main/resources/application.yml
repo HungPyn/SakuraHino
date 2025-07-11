@@ -4,7 +4,9 @@ server:
 spring:
   application:
     name: api-gateway
-
+  http: # <-- Thêm vào đây
+    codec:
+      max-in-memory-size: 10MB
   cloud:
     gateway:
       discovery:
@@ -26,12 +28,19 @@ spring:
           filters:
             - RewritePath=/api/users/(?<remaining>.*),/users/${remaining}
 
-        - id: topic-service
-          uri: lb://topic-service
+        - id: learning-service
+          uri: lb://learning-service
           predicates:
-            - Path=/api/topic/**
+            - Path=/topic/**
           filters:
-            - RewritePath=/api/topic/(?<remaining>.*),/topic/${remaining}
+            - RewritePath=/topic/(?<remaining>.*),/topic/${remaining}
+
+        - id: learning-service-question
+          uri: lb://learning-service
+          predicates:
+            - Path=/question/**
+          filters:
+            - RewritePath=/question/(?<remaining>.*),/question/${remaining}
 
         - id: lesson-service-user
           uri: lb://lesson-service

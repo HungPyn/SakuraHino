@@ -1,6 +1,7 @@
 package com.sakurahino.learningservice.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,9 +11,10 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class TopicResponse {
 
-    private UUID id;
+    private Integer id;
 
     private String name;
 
@@ -20,5 +22,5 @@ public class TopicResponse {
 
     private Instant createAt;
 
-    private Integer levelId;
+    private Boolean complete;
 }

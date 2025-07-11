@@ -23,26 +23,24 @@ public class TopicController {
     @GetMapping("/user")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public SuccessResponse getAllForUser(
-            @RequestParam("levelId") Integer levelId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        var result = topicService.getAllForUser(levelId, page, size);
+        var result = topicService.getAllForUser(page, size);
         return new SuccessResponse(result);
     }
 
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
     public SuccessResponse getAllForAdmin(
-            @RequestParam("levelId") Integer levelId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        var result = topicService.getAllForAdmin(levelId, page, size);
+        var result = topicService.getAllForAdmin(page, size);
         return new SuccessResponse(result);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public SuccessResponse getById(@PathVariable UUID id) {
+    public SuccessResponse getById(@PathVariable Integer id) {
         TopicResponse topic = topicService.getById(id);
         return new SuccessResponse(topic);
     }
@@ -50,7 +48,7 @@ public class TopicController {
     @PostMapping(value = "/admin/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public SuccessResponse create(
-            @RequestPart("dto") @Valid TopicRequest dto,
+            @RequestPart("dto") TopicRequest dto,
             @RequestPart("file") MultipartFile file) {
         var created = topicService.create(dto, file);
         return new SuccessResponse(created);
@@ -59,16 +57,16 @@ public class TopicController {
     @PutMapping(value = "/admin/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public SuccessResponse update(
-            @RequestParam UUID id,
+            @RequestParam Integer id,
             @RequestPart("dto") TopicRequest dto,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         var updated = topicService.update(id, dto, file);
         return new SuccessResponse(updated);
     }
 
-    @DeleteMapping("admin/{id}")
+    @DeleteMapping("/admin/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public SuccessResponse delete(@PathVariable UUID id) {
+    public SuccessResponse delete(@PathVariable Integer id) {
         topicService.delete(id);
         return new SuccessResponse();
     }

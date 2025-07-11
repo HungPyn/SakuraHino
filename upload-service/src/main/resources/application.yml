@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: upload-service
+  servlet: # Thêm phần này vào dưới 'spring:'
+    multipart:
+      max-file-size: 10MB   # Ví dụ: cho phép mỗi file lên đến 10 MB
+      max-request-size: 10MB
 
   config:
     import: optional:configserver:http://localhost:8888
@@ -12,7 +16,7 @@ spring:
     gcp:
       project-id: sakuranihongo-200e5
       credentials:
-        location: file://D:/DATN/keys/sakuranihongo-200e5-fd43217e81bb.json
+        location: file:///D:/sakuranihongo-200e5-fd43217e81bb.json
 
 gcp:
   storage:

@@ -4,11 +4,11 @@ import com.sakurahino.learningservice.entity.Topic;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
-
-public interface TopicRepository extends JpaRepository<Topic, UUID> {
-    Page<Topic> findAllByLevel_IdOrderByCreateAtAsc(Integer levelId, Pageable pageable);
-
-    Page<Topic> findAllByLevel_IdOrderByCreateAtDesc(Integer levelId,Pageable pageable);
+@Repository
+public interface TopicRepository extends JpaRepository<Topic, Integer> {
+    Page<Topic> findTopicsByOrderByCreateAtDesc(Pageable pageable);
 }
