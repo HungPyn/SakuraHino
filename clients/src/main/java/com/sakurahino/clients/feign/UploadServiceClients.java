@@ -20,4 +20,8 @@ public interface UploadServiceClients {
 
     @DeleteMapping("/api/v1/files/{objectName}")
     void deleteFile(@PathVariable("objectName") String objectName);
+
+    // audio
+    @PostMapping("/api/v1/files/tts")
+    UploadResponse upLoadText(@RequestParam("text") String text);
 }

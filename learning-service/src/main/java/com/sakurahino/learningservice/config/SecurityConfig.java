@@ -26,6 +26,9 @@ public class SecurityConfig {
                         .requestMatchers("/topic/admin/**").hasRole("ADMIN")
                         .requestMatchers("/topic/**").hasAnyRole("USER", "ADMIN") // Bao gồm cả GET /topic?levelId=...
                         .requestMatchers("/topic").hasAnyRole("USER", "ADMIN")     // Đảm bảo path gốc cũng match
+                        .requestMatchers("/question/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/question/**").hasAnyRole("USER", "ADMIN") // Bao gồm cả GET /topic?levelId=...
+                        .requestMatchers("/question").hasAnyRole("USER", "ADMIN")     // Đảm bảo path gốc cũng match
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(userContextFilter, UsernamePasswordAuthenticationFilter.class)

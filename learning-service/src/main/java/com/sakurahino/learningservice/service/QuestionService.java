@@ -1,9 +1,19 @@
 package com.sakurahino.learningservice.service;
 
+import com.sakurahino.learningservice.dto.LessonQuestionRequest;
 import com.sakurahino.learningservice.dto.LessonQuestionResponse;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface QuestionService {
-    List<LessonQuestionResponse> getQuestionsByTopicId(Integer topicId);
+    List<LessonQuestionResponse> getQuestionsByTopicId(UUID userId, Integer topicId);
+    List<LessonQuestionResponse> getQuestionsByTopicIdAdmin(Integer topicId);
+    LessonQuestionResponse getQuestionById(Integer id);
+
+    void deleteQuestion(Integer id);
+
+    void createQuestion(LessonQuestionRequest lessonQuestionRequest);
+    void updateQuestion(Integer id, LessonQuestionRequest lessonQuestionRequest);
+
 }

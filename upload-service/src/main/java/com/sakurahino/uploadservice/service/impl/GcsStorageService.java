@@ -40,6 +40,7 @@ public class GcsStorageService implements StorageService {
 
     @Override
     public String getPublicFileUrl(String objectName) {
+        System.out.println("objectname la:"+objectName  );
         return String.format("https://storage.googleapis.com/%s/%s", bucketName, objectName);
     }
 

@@ -22,6 +22,7 @@ public class GoogleTextToSpeechService implements TextToSpeechService {
 
     @Override
     public String synthesizeAndUpload(String text) throws Exception {
+        System.out.println("text ở service gg: "+text);
         String hash = generateHash(text);
         String objectName = "tts/" + hash + ".mp3";
 
@@ -29,7 +30,7 @@ public class GoogleTextToSpeechService implements TextToSpeechService {
         if (storageService.generateSignedUrl(objectName, 1, java.util.concurrent.TimeUnit.MINUTES) != null) {
             return storageService.getPublicFileUrl(objectName);
         }
-
+        System.out.println("obejct ở service gg: "+objectName);
         try (TextToSpeechClient client = TextToSpeechClient.create()) {
             SynthesisInput input = SynthesisInput.newBuilder().setText(text).build();
 

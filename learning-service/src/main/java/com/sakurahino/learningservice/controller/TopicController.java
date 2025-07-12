@@ -48,7 +48,7 @@ public class TopicController {
     @PostMapping(value = "/admin/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public SuccessResponse create(
-            @RequestPart("dto") TopicRequest dto,
+           @Valid @RequestPart("dto") TopicRequest dto,
             @RequestPart("file") MultipartFile file) {
         var created = topicService.create(dto, file);
         return new SuccessResponse(created);
@@ -58,7 +58,7 @@ public class TopicController {
     @PreAuthorize("hasRole('ADMIN')")
     public SuccessResponse update(
             @RequestParam Integer id,
-            @RequestPart("dto") TopicRequest dto,
+            @Valid @RequestPart("dto") TopicRequest dto,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         var updated = topicService.update(id, dto, file);
         return new SuccessResponse(updated);

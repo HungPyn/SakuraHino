@@ -1,5 +1,7 @@
 package com.sakurahino.learningservice.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Builder
 public class QuestionChoiceRequest {
     private Integer id; // để trống id nếu thêm mới
+
     private Integer lessonId;
     private String textForeign;
     private String textRomaji;
@@ -23,6 +26,7 @@ public class QuestionChoiceRequest {
     private Boolean isCorrect = false;
 
     private String textBlock;
+    @NotBlank(message = "Nghĩa câu hỏi không được để trống")
 
     private String meaning;
 }
