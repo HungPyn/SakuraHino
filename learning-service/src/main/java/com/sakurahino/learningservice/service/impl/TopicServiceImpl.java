@@ -5,10 +5,14 @@ import com.sakurahino.common.dto.PaginatedResponse;
 import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.util.FileUtils;
+import com.sakurahino.learningservice.dto.LessonResponse;
 import com.sakurahino.learningservice.dto.TopicRequest;
 import com.sakurahino.learningservice.dto.TopicResponse;
+import com.sakurahino.learningservice.entity.Lesson;
 import com.sakurahino.learningservice.entity.Topic;
+import com.sakurahino.learningservice.mapper.LessonMapper;
 import com.sakurahino.learningservice.mapper.TopicServiceMapper;
+import com.sakurahino.learningservice.repository.LessonRepository;
 import com.sakurahino.learningservice.repository.TopicRepository;
 import com.sakurahino.learningservice.service.TopicService;
 import jakarta.transaction.Transactional;
@@ -23,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,13 +37,13 @@ public class TopicServiceImpl implements TopicService {
     private final TopicRepository topicRepository;
     private final UploadServiceClients uploadServiceClients;
     private final TopicServiceMapper topicServiceMapper;
+    private final LessonRepository lessonRepository;
+    private final LessonMapper lessonMapper;
 
     @Override
-    public PaginatedResponse<TopicResponse> getAllForUser(int page, int size) {
-
-        // sau bổ sung thêm láy idUser để check tiến độ
-
-
+    public PaginatedResponse<TopicResponse> getAllForUser(int page, int size, String userIdString) {
+        UUID userId = UUID.fromString(userIdString);
+        System.out.println("user id là :--------- "+userId);
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Topic> topicPage;
@@ -48,10 +53,27 @@ public class TopicServiceImpl implements TopicService {
         List<TopicResponse> responseList = topicPage.getContent().stream()
                 .map(topicServiceMapper::maptoTopicResponse)
                 .toList();
+        //tim lesson
+        responseList.forEach(topicResponse -> {
+            List<LessonResponse> lessonResponses =
+                    lessonRepository.findLessonsWithUserCompletionStatusByTopicIdAndUserId(topicResponse.getId(),userId);
 
-        if (!responseList.isEmpty()) {
-            responseList.get(0).setComplete(true); // Set true cho topic đầu tiên của trang hiện tại
-        }
+//            List<LessonResponse> lessonResponses = lessonMapper.mapLessonListToResponseList(lessons);
+
+            boolean allComplete = true;
+            for (LessonResponse lessonResponse : lessonResponses) {
+                if (!lessonResponse.getComplete()) {
+                    allComplete = false;
+                    break; // không cần kiểm tra tiếp
+                }
+            }
+            topicResponse.setComplete(allComplete);
+            topicResponse.setLessons(lessonResponses);
+        });
+
+//        if (!responseList.isEmpty()) {
+//            responseList.get(0).setComplete(true); // Set true cho topic đầu tiên của trang hiện tại
+//        }
 
         return new PaginatedResponse<>(
                 responseList,                          // items
@@ -63,11 +85,11 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public PaginatedResponse<TopicResponse> getAllForAdmin( int page, int size) {
+    public PaginatedResponse<TopicResponse> getAllForAdmin(int page, int size) {
         // Có thể giống như getAllForUser nếu logic phân biệt quyền nằm ở controller
         Pageable pageable = PageRequest.of(page, size);
         Page<Topic> topicPage;
-            topicPage = topicRepository.findTopicsByOrderByCreateAtDesc(pageable);
+        topicPage = topicRepository.findTopicsByOrderByCreateAtDesc(pageable);
 
 
         List<TopicResponse> responseList = topicPage.getContent().stream()
@@ -100,7 +122,6 @@ public class TopicServiceImpl implements TopicService {
         topic.setUrlImage(urlImage);
         topic.setCreateAt(Instant.now());
         topic.setName(dto.getName());
-        topic.setComplete(false);
 
         topicRepository.save(topic);
         log.info("Chủ đề đã được tạo thành công với id = {}", topic.getId());

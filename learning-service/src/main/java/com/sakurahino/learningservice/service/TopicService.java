@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface TopicService {
 
-    PaginatedResponse<TopicResponse> getAllForUser( int page, int size);
+    PaginatedResponse<TopicResponse> getAllForUser( int page, int size, String userId);
     PaginatedResponse<TopicResponse> getAllForAdmin(int page, int size);
 
     TopicResponse create(TopicRequest dto, MultipartFile file);

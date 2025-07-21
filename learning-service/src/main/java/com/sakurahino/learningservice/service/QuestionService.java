@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface QuestionService {
-    List<LessonQuestionResponse> getQuestionsByTopicId(UUID userId, Integer topicId);
-    List<LessonQuestionResponse> getQuestionsByTopicIdAdmin(Integer topicId);
+    List<LessonQuestionResponse> getQuestionsByLessonId(Integer topicId);
+    List<LessonQuestionResponse> getQuestionsByLessonIdAdmin(Integer topicId);
     LessonQuestionResponse getQuestionById(Integer id);
 
     void deleteQuestion(Integer id);

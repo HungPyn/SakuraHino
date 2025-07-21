@@ -24,8 +24,9 @@ public class TopicController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public SuccessResponse getAllForUser(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        var result = topicService.getAllForUser(page, size);
+            @RequestParam(defaultValue = "10") int size,
+            @RequestHeader("X-User-Id") String userId) {
+        var result = topicService.getAllForUser(page, size,userId);
         return new SuccessResponse(result);
     }
 
@@ -48,7 +49,7 @@ public class TopicController {
     @PostMapping(value = "/admin/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public SuccessResponse create(
-           @Valid @RequestPart("dto") TopicRequest dto,
+            @Valid @RequestPart("dto") TopicRequest dto,
             @RequestPart("file") MultipartFile file) {
         var created = topicService.create(dto, file);
         return new SuccessResponse(created);

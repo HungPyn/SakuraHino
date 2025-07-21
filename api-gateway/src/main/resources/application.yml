@@ -42,33 +42,13 @@ spring:
           filters:
             - RewritePath=/question/(?<remaining>.*),/question/${remaining}
 
-        - id: lesson-service-user
-          uri: lb://lesson-service
+        - id: learning-service-lesson
+          uri: lb://learning-service
           predicates:
-            - Path=/user/lesson/**
+            - Path=/lesson/**
           filters:
-            - RewritePath=/user/lesson/(?<remaining>.*),/user/lesson/${remaining}
+            - RewritePath=/lesson/(?<remaining>.*),/lesson/${remaining}
 
-        - id: lesson-service-admin
-          uri: lb://lesson-service
-          predicates:
-            - Path=/admin/lesson/**
-          filters:
-            - RewritePath=/admin/lesson/(?<remaining>.*),/admin/lesson/${remaining}
-
-        - id: exam-service-user
-          uri: lb://exam-service
-          predicates:
-            - Path=/user/exam/**
-          filters:
-            - RewritePath=/user/exam/(?<remaining>.*),/user/exam/${remaining}
-
-        - id: exam-service-admin
-          uri: lb://exam-service
-          predicates:
-            - Path=/admin/exam/**
-          filters:
-            - RewritePath=/admin/exam/(?<remaining>.*),/admin/exam/${remaining}
 
         - id: result-service-user
           uri: lb://result-service

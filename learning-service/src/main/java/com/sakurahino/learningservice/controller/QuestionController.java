@@ -29,16 +29,16 @@ public class QuestionController {
 
     private final QuestionService questionService;
 
-    @GetMapping("/user")
+    @GetMapping("/user/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public SuccessResponse getQuesstionsByToppicId(@RequestParam("userId") UUID userId,
-                                                   @RequestParam("id") Integer toppicId) {
-        System.out.println("id toppic la:--------------- " + toppicId);
-        List<LessonQuestionResponse> response = questionService.getQuestionsByTopicId(userId, toppicId);
+    public SuccessResponse getQuesstionsByLessonId(
+            @PathVariable("id") Integer lessonId) {
+
+        List<LessonQuestionResponse> response = questionService.getQuestionsByLessonId(lessonId);
         return new SuccessResponse(response);
     }
 
-    @GetMapping("/user/{id}")
+    @GetMapping("/user/get-question/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public SuccessResponse getQuestionById(
             @PathVariable("id") Integer id) {
@@ -48,9 +48,9 @@ public class QuestionController {
 
     @GetMapping("/admin/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public SuccessResponse getQuesstionsByToppicIdAdmin(
-            @PathVariable("id") Integer toppicId) {
-        List<LessonQuestionResponse> response = questionService.getQuestionsByTopicIdAdmin(toppicId);
+    public SuccessResponse getQuesstionsByLessonIdAdmin(
+            @PathVariable("id") Integer lessonId) {
+        List<LessonQuestionResponse> response = questionService.getQuestionsByLessonIdAdmin(lessonId);
         return new SuccessResponse(response);
     }
 
@@ -68,8 +68,8 @@ public class QuestionController {
             @Valid @RequestPart("dto") LessonQuestionRequest questionRequest,
             @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) {
-        for (int i = 0; i < files.size(); i++){
-                questionRequest.getChoiceRequests().get(i).setImageFile(files.get(i));
+        for (int i = 0; i < files.size(); i++) {
+            questionRequest.getChoiceRequests().get(i).setImageFile(files.get(i));
         }
         questionService.createQuestion(questionRequest);
         return new SuccessResponse("Thêm câu hỏi thành công <3");
@@ -82,10 +82,10 @@ public class QuestionController {
             @Valid @RequestPart("dto") LessonQuestionRequest questionRequest,
             @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) {
-        for (int i = 0; i < files.size(); i++){
+        for (int i = 0; i < files.size(); i++) {
             questionRequest.getChoiceRequests().get(i).setImageFile(files.get(i));
         }
-        questionService.updateQuestion(id,questionRequest);
+        questionService.updateQuestion(id, questionRequest);
         return new SuccessResponse("Sửa câu hỏi thành công <3");
     }
 

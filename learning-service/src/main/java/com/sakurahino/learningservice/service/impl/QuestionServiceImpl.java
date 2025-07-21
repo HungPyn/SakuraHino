@@ -6,13 +6,14 @@ import com.sakurahino.common.ex.ResourceException;
 import com.sakurahino.learningservice.dto.LessonQuestionRequest;
 import com.sakurahino.learningservice.dto.LessonQuestionResponse;
 import com.sakurahino.learningservice.dto.QuestionChoiceResponse;
+import com.sakurahino.learningservice.entity.Lesson;
 import com.sakurahino.learningservice.entity.LessonQuestion;
 import com.sakurahino.learningservice.entity.QuestionChoice;
-import com.sakurahino.learningservice.entity.Topic;
 import com.sakurahino.learningservice.enums.QuestionType;
 import com.sakurahino.learningservice.mapper.ChoiceMapper;
 import com.sakurahino.learningservice.mapper.LessonQuestionMapper;
 import com.sakurahino.learningservice.repository.LessonQuestionRepository;
+import com.sakurahino.learningservice.repository.LessonRepository;
 import com.sakurahino.learningservice.repository.QuestionChoiceRepository;
 import com.sakurahino.learningservice.repository.TopicRepository;
 import com.sakurahino.learningservice.service.QuestionService;
@@ -36,13 +37,11 @@ public class QuestionServiceImpl implements QuestionService {
     private final LessonQuestionMapper lessonQuestionMapper;
     private final ChoiceMapper choiceMapper;
     private final TopicRepository topicRepository;
+    private final LessonRepository lessonRepository;
 
     @Override
-    public List<LessonQuestionResponse> getQuestionsByTopicId(UUID userId, Integer topicId) {
-        //bổ sung sử lí userId lấy complete theo người người dùng
-
-        //--------------------------------------------------------
-        List<LessonQuestion> lessonQuestions = lessonQuestionRepository.findLessonQuestionsByTopic_Id(topicId);
+    public List<LessonQuestionResponse> getQuestionsByLessonId(Integer lessonId) {
+        List<LessonQuestion> lessonQuestions = lessonQuestionRepository.findLessonQuestionsByLesson_Id(lessonId);
         List<LessonQuestionResponse> lessonQuestionResponses =
                 lessonQuestions.stream().map(lessonQuestion -> {
                     LessonQuestionResponse response = lessonQuestionMapper.mapQuestionResponse(lessonQuestion);
@@ -59,8 +58,8 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public List<LessonQuestionResponse> getQuestionsByTopicIdAdmin(Integer topicId) {
-        List<LessonQuestion> lessonQuestions = lessonQuestionRepository.findLessonQuestionsByTopic_IdOrderByIdDesc(topicId);
+    public List<LessonQuestionResponse> getQuestionsByLessonIdAdmin(Integer lessonId) {
+        List<LessonQuestion> lessonQuestions = lessonQuestionRepository.findLessonQuestionsByLesson_IdOrderByIdDesc(lessonId);
         List<LessonQuestionResponse> lessonQuestionResponses =
                 lessonQuestions.stream().map(lessonQuestion -> {
                     LessonQuestionResponse response = lessonQuestionMapper.mapQuestionResponse(lessonQuestion);
@@ -94,8 +93,8 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Transactional
     public void createQuestion(LessonQuestionRequest questionRequest) {
-        Topic topic = topicRepository.findById(questionRequest.getTopicId()).orElseThrow(() -> new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(),
-                "Topic không tồn tại (id)" + questionRequest.getTopicId()));
+        Lesson lesson = lessonRepository.findById(questionRequest.getLessonId()).orElseThrow(() -> new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(),
+                "Lesson không tồn tại (id)" + questionRequest.getLessonId()));
 
         if (questionRequest.getQuestionType().equalsIgnoreCase(QuestionType.AUDIO_CHOICE.toString())) {
             if (questionRequest.getTextAudioQuestion() == null || questionRequest.getTextAudioQuestion().isEmpty()) {
@@ -161,7 +160,7 @@ public class QuestionServiceImpl implements QuestionService {
         ).collect(Collectors.toList());
 
 
-        lessonQuestion.setTopic(topic);
+        lessonQuestion.setLesson(lesson);
 
         lessonQuestion.setChoices(questionChoices);
 
@@ -171,14 +170,14 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Transactional
     public void updateQuestion(Integer id, LessonQuestionRequest questionRequest) {
-        Topic topic = topicRepository.findById(questionRequest.getTopicId()).orElseThrow(() -> new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(),
-                "Topic không tồn tại (id)" + questionRequest.getTopicId()));
+        Lesson lesson = lessonRepository.findById(questionRequest.getLessonId()).orElseThrow(() -> new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(),
+                "Lesson không tồn tại (id)" + questionRequest.getLessonId()));
 
 
       LessonQuestion lessonQuestioncheck = lessonQuestionRepository.findById(id).orElseThrow(() ->
                 new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Câu hỏi không tồn tại (id)" + id));
 
-        if (topic.getId() != lessonQuestioncheck.getTopic().getId()) {
+        if (lesson.getId() != lessonQuestioncheck.getLesson().getId()) {
             throw new ResourceException(ExceptionCode.DU_LIEU_TRUYEN_LEN_SAI.getStatus(),
                     "Câu hỏi không thuộc topic");
         }
@@ -248,7 +247,7 @@ public class QuestionServiceImpl implements QuestionService {
         ).collect(Collectors.toList());
 
 
-        lessonQuestion.setTopic(topic);
+        lessonQuestion.setLesson(lesson);
         lessonQuestion.setId(id);
 
         lessonQuestion.setChoices(questionChoices);

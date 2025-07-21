@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface LessonQuestionRepository extends JpaRepository<LessonQuestion, Integer> {
-    List<LessonQuestion> findLessonQuestionsByTopic_Id(Integer toppicId);
-    List<LessonQuestion> findLessonQuestionsByTopic_IdOrderByIdDesc(Integer toppicId);
+    List<LessonQuestion> findLessonQuestionsByLesson_Id(Integer lessonId);
+    List<LessonQuestion> findLessonQuestionsByLesson_IdOrderByIdDesc(Integer toppicId);
 }

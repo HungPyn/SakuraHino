@@ -17,9 +17,9 @@ import java.util.List;
 public class LessonQuestionRequest {
 
 
-    @NotNull(message = "ID chủ đề không được để trống")
+    @NotNull(message = "Id chủ đề không được để trống")
 
-    private Integer topicId;
+    private Integer lessonId;
 
     // private String questionType;
     @NotBlank(message = "Loại câu hỏi không được để trống")

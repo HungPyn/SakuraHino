@@ -1,11 +1,8 @@
 package com.sakurahino.learningservice.entity;
 
-import com.sakurahino.learningservice.enums.QuestionType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,7 +14,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -28,24 +28,29 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "lesson_questions")
 public class LessonQuestion {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "topic_id")
-    private Topic topic;
+    @JoinColumn(name = "lesson_id", nullable = false)
+    private Lesson lesson;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @Lob
     @Column(name = "question_type", nullable = false)
-    private QuestionType questionType;
+    private String questionType;
 
     @NotNull
+    @Lob
     @Column(name = "prompt_text_template", nullable = false)
     private String promptTextTemplate;
 
@@ -68,7 +73,6 @@ public class LessonQuestion {
     @Column(name = "audio_url_questions")
     private String audioUrlQuestions;
 
-    // --- BỔ SUNG: Mối quan hệ One-to-Many với QuestionChoice ---
     @OneToMany(mappedBy = "lessonQuestion", // "lessonQuestion" là tên trường trong QuestionChoice entity
             cascade = CascadeType.ALL,    // Áp dụng tất cả các thao tác (PERSIST, MERGE, REMOVE) cho choices
             orphanRemoval = true,         // Xóa choices khỏi DB nếu chúng bị gỡ khỏi danh sách này

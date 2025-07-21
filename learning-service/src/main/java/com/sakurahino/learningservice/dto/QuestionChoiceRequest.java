@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class QuestionChoiceRequest {
     private Integer id; // để trống id nếu thêm mới
 
-    private Integer lessonId;
+    private Integer lessonQuestionId;
     private String textForeign;
     private String textRomaji;
 
