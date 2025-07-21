@@ -174,10 +174,7 @@ const TileIcon = ({
       </View>
     );
   }
-
-  // Trả về component SVG thực tế
-  // Quan trọng: Truyền width, height và đặc biệt là fill nếu bạn muốn thay đổi màu icon
-  return <IconComponent width={40} height={40} fill={iconColor} />;
+  return <IconComponent width={80} height={80} fill={iconColor} />;
 };
 
 const HoverLabel = ({
@@ -527,10 +524,8 @@ const LearningPathScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  mainScroll: {
-    width: "100%",
-  },
-  container: { flex: 1, backgroundColor: COLORS.white },
+  mainScroll: {},
+  container: { flex: 1, backgroundColor: COLORS.white, paddingBottom: 40 },
   topBar: {
     height: 50,
     paddingTop: 40,
@@ -570,7 +565,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    borderWidth: 6,
+    borderBottomWidth: 3,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -643,17 +638,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.gray200,
     elevation: 5,
   },
-  // Xóa style.bottomBar cũ ở đây nếu bạn đã xóa BottomBar cũ
-  // bottomBar: {
-  //   height: 80,
-  //   borderTopWidth: 1,
-  //   borderColor: COLORS.gray200,
-  //   flexDirection: "row",
-  //   justifyContent: "space-around",
-  //   alignItems: "center",
-  //   backgroundColor: COLORS.white,
-  //   paddingBottom: 10,
-  // },
 });
 
 export default LearningPathScreen;
