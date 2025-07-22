@@ -89,5 +89,14 @@ public class QuestionController {
         return new SuccessResponse("Sửa câu hỏi thành công <3");
     }
 
+    //excel
+    @PostMapping(value = "/admin/create/excel/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public SuccessResponse createByExcel(@PathVariable("id") Integer lessonId,
+                                         @RequestPart(value = "files", required = false)
+                                         MultipartFile fileExcel) {
+        questionService.importQuestionFromeExcel(lessonId, fileExcel);
+        return new SuccessResponse("Thêm dữ liệu thành công");
+    }
 
 }

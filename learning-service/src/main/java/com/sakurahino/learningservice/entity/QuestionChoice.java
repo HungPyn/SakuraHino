@@ -43,9 +43,9 @@ public class QuestionChoice {
     @JoinColumn(name = "lesson_question_id", nullable = false)
     private LessonQuestion lessonQuestion;
 
-    @NotNull
+
     @Lob
-    @Column(name = "text_foreign", nullable = false)
+    @Column(name = "text_foreign")
     private String textForeign;
 
     @Lob
@@ -69,7 +69,6 @@ public class QuestionChoice {
     private String textBlock;
 
     @Size(max = 255)
-    @NotNull
     @Column(name = "meaning", nullable = false)
     private String meaning;
 
