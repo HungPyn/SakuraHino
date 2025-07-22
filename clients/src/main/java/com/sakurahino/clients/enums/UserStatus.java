@@ -1,11 +1,12 @@
-package com.sakurahino.userservice.enums;
+package com.sakurahino.clients.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-public enum UserStatus {
+public enum  UserStatus {
     ACTIVE,
     BLOCKED,
-    DISABLED;
+    DISABLED,
+    DELETED;
 
     @JsonCreator
     public static UserStatus from(String value) {

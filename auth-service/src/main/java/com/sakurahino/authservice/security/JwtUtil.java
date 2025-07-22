@@ -28,7 +28,7 @@ public class JwtUtil {
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(expiry))
                 .claim("userId", userId)
-                .claim("role", role)
+                .claim("role", role.toUpperCase())
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }

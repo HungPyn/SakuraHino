@@ -2,6 +2,7 @@ package com.sakurahino.common.ex;
 
 
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ExceptionCode {
@@ -31,9 +32,19 @@ public enum ExceptionCode {
     //Upload-serivce
     FILE_NOT_NULL(3001,"Ảnh không được trống"),
     FILE_MAX(3002,"Ảnh vượt quá 5MB"),
-    FILE_NOT_SUPPORT(3004,"File ảnh là jpg,png");
+    FILE_NOT_SUPPORT(3004,"File ảnh là jpg,png"),
+
+    // kiểm tra quyền của user
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED.value(), "Bạn chưa đăng nhập"),
+    PERMISSION_DENIED(HttpStatus.FORBIDDEN.value(), "Bạn không có quyền thực hiện hành động này"),
+    USER_BLOCKED(HttpStatus.FORBIDDEN.value(), "Tài khoản của bạn đã bị khóa"),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN.value(), "Truy cập bị từ chối");
+
     private final int status;
     private final String error;
+
+
+
 
     ExceptionCode(int status, String error) {
         this.status = status;

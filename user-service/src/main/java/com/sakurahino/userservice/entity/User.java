@@ -1,7 +1,8 @@
 package com.sakurahino.userservice.entity;
 
 import com.sakurahino.clients.enums.Role;
-import com.sakurahino.userservice.enums.UserStatus;
+import com.sakurahino.clients.enums.UserStatus;
+import com.sakurahino.userservice.enums.UserType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,6 +35,9 @@ public class User {
     @Column(name = "day_creation")
     private Instant dayCreation;
 
+    @Column(name = "updated_day")
+    private Instant updatedDay;
+
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private Role role;
@@ -41,4 +45,8 @@ public class User {
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private UserStatus status;
+
+    @Column(name = "user_type")
+    @Enumerated(EnumType.STRING)
+    private UserType userType = UserType.FREE;
 }

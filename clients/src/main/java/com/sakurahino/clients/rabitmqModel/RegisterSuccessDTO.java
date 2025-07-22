@@ -1,6 +1,7 @@
 package com.sakurahino.clients.rabitmqModel;
 
 import com.sakurahino.clients.enums.Role;
+import com.sakurahino.clients.enums.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,5 +18,5 @@ public class RegisterSuccessDTO {
     private String username;
     private Role role;
     private Instant dayCreation;
-    private String status;
+    private UserStatus status;
 }
