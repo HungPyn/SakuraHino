@@ -1,7 +1,0 @@
-com\sakurahino\clients\dto\UploadResponse.class
-com\sakurahino\clients\config\FeignMultipartSupportConfig.class
-com\sakurahino\clients\enums\Role.class
-com\sakurahino\clients\rabitmqModel\SendResetCodeMessage.class
-com\sakurahino\clients\commons\RabbitKey.class
-com\sakurahino\clients\feign\UploadServiceClients.class
-com\sakurahino\clients\rabitmqModel\RegisterSuccessDTO.class
