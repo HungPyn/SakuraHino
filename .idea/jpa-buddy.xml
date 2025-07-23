@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="JpaBuddyIdeaProjectConfig" newRepositoryParent="org.springframework.data.jpa.repository.JpaRepository">
-    <option name="defaultUnitInitialized" value="true" />
-    <option name="renamerInitialized" value="true" />
-    <option name="reverseEngineeringLastDbConnectionId" value="8908d7ee-6ba8-46fb-adee-970a279bdda2__topic_service_db" />
-    <option name="reLastEntityCreationPackage" value="learning-service/src/main/java/com/sakurahino/learningservice/entity" />
-  </component>
-</project>
