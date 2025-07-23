@@ -32,7 +32,7 @@ public enum ExceptionCode {
     //Upload-serivce
     FILE_NOT_NULL(3001,"Ảnh không được trống"),
     FILE_MAX(3002,"Ảnh vượt quá 5MB"),
-    FILE_NOT_SUPPORT(3004,"File ảnh là jpg,png"),
+    FILE_NOT_SUPPORT(3004,"File ảnh phải có định dạng jpg,png"),
 
     // kiểm tra quyền của user
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED.value(), "Bạn chưa đăng nhập"),

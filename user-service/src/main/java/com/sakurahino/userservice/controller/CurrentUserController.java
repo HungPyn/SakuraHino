@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users/user")
-@PreAuthorize("hasAuthority('ADMIN')")
+@PreAuthorize("hasRole('USER')")
 public class CurrentUserController {
 
     private final UserService userService;
@@ -28,6 +28,11 @@ public class CurrentUserController {
     @GetMapping
     public SuccessResponse getUser() {
         var result = userService.findByIdForUser();
+        return new SuccessResponse(result);
+    }
+    @GetMapping("/checked")
+    public SuccessResponse checkUser() {
+        var result = userService.checkUser();
         return new SuccessResponse(result);
     }
 }

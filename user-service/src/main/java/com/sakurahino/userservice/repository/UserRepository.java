@@ -1,5 +1,6 @@
 package com.sakurahino.userservice.repository;
 
+import com.sakurahino.clients.enums.Role;
 import com.sakurahino.userservice.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,7 +13,7 @@ import java.time.Instant;
 public interface UserRepository extends JpaRepository<User, String> {
     boolean existsByEmail(String email);
 
-    Page<User> findAllByOrderByDayCreationDesc(Pageable pageable);
+    Page<User> findAllByRoleOrderByDayCreationDesc(Role role, Pageable pageable);
 
 }
 

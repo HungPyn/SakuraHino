@@ -2,6 +2,7 @@ package com.sakurahino.userservice.service.impl;
 
 import com.sakurahino.ampqclient.RabbitMQMessageProducer;
 import com.sakurahino.clients.commons.RabbitKey;
+import com.sakurahino.clients.enums.Role;
 import com.sakurahino.clients.feign.UploadServiceClients;
 import com.sakurahino.clients.rabitmqModel.RegisterSuccessDTO;
 import com.sakurahino.clients.rabitmqModel.UserDeletedDTO;
@@ -10,10 +11,7 @@ import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.security.AuthHelper;
 import com.sakurahino.common.util.FileUtils;
-import com.sakurahino.userservice.dto.PublicUserResponseDTO;
-import com.sakurahino.userservice.dto.RequestUserDTO;
-import com.sakurahino.userservice.dto.ResponseUserDTO;
-import com.sakurahino.userservice.dto.UpdateProfileRequestDTO;
+import com.sakurahino.userservice.dto.*;
 import com.sakurahino.userservice.entity.User;
 import com.sakurahino.clients.enums.UserStatus;
 import com.sakurahino.userservice.enums.UserType;
@@ -88,7 +86,7 @@ public class UserServiceImpl  implements UserService {
     public PaginatedResponse<ResponseUserDTO> getAll(int page, int size) {
         log.info("Fetching all users: page={}, size={}", page, size);
         Pageable pageable = PageRequest.of(page, size);
-        Page<User> topicPage = userRepository.findAllByOrderByDayCreationDesc(pageable);
+        Page<User> topicPage = userRepository.findAllByRoleOrderByDayCreationDesc(Role.USER,pageable);
 
         List<ResponseUserDTO> responseList = topicPage.getContent().stream()
                 .map(userServiceMapper::toResponseUserDTO)
@@ -180,5 +178,14 @@ public class UserServiceImpl  implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
         return userServiceMapper.toPublicUserResponseDTO(user);
+    }
+
+    @Override
+    public CheckedResponseDTO checkUser() {
+        String userId = authHelper.getUserId();
+        log.info("checking user ID: {}", userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
+        return userServiceMapper.toCheckedResponseDTO(user);
     }
 }

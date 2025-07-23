@@ -23,7 +23,8 @@ public class RabbitKey {
         public static final String QUEUE_USER_LOGGED_IN = "queue.auth.loggedin";
 
         //user-service
-        public static final String QUEUE_USER_DELETED = "queue.auth.delete.user";
+        public static final String QUEUE_USER_DELETED = "queue.auth.user.deleted";
+
 
         private RabbitKey() {}
 

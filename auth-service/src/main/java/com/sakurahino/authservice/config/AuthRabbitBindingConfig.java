@@ -15,7 +15,7 @@ public class AuthRabbitBindingConfig {
 
     @Bean
     Queue deleteSuccessQueue() {
-        return new Queue(RabbitKey.ROUTING_USER_DELETED);
+        return new Queue(RabbitKey.QUEUE_USER_DELETED);
     }
 
     @Bean

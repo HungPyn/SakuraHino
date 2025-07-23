@@ -1,12 +1,9 @@
 package com.sakurahino.userservice.service;
 
 import com.sakurahino.clients.rabitmqModel.RegisterSuccessDTO;
-import com.sakurahino.userservice.dto.PublicUserResponseDTO;
-import com.sakurahino.userservice.dto.RequestUserDTO;
-import com.sakurahino.userservice.dto.ResponseUserDTO;
+import com.sakurahino.userservice.dto.*;
 
 import com.sakurahino.common.dto.PaginatedResponse;
-import com.sakurahino.userservice.dto.UpdateProfileRequestDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
@@ -26,4 +23,5 @@ public interface UserService {
     //user
     PublicUserResponseDTO updateForUser (UpdateProfileRequestDTO dto, MultipartFile file);
     PublicUserResponseDTO findByIdForUser();
+    CheckedResponseDTO checkUser();
 }

@@ -4,8 +4,6 @@ import com.sakurahino.clients.enums.Role;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
-import java.time.Instant;
-
 @Data
 public class RegisterRequestDTO {
 
@@ -22,8 +20,6 @@ public class RegisterRequestDTO {
     @NotBlank(message = "Mật khẩu không được để trống")
     @Size(min = 6, max = 32, message = "Mật khẩu phải từ 6 đến 32 ký tự")
     private String password;
-
-    private Instant dayCreation;
 
     @NotNull(message = "Vai trò không được để trống")
     private Role role;

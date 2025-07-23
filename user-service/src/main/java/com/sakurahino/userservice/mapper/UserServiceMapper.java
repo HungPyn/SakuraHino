@@ -1,5 +1,6 @@
 package com.sakurahino.userservice.mapper;
 
+import com.sakurahino.userservice.dto.CheckedResponseDTO;
 import com.sakurahino.userservice.dto.PublicUserResponseDTO;
 import com.sakurahino.userservice.dto.ResponseUserDTO;
 import com.sakurahino.userservice.entity.User;
@@ -25,4 +26,6 @@ public abstract class UserServiceMapper {
         dto.setOnline(isOnline);
     }
     public abstract PublicUserResponseDTO toPublicUserResponseDTO(User user);
+
+    public abstract CheckedResponseDTO toCheckedResponseDTO(User user);
 }

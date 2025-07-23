@@ -38,6 +38,9 @@ public class User {
     @Column(name = "updated_day")
     private Instant updatedDay;
 
+    @Column(name = "isNewUser")
+    private  Boolean isNewUser = false;
+
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private Role role;

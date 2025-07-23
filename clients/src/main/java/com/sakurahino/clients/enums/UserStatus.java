@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 public enum  UserStatus {
     ACTIVE,
     BLOCKED,
-    DISABLED,
     DELETED;
 
     @JsonCreator
