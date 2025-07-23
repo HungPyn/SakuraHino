@@ -17,9 +17,9 @@ spring:
         - id: auth-service
           uri: lb://auth-service
           predicates:
-            - Path=/auth/**
+            - Path=/api/auth/**
           filters:
-            - RewritePath=/auth/(?<remaining>.*),/auth/${remaining}
+            - RewritePath=/api/auth/(?<remaining>.*),/auth/${remaining}
 
         - id: user-service
           uri: lb://user-service

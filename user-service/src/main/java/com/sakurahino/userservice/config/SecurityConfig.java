@@ -1,6 +1,6 @@
 package com.sakurahino.userservice.config;
 
-import com.sakurahino.userservice.security.UserContextFilter;
+import com.sakurahino.common.security.UserContextFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +21,8 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/users/admin/**").hasAuthority("ADMIN")
-                        .requestMatchers("/users/profile/**").hasAnyAuthority("USER", "ADMIN")
+                        .requestMatchers("/users/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/users/user/**").hasRole("USER")
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(userContextFilter, UsernamePasswordAuthenticationFilter.class)

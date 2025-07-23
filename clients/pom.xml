@@ -10,7 +10,7 @@
         <groupId>com.sakurahino</groupId>
         <artifactId>microservice-sakurahino</artifactId>
         <version>1.0.0</version>
-        <relativePath/>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>clients</artifactId>
@@ -61,6 +61,7 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.sakurahino</groupId>
             <artifactId>common</artifactId>

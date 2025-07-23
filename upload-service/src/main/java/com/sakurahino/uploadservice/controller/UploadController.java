@@ -30,7 +30,7 @@ public class UploadController {
      * Upload ảnh hoặc file mp3
      */
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadFile(@RequestPart("file") MultipartFile file) {
         validateFile(file);
         String url = uploadService.uploadAvoidDuplicate(file);
         return ResponseEntity.ok(new UploadResponse(url));
@@ -64,7 +64,8 @@ public class UploadController {
         if (file == null || file.isEmpty()) {
             throw new AppException(ExceptionCode.FILE_NOT_NULL);
         }
-
+        System.out.println("File content type: " + file.getContentType());
+        System.out.println("File size: " + file.getSize());
         if (!ALLOWED_CONTENT_TYPES.contains(file.getContentType())) {
             throw new AppException(ExceptionCode.FILE_NOT_SUPPORT);
         }

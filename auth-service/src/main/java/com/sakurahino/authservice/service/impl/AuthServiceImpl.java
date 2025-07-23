@@ -5,6 +5,7 @@ import com.sakurahino.authservice.dto.*;
 import com.sakurahino.authservice.entity.ResetPassword;
 import com.sakurahino.authservice.entity.User;
 import com.sakurahino.clients.enums.Role;
+import com.sakurahino.clients.enums.UserStatus;
 import com.sakurahino.clients.rabitmqModel.UserLoggedInDTO;
 import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
@@ -54,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(password);
         user.setRole(dto.getRole());
         user.setDayCreation(dayCreation);
-        user.setStatus("ACTIVE");
+        user.setStatus(UserStatus.ACTIVE);
         userRepository.save(user);
 
         // đăng ký gửi message rabbit mq
@@ -82,11 +83,13 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             throw new AppException(ExceptionCode.MAT_KHAU_KHONG_DUNG);
         }
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new AppException(ExceptionCode.USER_BLOCKED);
+        }
         String token = jwtUtil.generateToken(user.getId(), user.getRole().toString());
         LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
         loginResponseDTO.setUsername(user.getUsername());
         loginResponseDTO.setToken(token);
-
         if (user.getRole() == Role.USER) {
             UserLoggedInDTO loggedInDTO = new UserLoggedInDTO();
             loggedInDTO.setUserId(user.getId());

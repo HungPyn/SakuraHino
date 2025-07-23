@@ -1,7 +1,7 @@
 package com.sakurahino.userservice.dto;
 
 import com.sakurahino.clients.enums.Role;
-import com.sakurahino.userservice.enums.UserStatus;
+import com.sakurahino.clients.enums.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,6 +24,8 @@ public class ResponseUserDTO {
     private String avatarUrl;
 
     private Instant dayCreation;
+
+    private Instant updatedDay;
 
     private Role role;
 
