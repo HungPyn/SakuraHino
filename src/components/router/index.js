@@ -27,29 +27,39 @@ const routes = [
         component: () => import('@/components/admin/StatisticsView.vue')
       },
       {
-        path: 'vocabulary',
-        name: 'Vocabulary',
-        component: () => import('@/components/admin/VocabularyView.vue')
-      },
+        path: 'topic',
+        name: 'Topic',
+        component: () => import('@/components/admin/LessonByTopicView.vue')
+},    {
+        path: 'personal-path',
+        name: 'Personal-path',
+        component: () => import('@/components/admin/LearningPathView.vue')
+},
       {
-        path: 'grammar',
-        name: 'Grammar',
-        component: () => import('@/components/admin/GrammarView.vue')
-      },
-       {
-        path: 'exercises',
-        name: 'Exercises',
-        component: () => import('@/components/admin/ExerciseView.vue')
-      },
-       {
-        path: 'listening',
-        name: 'Listening',
-        component: () => import('@/components/admin/AudioView.vue')
-      }, {
-        path: 'exams',
-        name: 'Exams',
-        component: () => import('@/components/admin/JLPTView.vue')
-      }
+        path: 'badges',
+        name: 'Badges',
+        component: () => import('@/components/admin/BadgesView.vue')
+},
+     {
+        path: 'reminders',
+        name: 'Reminders',
+        component: () => import('@/components/admin/RemindersView.vue')
+},
+    {
+        path: 'entertainment',
+        name: 'Entertainment',
+        component: () => import('@/components/admin/EntertainmentView.vue')
+},
+   {
+        path: 'community',
+        name: 'Community',
+        component: () => import('@/components/admin/CommunityView.vue')
+},
+{
+        path: 'packages',
+        name: 'Packages',
+        component: () => import('@/components/admin/SubscriptionPlansView.vue')
+},
     ]
   }
 ];

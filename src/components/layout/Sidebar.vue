@@ -9,13 +9,13 @@
         <!-- General Overview Category -->
         <li class="nav-item">
           <router-link to="/admin/dashboard" class="nav-link" active-class="active">
-            <font-awesome-icon icon="fas fa-tachometer-alt" class="nav-icon" />
+            <i class="bi bi-speedometer2 nav-icon"></i>
             Tổng quan
           </router-link>
         </li>
         <li class="nav-item">
           <router-link to="/admin/statistics" class="nav-link" active-class="active">
-            <font-awesome-icon icon="fas fa-chart-bar" class="nav-icon" />
+            <i class="bi bi-bar-chart-line nav-icon"></i>
             Thống kê
           </router-link>
         </li>
@@ -23,73 +23,58 @@
         <!-- Content Management Section -->
         <li class="nav-item category-title">Quản lý nội dung</li>
         <li class="nav-item">
-          <router-link to="/admin/vocabulary" class="nav-link" active-class="active">
-            <font-awesome-icon icon="fas fa-language" class="nav-icon" />
-            Từ vựng & Flashcard
+          <router-link to="/admin/topic" class="nav-link" active-class="active">
+            <i class="bi bi-journal-text nav-icon"></i>
+            Chủ đề
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/grammar" class="nav-link" active-class="active">
-            <font-awesome-icon icon="fas fa-pencil-alt" class="nav-icon" />
-            Bài giảng Ngữ pháp
+          <router-link to="/admin/personal-path" class="nav-link" active-class="active">
+            <i class="bi bi-map nav-icon"></i>
+            Lộ trình học cá nhân
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/exercises" class="nav-link" active-class="active">
-            <font-awesome-icon icon="fas fa-dumbbell" class="nav-icon" />
-            Bài tập & Luyện tập
+          <router-link to="/admin/badges" class="nav-link" active-class="active">
+            <i class="bi bi-award nav-icon"></i>
+            Huy hiệu người dùng
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/listening" class="nav-link" active-class="active">
-            <font-awesome-icon icon="fas fa-headphones-alt" class="nav-icon" />
-            Audio & Luyện nghe
+          <router-link to="/admin/reminders" class="nav-link" active-class="active">
+            <i class="bi bi-bell nav-icon"></i>
+            Nhắc nhở
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/exams" class="nav-link" active-class="active">
-            <font-awesome-icon icon="fas fa-file-signature" class="nav-icon" />
-            Đề thi & Kiểm tra
-          </router-link>
-        </li>
-        <li class="nav-item">
-          <router-link to="/admin/manga-dialogue" class="nav-link" active-class="active">
-            <font-awesome-icon icon="fas fa-comments" class="nav-icon" />
+          <router-link to="/admin/entertainment" class="nav-link" active-class="active">
+            <i class="bi bi-controller nav-icon"></i>
             Giải trí
+          </router-link>
+        </li>
+        <li class="nav-item">
+          <router-link to="/admin/community" class="nav-link" active-class="active">
+            <i class="bi bi-people nav-icon"></i>
+            Cộng đồng
           </router-link>
         </li>
 
         <!-- User Management Section -->
         <li class="nav-item category-title">Quản lý người dùng</li>
         <li class="nav-item">
-          <router-link to="/admin/users" class="nav-link" active-class="active">
-            <font-awesome-icon icon="fas fa-user-friends" class="nav-icon" />
-            Học viên
-          </router-link>
-        </li>
-        <li class="nav-item">
           <router-link to="/admin/packages" class="nav-link" active-class="active">
-            <font-awesome-icon icon="fas fa-box-open" class="nav-icon" />
+            <i class="bi bi-box-seam nav-icon"></i>
             Quản lý Gói & Đăng ký
           </router-link>
-        </li>
-
-        <!-- Reports & Statistics Section -->
-        <li class="nav-item category-title">Báo cáo & Thống kê</li>
-        <li class="nav-item">
-            <router-link to="/admin/reports/general" class="nav-link" active-class="active">
-                <font-awesome-icon icon="fas fa-chart-line" class="nav-icon" />
-                Báo cáo tổng quan
-            </router-link>
         </li>
 
         <!-- System Settings Section -->
         <li class="nav-item category-title">Cài đặt hệ thống</li>
         <li class="nav-item">
-            <router-link to="/admin/settings/general" class="nav-link" active-class="active">
-                <font-awesome-icon icon="fas fa-cog" class="nav-icon" />
-                Cài đặt chung
-            </router-link>
+          <router-link to="/admin/settings/general" class="nav-link" active-class="active">
+            <i class="bi bi-gear nav-icon"></i>
+            Cài đặt chung
+          </router-link>
         </li>
       </ul>
     </nav>

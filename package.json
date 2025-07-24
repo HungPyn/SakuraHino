@@ -15,6 +15,8 @@
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@heroicons/vue": "^2.2.0",
     "autoprefixer": "^10.4.21",
+    "bootstrap": "^5.3.7",
+    "bootstrap-icons": "^1.13.1",
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
     "material-design-icons-iconfont": "^6.7.0",
