@@ -1,87 +1,104 @@
 // src/services/subscriptionService.js
 
-import { ref } from 'vue';
-
-const subscriptionPlans = ref([
+// Dữ liệu gói đăng ký giả lập
+let subscriptionPlans = [
   {
     id: 1,
-    name: 'Gói Standard',
-    description: 'Gói cơ bản với các tính năng tiêu chuẩn.',
-    price: 99000,
-    duration: '1 tháng', // Ví dụ: '1 tháng', '3 tháng', '1 năm'
-    features: [
-      'Truy cập nội dung cơ bản',
-      'Không quảng cáo',
-      'Hỗ trợ tiêu chuẩn'
-    ],
+    name: 'Gói Cơ Bản (Tháng)',
+    description: 'Truy cập không giới hạn vào tất cả bài học N5.',
+    price: 150000,
+    duration: 'monthly', // monthly, quarterly, yearly
+    features: ['Bài học N5', 'Quiz cơ bản'],
     status: 'active', // active, inactive
-    createdAt: '2023-01-15T10:00:00Z',
-    updatedAt: '2023-01-15T10:00:00Z',
+    createdAt: '2025-07-01T10:00:00Z',
   },
   {
     id: 2,
-    name: 'Gói Premium',
-    description: 'Gói cao cấp với nhiều tính năng nâng cao và ưu đãi đặc biệt.',
-    price: 199000,
-    duration: '1 tháng',
-    features: [
-      'Truy cập tất cả nội dung',
-      'Xem offline',
-      'Chất lượng HD/4K',
-      'Hỗ trợ ưu tiên'
-    ],
+    name: 'Gói Tiêu Chuẩn (Quý)',
+    description: 'Truy cập vào tất cả bài học N5, N4 và 2 buổi mentorship/quý.',
+    price: 400000,
+    duration: 'quarterly',
+    features: ['Bài học N5, N4', 'Quiz nâng cao', '2 buổi mentorship'],
     status: 'active',
-    createdAt: '2023-02-01T11:30:00Z',
-    updatedAt: '2023-02-01T11:30:00Z',
+    createdAt: '2025-06-15T12:30:00Z',
   },
   {
     id: 3,
-    name: 'Gói VIP',
-    description: 'Gói đặc biệt dành cho khách hàng thân thiết, ưu tiên cao nhất.',
-    price: 499000,
-    duration: '6 tháng',
-    features: [
-      'Tất cả tính năng Premium',
-      'Sự kiện độc quyền',
-      'Quà tặng hàng tháng',
-      'Hỗ trợ 24/7'
-    ],
-    status: 'inactive',
-    createdAt: '2023-03-10T09:00:00Z',
-    updatedAt: '2023-03-10T09:00:00Z',
+    name: 'Gói Cao Cấp (Năm)',
+    description: 'Truy cập toàn bộ nền tảng, hỗ trợ 24/7 và khóa học chuyên sâu.',
+    price: 1500000,
+    duration: 'yearly',
+    features: ['Tất cả bài học', 'Hỗ trợ 24/7', 'Khóa học chuyên sâu', 'Thi thử JLPT'],
+    status: 'active',
+    createdAt: '2025-05-20T08:00:00Z',
   },
-]);
+  {
+    id: 4,
+    name: 'Gói Dùng Thử (1 tuần)',
+    description: 'Truy cập giới hạn các bài học đầu tiên.',
+    price: 0,
+    duration: 'weekly', // Thêm ví dụ tuần
+    features: ['Bài học giới hạn'],
+    status: 'inactive', // Gói không hoạt động
+    createdAt: '2025-07-20T14:00:00Z',
+  },
+  {
+    id: 5,
+    name: 'Gói VIP (Năm)',
+    description: 'Tất cả các tính năng của gói Cao cấp kèm theo các buổi học 1 kèm 1.',
+    price: 2500000,
+    duration: 'yearly',
+    features: ['Tất cả tính năng Cao cấp', 'Học 1 kèm 1'],
+    status: 'active',
+    createdAt: '2025-07-22T09:00:00Z',
+  },
+   {
+    id: 6,
+    name: 'Gói Khuyến Mãi (Tháng)',
+    description: 'Gói cơ bản với giá ưu đãi đặc biệt trong thời gian có hạn.',
+    price: 120000,
+    duration: 'monthly',
+    features: ['Bài học N5', 'Quiz cơ bản', 'Giá ưu đãi'],
+    status: 'inactive', // Gói không hoạt động (đã hết khuyến mãi)
+    createdAt: '2025-07-10T11:00:00Z',
+  },
+];
 
-export const getSubscriptionPlans = () => {
-  return subscriptionPlans.value;
-};
+// Hàm hỗ trợ để tạo ID duy nhất cho gói mới
+function getNextId() {
+    return subscriptionPlans.length > 0 ? Math.max(...subscriptionPlans.map(p => p.id)) + 1 : 1;
+}
 
-export const addSubscriptionPlan = (newPlan) => {
-  const newId = subscriptionPlans.value.length > 0 ? Math.max(...subscriptionPlans.value.map(p => p.id)) + 1 : 1;
-  const planWithId = {
-    id: newId,
-    ...newPlan,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  subscriptionPlans.value.push(planWithId);
-  return planWithId;
-};
+export function getSubscriptionPlans() {
+    // Trả về một bản sao để tránh thay đổi trực tiếp mảng gốc bên ngoài service
+    return [...subscriptionPlans];
+}
 
-export const updateSubscriptionPlan = (updatedPlan) => {
-  const index = subscriptionPlans.value.findIndex(p => p.id === updatedPlan.id);
-  if (index !== -1) {
-    subscriptionPlans.value[index] = {
-      ...updatedPlan,
-      updatedAt: new Date().toISOString(),
+export function addSubscriptionPlan(plan) {
+    const newPlan = {
+        id: getNextId(),
+        createdAt: new Date().toISOString(),
+        // Gán giá trị mặc định nếu không được cung cấp từ form
+        status: plan.status || 'inactive',
+        duration: plan.duration || 'monthly',
+        features: plan.features || [],
+        ...plan, // Ghi đè các thuộc tính nếu chúng đã tồn tại trong 'plan'
     };
-    return subscriptionPlans.value[index];
-  }
-  return null;
-};
+    subscriptionPlans.push(newPlan);
+    return newPlan; // Trả về đối tượng mới đã thêm ID và createdAt
+}
 
-export const deleteSubscriptionPlan = (planId) => {
-  const initialLength = subscriptionPlans.value.length;
-  subscriptionPlans.value = subscriptionPlans.value.filter(p => p.id !== planId);
-  return subscriptionPlans.value.length < initialLength;
-};
+export function updateSubscriptionPlan(updatedPlan) {
+    const index = subscriptionPlans.findIndex(p => p.id === updatedPlan.id);
+    if (index !== -1) {
+        subscriptionPlans[index] = { ...subscriptionPlans[index], ...updatedPlan };
+        return subscriptionPlans[index]; // Trả về gói đã được cập nhật
+    }
+    return null; // Không tìm thấy gói để cập nhật
+}
+
+export function deleteSubscriptionPlan(planId) {
+    const initialLength = subscriptionPlans.length;
+    subscriptionPlans = subscriptionPlans.filter(p => p.id !== planId);
+    return subscriptionPlans.length < initialLength; // Trả về true nếu có gói được xóa
+}

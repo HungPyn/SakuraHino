@@ -7,12 +7,12 @@
     <nav class="sidebar-nav">
       <ul>
         <!-- General Overview Category -->
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <router-link to="/admin/dashboard" class="nav-link" active-class="active">
             <i class="bi bi-speedometer2 nav-icon"></i>
             Tổng quan
           </router-link>
-        </li>
+        </li> -->
         <li class="nav-item">
           <router-link to="/admin/statistics" class="nav-link" active-class="active">
             <i class="bi bi-bar-chart-line nav-icon"></i>
@@ -71,7 +71,7 @@
         <!-- System Settings Section -->
         <li class="nav-item category-title">Cài đặt hệ thống</li>
         <li class="nav-item">
-          <router-link to="/admin/settings/general" class="nav-link" active-class="active">
+          <router-link to="/admin/settings-general" class="nav-link" active-class="active">
             <i class="bi bi-gear nav-icon"></i>
             Cài đặt chung
           </router-link>

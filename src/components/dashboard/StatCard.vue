@@ -1,101 +1,96 @@
 <template>
-  <div class="card stat-card" :style="{ background: bgColor }">
-    <div class="icon-container" :style="{ background: iconBgColor }">
-      <font-awesome-icon :icon="icon" class="main-icon" :style="{ color: iconColor }" />
-    </div>
-    <div class="stat-content">
-      <div class="stat-title">{{ title }}</div>
-      <div class="stat-value">{{ value }}</div>
-      <div class="stat-change" :class="changeType">
-        <font-awesome-icon :icon="changeIcon" class="change-icon" />
-        {{ changePercentage }} so với tháng trước
+  <v-card class="stat-card rounded-xl elevation-3">
+    <v-card-text class="d-flex align-center justify-space-between py-4">
+      <div class="stat-content">
+        <div class="stat-value font-weight-bold text-h5 mb-1 text-primary">{{ value }}</div>
+        <div class="stat-title text-subtitle-2 text-grey-darken-2">{{ title }}</div>
       </div>
-    </div>
-  </div>
+      <div class="stat-icon-wrapper" :style="{ backgroundColor: iconBgColor }">
+        <span v-if="emoji" class="stat-emoji">{{ emoji }}</span>
+        <i v-else :class="['bi', iconClass]" :style="{ color: iconColor }"></i>
+      </div>
+    </v-card-text>
+    <v-card-actions class="px-4 pb-3">
+      <v-chip
+        size="small"
+        :color="changePositive ? 'green' : 'red'"
+        label
+      >
+        <i
+          :class="['bi', changePositive ? 'bi-arrow-up-short' : 'bi-arrow-down-short']"
+          class="mr-1"
+          style="font-size: 1.1rem;"
+        ></i>
+        <span class="font-weight-medium">{{ changePercentage }}</span>
+      </v-chip>
+      <v-spacer></v-spacer>
+    </v-card-actions>
+  </v-card>
 </template>
 
-<script>
-import { defineComponent, computed } from 'vue';
+<script setup>
+import { defineProps } from 'vue';
 
-export default defineComponent({
-  name: 'StatCard',
-  props: {
-    title: String,
-    value: [String, Number],
-    changePercentage: String,
-    changePositive: Boolean,
-    icon: String,
-    iconBgColor: String,
-    iconColor: String
-  },
-  setup(props) {
-    const changeType = computed(() => (props.changePositive ? 'positive' : 'negative'));
-    const changeIcon = computed(() => (props.changePositive ? 'fas fa-arrow-up' : 'fas fa-arrow-down'));
-    return { changeType, changeIcon };
-  }
+const props = defineProps({
+  title: String,
+  value: [String, Number],
+  changePercentage: String,
+  changePositive: Boolean,
+  // icon không còn là FontAwesome class mà là phần sau 'bi-'
+  iconClass: String, // Ví dụ: 'person-fill' cho bi-person-fill
+  emoji: String, // Emoji character (e.g., '👥')
+  iconBgColor: String, // Background color for the icon circle
+  iconColor: String // Color for Bootstrap icon
 });
 </script>
 
 <style scoped>
 .stat-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 25px;
-  border-radius: 16px;
-  color: white;
-  background: #f5f5f5;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease;
+  background-color: #FFFFFF !important;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  border: none;
 }
 
 .stat-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
-.icon-container {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
+
+.stat-content {
+  flex-grow: 1;
+  text-align: left;
+}
+
+.stat-value {
+  color: #333333;
+  font-size: 1.8rem !important;
+}
+
+.stat-title {
+  color: #616161;
+  font-size: 0.95rem !important;
+  line-height: 1.2;
+}
+
+.stat-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 24px;
-  background: var(--icon-bg, #e0e0e0);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-left: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.main-icon {
-  font-size: 28px;
-}
-.stat-content {
-  flex: 1;
-}
-.stat-title {
-  font-size: 15px;
-  color: #666;
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-.stat-value {
+.stat-emoji {
   font-size: 32px;
-  font-weight: 700;
-  color: #2d2d2d;
-  margin-bottom: 6px;
+  line-height: 1;
 }
-.stat-change {
-  font-size: 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-}
-.stat-change.positive {
-  color: #28a745;
-}
-.stat-change.negative {
-  color: #dc3545;
-}
-.change-icon {
-  margin-right: 6px;
-  font-size: 13px;
+
+/* Style cho Bootstrap Icons */
+.stat-icon-wrapper i.bi {
+  font-size: 30px; /* Kích thước Bootstrap icon */
+  line-height: 1;
 }
 </style>

@@ -1,308 +1,217 @@
 <template>
-  <div class="modal fade" id="lessonFormModal" tabindex="-1" aria-labelledby="lessonFormModalLabel" aria-hidden="true" ref="modalElement">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+  <div class="modal fade" id="lessonFormModal" tabindex="-1" aria-labelledby="lessonFormModalLabel" aria-hidden="true" ref="modalRef">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="lessonFormModalLabel">{{ isEditMode ? 'Chỉnh Sửa Bài học' : 'Tạo Bài học Mới' }}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="closeModal"></button>
+          <h5 class="modal-title" id="lessonFormModalLabel">{{ isEditMode ? 'Chỉnh Sửa Bài Học' : 'Thêm Bài Học Mới' }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="saveLesson">
-            <div class="row mb-3">
-              <div class="col-md-6">
+            <div class="row">
+              <div class="col-md-6 mb-3">
                 <label for="lessonName" class="form-label">Tên Bài học <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="lessonName" v-model="lesson.name" required>
+                <input type="text" class="form-control" :class="{'is-invalid': errors.name}" id="lessonName" v-model="lesson.name" required>
+                <div class="invalid-feedback" v-if="errors.name">{{ errors.name }}</div>
               </div>
-              <div class="col-md-3">
+              <div class="col-md-6 mb-3">
                 <label for="lessonLevel" class="form-label">Cấp độ <span class="text-danger">*</span></label>
-                <select class="form-select" id="lessonLevel" v-model="lesson.level" required>
-                  <option value="">Chọn cấp độ</option>
-                  <option>N5</option>
-                  <option>N4</option>
-                  <option>N3</option>
-                  <option>N2</option>
-                  <option>N1</option>
+                <select class="form-select" :class="{'is-invalid': errors.level}" id="lessonLevel" v-model="lesson.level" required>
+                  <option value="" disabled>Chọn cấp độ</option>
+                  <option v-for="level in availableLevels" :key="level" :value="level">{{ level }}</option>
                 </select>
-              </div>
-              <div class="col-md-3">
-                <label for="lessonStatus" class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                <select class="form-select" id="lessonStatus" v-model="lesson.status" required>
-                  <option value="draft">Nháp</option>
-                  <option value="published">Đã xuất bản</option>
-                </select>
+                <div class="invalid-feedback" v-if="errors.level">{{ errors.level }}</div>
               </div>
             </div>
+
             <div class="mb-3">
-              <label for="lessonTopic" class="form-label">Chủ đề</label>
-              <input type="text" class="form-control" id="lessonTopic" v-model="lesson.topic">
+              <label for="lessonTopic" class="form-label">Chủ đề <span class="text-danger">*</span></label>
+              <select class="form-select" :class="{'is-invalid': errors.topic_id}" id="lessonTopic" v-model="lesson.topic_id" required>
+                <option value="" disabled>Chọn chủ đề</option>
+                <option v-for="topic in availableTopics" :key="topic.id" :value="topic.id">{{ topic.name }}</option>
+              </select>
+              <div class="invalid-feedback" v-if="errors.topic_id">{{ errors.topic_id }}</div>
             </div>
+
             <div class="mb-3">
-              <label for="lessonDescription" class="form-label">Mô tả ngắn gọn</label>
-              <textarea class="form-control" id="lessonDescription" rows="2" v-model="lesson.description"></textarea>
-            </div>
-            <div class="mb-4">
-                <label for="lessonImage" class="form-label">Hình ảnh đại diện</label>
-                <input type="file" class="form-control" id="lessonImage" @change="handleImageUpload">
-                <small v-if="lesson.imageUrl" class="text-muted mt-2 d-block">
-                    <img :src="lesson.imageUrl" alt="Preview" class="img-thumbnail mt-2" style="max-height: 100px;">
-                    <br>Đã có ảnh. Chọn ảnh mới để thay đổi.
-                </small>
+              <label for="lessonDescription" class="form-label">Mô tả</label>
+              <textarea class="form-control" :class="{'is-invalid': errors.description}" id="lessonDescription" v-model="lesson.description" rows="3"></textarea>
+              <div class="invalid-feedback" v-if="errors.description">{{ errors.description }}</div>
             </div>
 
-            <ul class="nav nav-tabs nav-fill mb-3" id="lessonContentTabs" role="tablist">
-              <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="vocab-tab" data-bs-toggle="tab" data-bs-target="#vocab" type="button" role="tab" aria-controls="vocab" aria-selected="true">
-                  <i class="bi bi-card-text me-2"></i>Từ vựng
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="grammar-tab" data-bs-toggle="tab" data-bs-target="#grammar" type="button" role="tab" aria-controls="grammar" aria-selected="false">
-                  <i class="bi bi-spellcheck me-2"></i>Ngữ pháp
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="listening-tab" data-bs-toggle="tab" data-bs-target="#listening" type="button" role="tab" aria-controls="listening" aria-selected="false">
-                  <i class="bi bi-headset me-2"></i>Nghe hiểu
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="exercises-tab" data-bs-toggle="tab" data-bs-target="#exercises" type="button" role="tab" aria-controls="exercises" aria-selected="false">
-                  <i class="bi bi-clipboard-check me-2"></i>Bài tập
-                </button>
-              </li>
-            </ul>
+            <div class="mb-3">
+              <label for="lessonImageUrl" class="form-label">URL Hình ảnh</label>
+              <input type="url" class="form-control" :class="{'is-invalid': errors.imageUrl}" id="lessonImageUrl" v-model="lesson.imageUrl">
+              <div class="invalid-feedback" v-if="errors.imageUrl">{{ errors.imageUrl }}</div>
+            </div>
 
-            <div class="tab-content" id="lessonContentTabsContent">
-              <div class="tab-pane fade show active" id="vocab" role="tabpanel" aria-labelledby="vocab-tab">
-                <h6 class="mb-3">Danh sách Từ vựng</h6>
-                <div class="table-responsive mb-3">
-                    <table class="table table-bordered table-sm">
-                        <thead>
-                            <tr>
-                                <th>Tiếng Nhật</th>
-                                <th>Phiên âm</th>
-                                <th>Nghĩa TV</th>
-                                <th>Loại từ</th>
-                                <th>Ví dụ</th>
-                                <th>Audio</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-if="lesson.vocabulary.length === 0">
-                                <td colspan="7" class="text-center text-muted">Chưa có từ vựng nào.</td>
-                            </tr>
-                            <tr v-for="(word, index) in lesson.vocabulary" :key="index">
-                                <td><input type="text" class="form-control form-control-sm" v-model="word.japanese"></td>
-                                <td><input type="text" class="form-control form-control-sm" v-model="word.pronunciation"></td>
-                                <td><input type="text" class="form-control form-control-sm" v-model="word.vietnamese"></td>
-                                <td><input type="text" class="form-control form-control-sm" v-model="word.type"></td>
-                                <td><input type="text" class="form-control form-control-sm" v-model="word.example"></td>
-                                <td>
-                                    <input type="file" class="form-control form-control-sm" @change="e => handleAudioUpload(e, index, 'vocabulary')">
-                                    <small v-if="word.audioUrl">{{ word.audioUrl ? word.audioUrl.split('/').pop() : '' }}</small>
-                                    <audio v-if="word.audioUrl" :src="word.audioUrl" controls class="w-100 mt-1"></audio>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-danger" @click="removeVocab(index)"><i class="bi bi-x-lg"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm" @click="addVocab">
-                    <i class="bi bi-plus-lg me-2"></i>Thêm Từ Vựng
+            <div class="mb-3">
+              <label for="lessonStatus" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+              <select class="form-select" :class="{'is-invalid': errors.status}" id="lessonStatus" v-model="lesson.status" required>
+                <option value="draft">Bản nháp</option>
+                <option value="published">Đã xuất bản</option>
+              </select>
+              <div class="invalid-feedback" v-if="errors.status">{{ errors.status }}</div>
+            </div>
+
+            <hr class="my-4">
+
+            <h6>Nội dung chi tiết bài học</h6>
+
+            <div class="mb-4 p-3 border rounded">
+              <h5 class="d-flex justify-content-between align-items-center">
+                Từ vựng
+                <button type="button" class="btn btn-sm btn-outline-primary" @click="addVocabularyItem">
+                  <i class="bi bi-plus-circle"></i> Thêm từ
                 </button>
+              </h5>
+              <div v-for="(vocab, index) in lesson.vocabulary" :key="index" class="row g-2 mb-2 align-items-end">
+                <div class="col-md-4">
+                  <label :for="'vocabWord' + index" class="form-label small">Từ/Cụm từ</label>
+                  <input type="text" class="form-control form-control-sm" :id="'vocabWord' + index" v-model="vocab.word">
+                </div>
+                <div class="col-md-4">
+                  <label :for="'vocabMeaning' + index" class="form-label small">Nghĩa</label>
+                  <input type="text" class="form-control form-control-sm" :id="'vocabMeaning' + index" v-model="vocab.meaning">
+                </div>
+                <div class="col-md-3">
+                  <label :for="'vocabReading' + index" class="form-label small">Cách đọc (Hiragana/Katakana)</label>
+                  <input type="text" class="form-control form-control-sm" :id="'vocabReading' + index" v-model="vocab.reading">
+                </div>
+                <div class="col-md-1">
+                  <button type="button" class="btn btn-sm btn-danger w-100" @click="removeVocabularyItem(index)">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4 p-3 border rounded">
+              <h5 class="d-flex justify-content-between align-items-center">
+                Ngữ pháp
+                <button type="button" class="btn btn-sm btn-outline-primary" @click="addGrammarItem">
+                  <i class="bi bi-plus-circle"></i> Thêm cấu trúc
+                </button>
+              </h5>
+              <div v-for="(grammar, index) in lesson.grammar" :key="index" class="mb-3 border-bottom pb-3">
+                <div class="row g-2 mb-2">
+                  <div class="col-md-6">
+                    <label :for="'grammarStructure' + index" class="form-label small">Cấu trúc</label>
+                    <input type="text" class="form-control form-control-sm" :id="'grammarStructure' + index" v-model="grammar.structure">
+                  </div>
+                  <div class="col-md-6">
+                    <label :for="'grammarMeaning' + index" class="form-label small">Ý nghĩa</label>
+                    <input type="text" class="form-control form-control-sm" :id="'grammarMeaning' + index" v-model="grammar.meaning">
+                  </div>
+                </div>
+                <div class="mb-2">
+                  <label :for="'grammarExplanation' + index" class="form-label small">Giải thích</label>
+                  <textarea class="form-control form-control-sm" :id="'grammarExplanation' + index" v-model="grammar.explanation" rows="2"></textarea>
+                </div>
+                <div class="text-end">
+                  <button type="button" class="btn btn-sm btn-danger" @click="removeGrammarItem(index)">
+                    Xóa cấu trúc
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4 p-3 border rounded">
+              <h5>Luyện nghe</h5>
+              <div class="mb-3">
+                <label for="listeningTitle" class="form-label">Tiêu đề phần nghe</label>
+                <input type="text" class="form-control" id="listeningTitle" v-model="lesson.listening.title">
+              </div>
+              <div class="mb-3">
+                <label for="listeningAudioUrl" class="form-label">URL Audio</label>
+                <input type="url" class="form-control" id="listeningAudioUrl" v-model="lesson.listening.audioUrl">
+              </div>
+              <div class="mb-3">
+                <label for="listeningScript" class="form-label">Script</label>
+                <textarea class="form-control" id="listeningScript" v-model="lesson.listening.script" rows="4"></textarea>
               </div>
 
-              <div class="tab-pane fade" id="grammar" role="tabpanel" aria-labelledby="grammar-tab">
-                <h6 class="mb-3">Danh sách Ngữ pháp</h6>
-                 <div class="table-responsive mb-3">
-                    <table class="table table-bordered table-sm">
-                        <thead>
-                            <tr>
-                                <th>Cấu trúc</th>
-                                <th>Giải thích TV</th>
-                                <th>Ví dụ</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-if="lesson.grammar.length === 0">
-                                <td colspan="4" class="text-center text-muted">Chưa có điểm ngữ pháp nào.</td>
-                            </tr>
-                            <tr v-for="(point, index) in lesson.grammar" :key="index">
-                                <td><input type="text" class="form-control form-control-sm" v-model="point.structure"></td>
-                                <td><textarea class="form-control form-control-sm" rows="2" v-model="point.explanation"></textarea></td>
-                                <td><textarea class="form-control form-control-sm" rows="2" v-model="point.example"></textarea></td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-danger" @click="removeGrammar(index)"><i class="bi bi-x-lg"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+              <h6>Câu hỏi nghe</h6>
+              <button type="button" class="btn btn-sm btn-outline-primary mb-3" @click="addListeningQuestion">
+                <i class="bi bi-plus-circle"></i> Thêm câu hỏi
+              </button>
+              <div v-for="(q, qIndex) in lesson.listening.questions" :key="qIndex" class="mb-3 p-2 border rounded bg-light">
+                <div class="mb-2">
+                  <label :for="'listeningQuestionText' + qIndex" class="form-label small">Nội dung câu hỏi</label>
+                  <input type="text" class="form-control form-control-sm" :id="'listeningQuestionText' + qIndex" v-model="q.question">
                 </div>
-                <button type="button" class="btn btn-outline-primary btn-sm" @click="addGrammar">
-                    <i class="bi bi-plus-lg me-2"></i>Thêm Ngữ Pháp
-                </button>
+                <div class="mb-2">
+                  <label class="form-label small">Đáp án</label>
+                  <input type="text" class="form-control form-control-sm" :id="'listeningAnswer' + qIndex" v-model="q.answer">
+                </div>
+                <div class="text-end">
+                  <button type="button" class="btn btn-sm btn-danger" @click="removeListeningQuestion(qIndex)">Xóa câu hỏi</button>
+                </div>
               </div>
+            </div>
 
-              <div class="tab-pane fade" id="listening" role="tabpanel" aria-labelledby="listening-tab">
-                <h6 class="mb-3">Nội dung Nghe hiểu</h6>
-                <div class="mb-3">
-                    <label for="listeningTitle" class="form-label">Tiêu đề đoạn nghe</label>
-                    <input type="text" class="form-control" id="listeningTitle" v-model="lesson.listening.title">
-                </div>
-                <div class="mb-3">
-                    <label for="listeningAudio" class="form-label">File Audio</label>
-                    <input type="file" class="form-control" id="listeningAudio" @change="e => handleAudioUpload(e, null, 'listening')">
-                    <small v-if="lesson.listening.audioUrl" class="text-muted mt-2 d-block">
-                        Hiện tại: {{ lesson.listening.audioUrl ? lesson.listening.audioUrl.split('/').pop() : '' }}
-                        <audio v-if="lesson.listening.audioUrl" :src="lesson.listening.audioUrl" controls class="w-100 mt-2"></audio>
-                    </small>
-                </div>
-                <div class="mb-3">
-                    <label for="listeningScript" class="form-label">Script (Lời thoại)</label>
-                    <textarea class="form-control" id="listeningScript" rows="5" v-model="lesson.listening.script"></textarea>
-                </div>
-
-                <h6 class="mt-4 mb-3">Câu hỏi Nghe hiểu</h6>
-                 <div class="table-responsive mb-3">
-                    <table class="table table-bordered table-sm">
-                        <thead>
-                            <tr>
-                                <th>Câu hỏi</th>
-                                <th>Loại</th>
-                                <th>Lựa chọn/Đáp án</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-if="lesson.listening.questions.length === 0">
-                                <td colspan="4" class="text-center text-muted">Chưa có câu hỏi nghe hiểu nào.</td>
-                            </tr>
-                            <tr v-for="(question, qIndex) in lesson.listening.questions" :key="qIndex">
-                                <td><input type="text" class="form-control form-control-sm" v-model="question.questionText"></td>
-                                <td>
-                                    <select class="form-select form-select-sm" v-model="question.type">
-                                        <option value="multiple_choice">Trắc nghiệm</option>
-                                        <option value="fill_in_blank">Điền từ</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <div v-if="question.type === 'multiple_choice'">
-                                        <div v-for="(option, oIndex) in question.options" :key="oIndex" class="input-group input-group-sm mb-1">
-                                            <input type="text" class="form-control" v-model="question.options[oIndex]">
-                                            <div class="input-group-text">
-                                                <input class="form-check-input mt-0" type="radio" :name="'q'+qIndex+'options'" :value="option" v-model="question.correctAnswer">
-                                            </div>
-                                            <button type="button" class="btn btn-outline-danger btn-sm" @click="removeOption(qIndex, oIndex)"><i class="bi bi-dash-lg"></i></button>
-                                        </div>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm mt-1" @click="addOption(qIndex)">Thêm lựa chọn</button>
-                                    </div>
-                                    <div v-else-if="question.type === 'fill_in_blank'">
-                                        <input type="text" class="form-control form-control-sm" v-model="question.correctAnswer" placeholder="Đáp án đúng">
-                                    </div>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-danger" @click="removeListeningQuestion(qIndex)"><i class="bi bi-x-lg"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm" @click="addListeningQuestion">
-                    <i class="bi bi-plus-lg me-2"></i>Thêm Câu Hỏi
+            <div class="mb-4 p-3 border rounded">
+              <h5 class="d-flex justify-content-between align-items-center">
+                Bài tập
+                <button type="button" class="btn btn-sm btn-outline-primary" @click="addExercise">
+                  <i class="bi bi-plus-circle"></i> Thêm bài tập
                 </button>
-              </div>
+              </h5>
+              <div v-for="(exercise, exIndex) in lesson.exercises" :key="exIndex" class="mb-3 border-bottom pb-3">
+                <div class="mb-2">
+                  <label :for="'exerciseType' + exIndex" class="form-label small">Loại bài tập</label>
+                  <select class="form-select form-select-sm" :id="'exerciseType' + exIndex" v-model="exercise.type">
+                    <option value="fill_in_blank">Điền từ vào chỗ trống</option>
+                    <option value="multiple_choice">Chọn đáp án đúng</option>
+                    <option value="match_pair">Nối cặp</option>
+                  </select>
+                </div>
+                <div class="mb-2">
+                  <label :for="'exerciseQuestion' + exIndex" class="form-label small">Nội dung/Hướng dẫn</label>
+                  <textarea class="form-control form-control-sm" :id="'exerciseQuestion' + exIndex" v-model="exercise.question" rows="2"></textarea>
+                </div>
 
-              <div class="tab-pane fade" id="exercises" role="tabpanel" aria-labelledby="exercises-tab">
-                <h6 class="mb-3">Danh sách Bài tập cuối bài</h6>
-                <div class="mb-3" v-for="(exercise, exIndex) in lesson.exercises" :key="exIndex">
-                    <div class="card card-body bg-light mb-2">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0">Bài tập {{ exIndex + 1 }}</h6>
-                            <button type="button" class="btn btn-sm btn-danger" @click="removeExercise(exIndex)"><i class="bi bi-trash"></i> Xóa</button>
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label">Loại bài tập</label>
-                            <select class="form-select form-select-sm" v-model="exercise.type" @change="resetExerciseContent(exercise)">
-                                <option value="multiple_choice">Trắc nghiệm</option>
-                                <option value="fill_in_blank">Điền vào chỗ trống</option>
-                                <option value="matching">Nối từ/câu</option>
-                                <option value="rearrange_sentence">Sắp xếp câu</option>
-                            </select>
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label">Yêu cầu/Câu hỏi</label>
-                            <input type="text" class="form-control form-control-sm" v-model="exercise.question">
-                        </div>
+                <div v-if="exercise.type === 'fill_in_blank'" class="ms-3 p-2 border rounded bg-light">
+                  <label class="form-label small">Đáp án đúng (phân cách bởi dấu phẩy nếu nhiều từ)</label>
+                  <input type="text" class="form-control form-control-sm" v-model="exercise.answer">
+                </div>
 
-                        <div v-if="exercise.type === 'multiple_choice'">
-                            <label class="form-label">Các lựa chọn</label>
-                            <div v-for="(option, optIndex) in exercise.options" :key="optIndex" class="input-group input-group-sm mb-1">
-                                <input type="text" class="form-control" v-model="exercise.options[optIndex]">
-                                <div class="input-group-text">
-                                    <input class="form-check-input mt-0" type="radio" :name="'ex'+exIndex+'options'" :value="option" v-model="exercise.correctAnswer">
-                                </div>
-                                <button type="button" class="btn btn-outline-danger btn-sm" @click="removeExerciseOption(exIndex, optIndex)"><i class="bi bi-dash-lg"></i></button>
-                            </div>
-                            <button type="button" class="btn btn-outline-secondary btn-sm mt-1" @click="addExerciseOption(exIndex)">Thêm lựa chọn</button>
-                            <div class="mt-2">
-                                <label class="form-label">Giải thích đáp án (tùy chọn)</label>
-                                <textarea class="form-control form-control-sm" rows="1" v-model="exercise.explanation"></textarea>
-                            </div>
-                        </div>
-
-                        <div v-else-if="exercise.type === 'fill_in_blank'">
-                            <label class="form-label">Đáp án đúng</label>
-                            <input type="text" class="form-control form-control-sm mb-2" v-model="exercise.correctAnswer" placeholder="Ví dụ: sakura">
-                            <label class="form-label">Gợi ý từ (tùy chọn, cách nhau bằng dấu phẩy)</label>
-                            <input type="text" class="form-control form-control-sm" v-model="exercise.hintWords">
-                            <div class="mt-2">
-                                <label class="form-label">Giải thích đáp án (tùy chọn)</label>
-                                <textarea class="form-control form-control-sm" rows="1" v-model="exercise.explanation"></textarea>
-                            </div>
-                        </div>
-
-                        <div v-else-if="exercise.type === 'matching'">
-                            <label class="form-label">Các cặp nối (Mỗi hàng là một cặp: Phần A | Phần B)</label>
-                            <div v-for="(pair, pIndex) in exercise.pairs" :key="pIndex" class="input-group input-group-sm mb-1">
-                                <input type="text" class="form-control" v-model="pair.a" placeholder="Phần A">
-                                <span class="input-group-text">|</span>
-                                <input type="text" class="form-control" v-model="pair.b" placeholder="Phần B">
-                                <button type="button" class="btn btn-outline-danger btn-sm" @click="removeMatchingPair(exIndex, pIndex)"><i class="bi bi-dash-lg"></i></button>
-                            </div>
-                            <button type="button" class="btn btn-outline-secondary btn-sm mt-1" @click="addMatchingPair(exIndex)">Thêm cặp</button>
-                            <div class="mt-2">
-                                <label class="form-label">Giải thích đáp án (tùy chọn)</label>
-                                <textarea class="form-control form-control-sm" rows="1" v-model="exercise.explanation"></textarea>
-                            </div>
-                        </div>
-
-                        <div v-else-if="exercise.type === 'rearrange_sentence'">
-                            <label class="form-label">Các từ/cụm từ (cách nhau bằng dấu phẩy)</label>
-                            <input type="text" class="form-control form-control-sm mb-2" v-model="exercise.words" placeholder="Ví dụ: 私は, 日本語, 勉強します, を">
-                            <label class="form-label">Thứ tự đúng (các chỉ số, bắt đầu từ 0, cách nhau bằng dấu phẩy)</label>
-                            <input type="text" class="form-control form-control-sm" v-model="exercise.correctOrder" placeholder="Ví dụ: 0, 2, 3, 1">
-                            <div class="mt-2">
-                                <label class="form-label">Giải thích đáp án (tùy chọn)</label>
-                                <textarea class="form-control form-control-sm" rows="1" v-model="exercise.explanation"></textarea>
-                            </div>
-                        </div>
+                <div v-if="exercise.type === 'multiple_choice'" class="ms-3 p-2 border rounded bg-light">
+                  <label class="form-label small">Các lựa chọn và đáp án đúng</label>
+                  <button type="button" class="btn btn-sm btn-secondary mb-2" @click="addOption(exercise)">Thêm lựa chọn</button>
+                  <div v-for="(option, optIndex) in exercise.options" :key="optIndex" class="d-flex mb-1 align-items-center">
+                    <input type="text" class="form-control form-control-sm me-2" v-model="option.text">
+                    <div class="form-check me-2">
+                      <input class="form-check-input" type="radio" :name="'mc_answer_' + exIndex" :id="'mc_answer_' + exIndex + '_' + optIndex" :value="option.text" v-model="exercise.answer">
+                      <label class="form-check-label small" :for="'mc_answer_' + exIndex + '_' + optIndex">Đúng</label>
                     </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" @click="removeOption(exercise, optIndex)"><i class="bi bi-dash-circle"></i></button>
+                  </div>
                 </div>
-                <button type="button" class="btn btn-outline-primary btn-sm" @click="addExercise">
-                    <i class="bi bi-plus-lg me-2"></i>Thêm Bài Tập
-                </button>
+
+                <div v-if="exercise.type === 'match_pair'" class="ms-3 p-2 border rounded bg-light">
+                  <label class="form-label small">Các cặp cần nối</label>
+                  <button type="button" class="btn btn-sm btn-secondary mb-2" @click="addPair(exercise)">Thêm cặp</button>
+                  <div v-for="(pair, pairIndex) in exercise.pairs" :key="pairIndex" class="d-flex mb-1 align-items-center">
+                    <input type="text" class="form-control form-control-sm me-2" placeholder="Item A" v-model="pair.itemA">
+                    <input type="text" class="form-control form-control-sm me-2" placeholder="Item B" v-model="pair.itemB">
+                    <button type="button" class="btn btn-sm btn-outline-danger" @click="removePair(exercise, pairIndex)"><i class="bi bi-dash-circle"></i></button>
+                  </div>
+                </div>
+
+                <div class="text-end mt-3">
+                  <button type="button" class="btn btn-sm btn-danger" @click="removeExercise(exIndex)">
+                    Xóa bài tập này
+                  </button>
+                </div>
               </div>
+            </div>
+
+            <div class="modal-footer d-flex justify-content-between">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+              <button type="submit" class="btn btn-primary">Lưu Bài học</button>
             </div>
           </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="closeModal">Hủy</button>
-          <button type="button" class="btn btn-primary" @click="saveLesson(false)">Lưu Nháp</button>
-          <button type="submit" class="btn btn-success" @click="saveLesson(true)">Lưu & Xuất bản</button>
         </div>
       </div>
     </div>
@@ -310,297 +219,229 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch, onMounted } from 'vue';
-import { Modal } from 'bootstrap'; // Import Modal từ Bootstrap JS
-import lessonService from '../../services/lessonService'; // Service quản lý bài học
+import { ref, reactive, computed, onMounted } from 'vue';
+import { Modal } from 'bootstrap';
+import lessonService from '../../services/lessonService';
+import NotificationToast from '../share/NotificationToast.vue'; // Import notification
 
-// Props từ component cha (LessonManagementPage)
 const props = defineProps({
-  lesson: Object // Có thể là null khi tạo mới, hoặc object khi chỉnh sửa
+  availableTopics: {
+    type: Array,
+    default: () => []
+  }
 });
 
-// Sự kiện phát ra cho component cha
 const emit = defineEmits(['lesson-saved']);
 
-// Ref cho đối tượng modal của Bootstrap
-const modalElement = ref(null);
-let bsModal = null; // Biến để lưu trữ instance Modal của Bootstrap
+const modalRef = ref(null);
+let bsModal = null; // Biến để giữ instance của Bootstrap Modal
 
-// Reactive state cho form
+const initialLessonState = {
+  id: null,
+  name: '',
+  level: '',
+  topic_id: '',
+  description: '',
+  imageUrl: '',
+  status: 'draft',
+  vocabulary: [],
+  grammar: [],
+  listening: {
+    title: '',
+    audioUrl: '',
+    script: '',
+    questions: []
+  },
+  exercises: []
+};
+
+const lesson = reactive({ ...initialLessonState });
 const isEditMode = ref(false);
-const lesson = reactive(getDefaultLessonData());
+const errors = reactive({});
 
-// Reactive state để giữ các file tạm thời trước khi upload
-const currentLessonImageFile = ref(null);
-const currentListeningAudioFile = ref(null);
-const currentVocabAudioFiles = reactive({}); // { index: File }
+const notificationToast = ref(null); // Ref for NotificationToast
 
-
-// --- Lifecycle Hook & Watchers ---
-onMounted(() => {
-  // Khởi tạo instance Modal của Bootstrap sau khi component được mount
-  bsModal = new Modal(modalElement.value);
-  
-  // Lắng nghe sự kiện "hidden.bs.modal" để reset form khi modal đóng
-  modalElement.value.addEventListener('hidden.bs.modal', resetForm);
-});
-
-// Watch props.lesson để cập nhật form khi có bài học được truyền vào (chế độ chỉnh sửa)
-watch(() => props.lesson, (newVal) => {
-  if (newVal) {
-    // Deep copy để không sửa trực tiếp vào dữ liệu gốc của props
-    Object.assign(lesson, JSON.parse(JSON.stringify(newVal)));
-    isEditMode.value = true;
-  } else {
-    // Nếu props.lesson là null, reset form để tạo bài mới
-    resetForm();
-    isEditMode.value = false;
-  }
-}, { deep: true, immediate: true }); // immediate để chạy lần đầu khi component được tạo
-
-
-// --- Helper Functions ---
-function getDefaultLessonData() {
-  return {
-    id: null,
-    name: '',
-    level: '',
-    topic: '',
-    description: '',
-    imageUrl: '',
-    status: 'draft',
-    vocabulary: [],
-    grammar: [],
-    listening: {
-      title: '',
-      audioUrl: '',
-      script: '',
-      questions: []
-    },
-    exercises: []
-  };
-}
-
-// --- Modal Control Functions ---
+// Hàm mở modal
 function openModal(lessonData = null) {
+  Object.assign(errors, {}); // Clear previous errors
+
   if (lessonData) {
-    // Khi chỉnh sửa, gán dữ liệu bài học được truyền vào props
-    Object.assign(lesson, JSON.parse(JSON.stringify(lessonData)));
     isEditMode.value = true;
+    // Deep copy for nested objects/arrays
+    Object.assign(lesson, JSON.parse(JSON.stringify(lessonData)));
+    // Ensure nested arrays/objects are properly initialized if they might be null/undefined
+    lesson.vocabulary = lesson.vocabulary || [];
+    lesson.grammar = lesson.grammar || [];
+    lesson.listening = lesson.listening || { title: '', audioUrl: '', script: '', questions: [] };
+    lesson.listening.questions = lesson.listening.questions || [];
+    lesson.exercises = lesson.exercises || [];
   } else {
-    // Khi tạo mới, reset form về trạng thái mặc định
-    resetForm();
     isEditMode.value = false;
+    Object.assign(lesson, initialLessonState); // Reset to initial state for new lesson
   }
-  bsModal.show(); // Hiển thị modal
+  bsModal.show();
 }
 
+// Hàm đóng modal
 function closeModal() {
-  bsModal.hide(); // Ẩn modal
+  bsModal.hide();
 }
 
-function resetForm() {
-  Object.assign(lesson, getDefaultLessonData());
-  isEditMode.value = false;
-  currentLessonImageFile.value = null;
-  currentListeningAudioFile.value = null;
-  // Clear reactive object: https://vuejs.org/guide/essentials/reactivity-fundamentals.html#declaring-reactive-state
-  for (const key in currentVocabAudioFiles) {
-    delete currentVocabAudioFiles[key];
+// Hàm lưu bài học
+async function saveLesson() {
+  Object.assign(errors, {}); // Clear errors before validation
+
+  // Validate lesson data using lessonService
+  const validationResult = lessonService.validateLessonData(lesson, props.availableTopics);
+
+  if (!validationResult.isValid) {
+    validationResult.errors.forEach(error => {
+      // Map error messages to specific fields if possible, otherwise use a general error
+      if (error.includes('Tên bài học')) errors.name = error;
+      else if (error.includes('Cấp độ')) errors.level = error;
+      else if (error.includes('Chủ đề')) errors.topic_id = error;
+      else if (error.includes('Mô tả')) errors.description = error;
+      else if (error.includes('URL hình ảnh')) errors.imageUrl = error;
+      else if (error.includes('Trạng thái')) errors.status = error;
+      else if (!errors.general) errors.general = error; // For generic errors
+      // You might need more specific mapping for complex errors
+    });
+    // Show a general error if no specific field mapping
+    if (Object.keys(errors).length === 0 && validationResult.errors.length > 0) {
+       alert(validationResult.errors.join('\n')); // Fallback to alert if no specific mapping
+       // Or show a toast, assuming notificationToast is available and initialized correctly
+       // notificationToast.value.showToast('Lỗi nhập liệu: ' + validationResult.errors.join(', '), 'error');
+    }
+    return; // Stop if validation fails
+  }
+
+  try {
+    const isNew = !lesson.id; // Check if it's a new lesson or update
+
+    // Emit 'lesson-saved' with 'isNew' flag
+    // The parent (LessonAdminView) will handle the confirmation and then call the service
+    emit('lesson-saved', isNew);
+    
+    // We expect the parent to call the actual save operation, so just close the modal here
+    closeModal();
+
+  } catch (error) {
+    console.error("Error saving lesson:", error);
+    // This part might not be reached if parent handles the actual save,
+    // but good to keep for direct calls if any.
+    alert('Có lỗi xảy ra khi lưu bài học: ' + error.message);
   }
 }
 
-// --- File Upload Handlers ---
-function handleImageUpload(event) {
-  currentLessonImageFile.value = event.target.files[0];
-  if (currentLessonImageFile.value) {
-    // Tạo URL tạm thời cho preview, trong thực tế sẽ upload lên server
-    lesson.imageUrl = URL.createObjectURL(currentLessonImageFile.value); 
-  } else {
-    lesson.imageUrl = '';
-  }
+// --- Dynamic content methods ---
+function addVocabularyItem() {
+  lesson.vocabulary.push({ word: '', meaning: '', reading: '' });
 }
-
-function handleAudioUpload(event, index, type) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  // Simulate file upload and getting a URL
-  // In a real application, you'd send `file` to your backend storage service (e.g., AWS S3, Cloudinary)
-  // and update the `audioUrl` with the URL returned from the server.
-  const tempUrl = URL.createObjectURL(file); 
-
-  if (type === 'listening') {
-    currentListeningAudioFile.value = file;
-    lesson.listening.audioUrl = tempUrl; 
-  } else if (type === 'vocabulary' && index !== null) {
-    currentVocabAudioFiles[index] = file;
-    lesson.vocabulary[index].audioUrl = tempUrl;
-  }
-  // Clear the input file value to allow selecting the same file again if needed
-  event.target.value = ''; 
-}
-
-// --- Vocabulary Methods ---
-function addVocab() {
-  lesson.vocabulary.push({ japanese: '', pronunciation: '', vietnamese: '', type: '', example: '', audioUrl: '' });
-}
-function removeVocab(index) {
+function removeVocabularyItem(index) {
   lesson.vocabulary.splice(index, 1);
-  delete currentVocabAudioFiles[index]; // Clear file if exists
 }
 
-// --- Grammar Methods ---
-function addGrammar() {
-  lesson.grammar.push({ structure: '', explanation: '', example: '' });
+function addGrammarItem() {
+  lesson.grammar.push({ structure: '', meaning: '', explanation: '', examples: [] });
 }
-function removeGrammar(index) {
+function removeGrammarItem(index) {
   lesson.grammar.splice(index, 1);
 }
 
-// --- Listening Questions Methods ---
 function addListeningQuestion() {
-  lesson.listening.questions.push({ questionText: '', type: 'multiple_choice', options: ['', '', ''], correctAnswer: '' });
+  lesson.listening.questions.push({ question: '', answer: '' });
 }
 function removeListeningQuestion(index) {
   lesson.listening.questions.splice(index, 1);
 }
-function addOption(qIndex) {
-  lesson.listening.questions[qIndex].options.push('');
-}
-function removeOption(qIndex, oIndex) {
-  lesson.listening.questions[qIndex].options.splice(oIndex, 1);
-  // Ensure correct answer is still valid if it was deleted
-  if (this.lesson.listening.questions[qIndex].options.indexOf(this.lesson.listening.questions[qIndex].correctAnswer) === -1) {
-    this.lesson.listening.questions[qIndex].correctAnswer = '';
-  }
-}
 
-// --- Exercises Methods ---
 function addExercise() {
-  lesson.exercises.push({ type: 'multiple_choice', question: '', options: ['', '', ''], correctAnswer: '', explanation: '', pairs: [{a: '', b: ''}], words: '', correctOrder: '' });
+  lesson.exercises.push({ type: 'fill_in_blank', question: '', answer: '', options: [], pairs: [] });
 }
 function removeExercise(index) {
   lesson.exercises.splice(index, 1);
 }
-function resetExerciseContent(exercise) {
-    // Reset specific fields when exercise type changes
-    exercise.options = ['', '', ''];
-    exercise.correctAnswer = '';
-    exercise.explanation = '';
-    exercise.pairs = [{a: '', b: ''}];
-    exercise.words = '';
-    exercise.correctOrder = '';
-    exercise.hintWords = '';
-}
-function addExerciseOption(exIndex) {
-    lesson.exercises[exIndex].options.push('');
-}
-function removeExerciseOption(exIndex, optIndex) {
-    lesson.exercises[exIndex].options.splice(optIndex, 1);
-}
-function addMatchingPair(exIndex) {
-    lesson.exercises[exIndex].pairs.push({a: '', b: ''});
-}
-function removeMatchingPair(exIndex, pIndex) {
-    lesson.exercises[exIndex].pairs.splice(pIndex, 1);
-}
 
-// --- Save Lesson ---
-async function saveLesson(publish = false) {
-  if (publish) {
-    lesson.status = 'published';
-  }
-
-  // Basic validation
-  if (!lesson.name || !lesson.level) {
-    alert('Vui lòng điền đầy đủ Tên Bài học và Cấp độ.');
-    return;
-  }
-
-  // In a real app, you would upload files here using a service
-  // and update the lesson.imageUrl, lesson.listening.audioUrl, etc.
-  // with the actual URLs from your storage service before saving the lesson object.
-  // For this mock, we assume URLs are already handled or will be by backend.
-
-  try {
-    let savedLesson;
-    if (isEditMode.value) {
-      savedLesson = await lessonService.updateLesson(lesson.id, lesson);
-      alert('Bài học đã được cập nhật thành công!');
-    } else {
-      savedLesson = await lessonService.createLesson(lesson);
-      alert('Bài học đã được tạo thành công!');
-    }
-    emit('lesson-saved', savedLesson); // Emit event to parent to refresh list
-    closeModal(); // Close the modal
-  } catch (error) {
-    console.error("Error saving lesson:", error);
-    alert('Có lỗi xảy ra khi lưu bài học.');
+function addOption(exercise) {
+  exercise.options.push({ text: '' });
+}
+function removeOption(exercise, index) {
+  exercise.options.splice(index, 1);
+  // If the removed option was the answer, clear the answer
+  if (exercise.answer === exercise.options[index]?.text) { // Check if it's still the answer
+    exercise.answer = '';
   }
 }
 
-// Expose openModal to parent component using `defineExpose`
-// This allows parent to call `lessonFormModal.value.openModal()`
+function addPair(exercise) {
+  exercise.pairs.push({ itemA: '', itemB: '' });
+}
+function removePair(exercise, index) {
+  exercise.pairs.splice(index, 1);
+}
+
+// Expose openModal to parent component
 defineExpose({
   openModal
+});
+
+// Initialize Bootstrap Modal on component mount
+onMounted(() => {
+  bsModal = new Modal(modalRef.value);
+  // Optionally, listen to hide event to reset form state
+  modalRef.value.addEventListener('hidden.bs.modal', () => {
+    Object.assign(lesson, initialLessonState); // Reset form when modal is closed
+    Object.assign(errors, {}); // Clear errors
+  });
 });
 </script>
 
 <style scoped>
-.modal-xl {
-  --bs-modal-width: 90vw; /* Chiều rộng lớn hơn cho modal */
-}
-
-.modal-header {
-  border-bottom: 1px solid #dee2e6;
-}
-
-.modal-body {
-  padding: 2rem;
+/* Scoped styles for LessonFormModal */
+.modal-title {
+  color: #007bff;
 }
 
 .form-label {
   font-weight: 500;
-  color: #333;
+  color: #555;
 }
 
-.nav-tabs .nav-link {
-  color: #666;
-  font-weight: 500;
+.modal-footer {
+  border-top: 1px solid #e9ecef;
+  padding-top: 1rem;
+  padding-bottom: 0.5rem;
 }
 
-.nav-tabs .nav-link.active {
+h6 {
   color: #007bff;
-  border-color: #dee2e6 #dee2e6 #fff;
-  background-color: #fff;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
 }
 
-.tab-pane {
-  padding: 1rem 0;
+.border.rounded {
+  border-color: #dee2e6 !important;
+  background-color: #f8fafd;
 }
 
-table input.form-control-sm,
-table select.form-select-sm,
-table textarea.form-control-sm {
-    font-size: 0.85rem;
-    padding: 0.3rem 0.6rem;
+.border-bottom {
+  border-color: #e9ecef !important;
 }
 
-.table.table-bordered th, .table.table-bordered td {
-    border: 1px solid #e9ecef;
+/* Custom styling for small form controls within nested sections */
+.form-control-sm {
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
 }
 
-.table thead th {
-    background-color: #f8fafd;
+.form-select-sm {
+  font-size: 0.875rem;
+  padding: 0.375rem 2.25rem 0.375rem 0.75rem;
 }
 
-.btn-outline-primary, .btn-outline-secondary {
-    border-radius: 0.5rem;
-}
-
-.input-group-text {
-    background-color: #e9ecef;
-    border-color: #ced4da;
+.btn-sm {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
 }
 </style>

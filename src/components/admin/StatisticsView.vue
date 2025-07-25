@@ -1,25 +1,13 @@
 <template>
   <v-container fluid class="japanese-learning-analytics-dashboard pa-8">
     <v-row align="center" class="mb-6">
-      <v-col cols="12" md="6">
+      <v-col cols="12" md="12">
         <h1 class="text-h4 font-weight-bold page-title">
           <span class="page-title-icon mr-3">📚</span> Thống kê
         </h1>
         <p class="text-subtitle-1 text-grey-darken-1 pl-10">
-         Thống kê chi tiết
+          Thống kê chi tiết
         </p>
-      </v-col>
-      <v-col cols="12" md="6" class="d-flex justify-end">
-        <v-select
-          v-model="timeFilter"
-          :items="['30 ngày qua', '7 ngày qua', 'Tháng này', 'Năm nay']"
-          label="Thời gian"
-          density="compact"
-          variant="outlined"
-          hide-details
-          class="time-filter rounded-lg"
-          prepend-inner-icon="🗓️"
-        />
       </v-col>
     </v-row>
 
@@ -50,7 +38,7 @@
         <v-card class="dashboard-card mt-6 pa-4 rounded-xl elevation-3">
           <v-card-title class="card-title d-flex align-center">
             <span class="card-title-icon mr-2">🧠</span>
-            Tiến độ kỹ năng
+            Thống kê người dùng
           </v-card-title>
           <v-card-text>
             <SkillProgressList :skills="skillProgressData" />
@@ -94,10 +82,11 @@
         </v-card>
       </v-col>
       <v-col cols="12" md="6">
-        <MiniStatCards :data="miniStatCardsData" />
+        <PendingTasksCard :tasks="pendingTasksData" />
       </v-col>
     </v-row>
-  </v-container>
+
+    </v-container>
 </template>
 
 <script setup>
@@ -110,45 +99,58 @@ import SkillProgressList from '@/components/dashboard/statistics/SkillProgressLi
 import PerformanceTable from '@/components/dashboard/statistics/PerformanceTable.vue'
 import LeaderboardTable from '@/components/dashboard/statistics/LeaderboardTable.vue'
 import RecentActivitiesCard from '@/components/dashboard/statistics/RecentActivitiesCard.vue'
-import MiniStatCards from '@/components/dashboard/statistics/MiniStatCards.vue'
-import NewStatCards from '@/components/dashboard/statistics/NewStatCards.vue' // Đảm bảo component này đã được tùy chỉnh với emoji
+import NewStatCards from '@/components/dashboard/statistics/NewStatCards.vue'
 
-// Biến reactive cho bộ lọc thời gian
-const timeFilter = ref('30 ngày qua')
+// Import PendingTasksCard và loại bỏ MiniStatCards
+import PendingTasksCard from '@/components/dashboard/PendingTasksCard.vue'
+// import MiniStatCards from '@/components/dashboard/statistics/MiniStatCards.vue' // Đã loại bỏ dòng này
 
-// Dữ liệu cho NewStatCards (đã được tinh chỉnh để phù hợp với emoji trong component con)
-const statCardsData = [
+// Dữ liệu cho NewStatCards
+const statCardsData = ref([
   {
-    title: 'Tổng học viên',
-    value: 1680,
-    changePercentage: '12.5%',
+    title: "Tổng người dùng",
+    value: "12,845",
+    changePercentage: "8.2%",
     changePositive: true,
-    icon: '🧑‍🤝‍🧑', // Emoji cho tổng học viên
-    bgColor: 'linear-gradient(135deg, #42a5f5, #478ed1)',
-    iconColor: '#ffffff'
+    icon: "fas fa-users",
+    iconBgColor: "#e8f0fe",
+    iconColor: "#1a73e8",
+    emoji: "👥"
   },
   {
-    title: 'Bài học đã hoàn thành',
-    value: 7520,
-    changePercentage: '5.2%',
+    title: "Nội dung đã tạo",
+    value: "3,721",
+    changePercentage: "12.5%",
     changePositive: true,
-    icon: '📚', // Emoji cho bài học đã hoàn thành
-    bgColor: 'linear-gradient(135deg, #ab47bc, #8e24aa)',
-    iconColor: '#ffffff'
+    icon: "fas fa-file-alt",
+    iconBgColor: "#e6ffe6",
+    iconColor: "#28a745",
+    emoji: "📝"
   },
   {
-    title: 'Doanh thu tháng này',
-    value: '92 triệu VNĐ',
-    changePercentage: '8.3%',
+    title: "Gói học đang hoạt động",
+    value: "24",
+    changePercentage: "3.8%",
+    changePositive: true,
+    icon: "fas fa-graduation-cap",
+    iconBgColor: "#fff0e6",
+    iconColor: "#ff9800",
+    emoji: "🎓"
+  },
+  {
+    title: "Đăng ký mới trong tháng",
+    value: "842",
+    changePercentage: "2.4%",
     changePositive: false,
-    icon: '💰', // Emoji cho doanh thu
-    bgColor: 'linear-gradient(135deg, #fbc02d, #f9a825)',
-    iconColor: '#ffffff'
+    icon: "fas fa-user-plus",
+    iconBgColor: "#ffe6e6",
+    iconColor: "#dc3545",
+    emoji: "🆕"
   }
-];
+]);
 
 // Dữ liệu cho CombinedBarLineChart
-const userGrowthData = {
+const userGrowthData = ref({
   labels: ['Tháng 11', 'Tháng 12', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6'],
   datasets: [
     {
@@ -181,10 +183,10 @@ const userGrowthData = {
       type: 'line'
     }
   ]
-}
+});
 
 // Dữ liệu cho LevelDistributionChart
-const levelDistributionData = {
+const levelDistributionData = ref({
   labels: ['N5', 'N4', 'N3', 'N2', 'N1'],
   datasets: [
     {
@@ -193,26 +195,26 @@ const levelDistributionData = {
       backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
     }
   ]
-}
+});
 
 // Dữ liệu cho SkillProgressList
-const skillProgressData = [
+const skillProgressData = ref([
   { skill: 'Ngữ pháp', progress: 80 },
   { skill: 'Từ vựng', progress: 65 },
   { skill: 'Nghe hiểu', progress: 50 }
-]
+]);
 
 // Dữ liệu cho RecentActivitiesCard
-const recentActivitiesData = [
+const recentActivitiesData = ref([
   { title: 'Bạn A đã hoàn thành bài nghe N5', time: '5 phút trước' },
   { title: 'Bạn B đạt cấp độ N4', time: '30 phút trước' },
   { title: 'Bạn C đăng nhập lại sau 7 ngày', time: '1 giờ trước' },
   { title: 'Bạn D hoàn thành phần luyện từ vựng', time: '2 giờ trước' },
   { title: 'Bạn E vừa bắt đầu học ngữ pháp N3', time: 'Hôm qua' }
-]
+]);
 
 // Dữ liệu cho PerformanceTable
-const performanceData = [
+const performanceData = ref([
   {
     name: 'Hoàng Nguyên Phúc',
     lessonsCompleted: 75,
@@ -237,47 +239,55 @@ const performanceData = [
     accuracy: '59%',
     speed: 35
   }
-]
+]);
 
 // Dữ liệu cho LeaderboardTable
-const leaderboardData = [
+const leaderboardData = ref([
   { rank: 1, name: 'Nguyễn Thị Trinh', score: 980 },
   { rank: 2, name: 'Vũ Văn Hùng', score: 920 },
   { rank: 3, name: 'Hoàng Ngọc Vương', score: 860 },
   { rank: 4, name: 'Nguyễn Hữu Dũng', score: 900 }
-]
+]);
 
-// Dữ liệu cho MiniStatCards (đã được tinh chỉnh để phù hợp với emoji trong component con)
-const miniStatCardsData = [
-  {
-    icon: '➕🧑‍🎓', // Emoji cho học viên mới
-    value: '120',
-    label: 'Học viên mới',
-    bg: 'linear-gradient(135deg, #42a5f5, #1e88e5)'
-  },
-  {
-    icon: '✅📖', // Emoji cho bài học hoàn thành
-    value: '85',
-    label: 'Bài học hoàn thành',
-    bg: 'linear-gradient(135deg, #66bb6a, #43a047)'
-  },
-  {
-    icon: '⏳', // Emoji cho thời gian học
-    value: '2h 30m',
-    label: 'Thời gian học',
-    bg: 'linear-gradient(135deg, #ffb74d, #fb8c00)'
-  },
-  {
-    icon: '💯', // Emoji cho tiến độ hoàn thành
-    value: '95%',
-    label: 'Tiến độ hoàn thành',
-    bg: 'linear-gradient(135deg, #ab47bc, #8e24aa)'
-  }
-]
+// Dữ liệu cho MiniStatCards - Sẽ không còn được sử dụng trực tiếp trong template này
+// const miniStatCardsData = ref([
+//   {
+//     icon: 'bi-person-add',
+//     emoji: null,
+//     value: '120',
+//     label: 'Học viên mới',
+//     bg: 'linear-gradient(135deg, #42a5f5, #1e88e5)'
+//   },
+//   {
+//     icon: 'bi-book-fill',
+//     emoji: null,
+//     value: '85',
+//     label: 'Bài học hoàn thành',
+//     bg: 'linear-gradient(135deg, #66bb6a, #43a047)'
+//   },
+//   {
+//     icon: 'bi-hourglass-split',
+//     emoji: null,
+//     value: '2h 30m',
+//     label: 'Thời gian học',
+//     bg: 'linear-gradient(135deg, #ffb74d, #fb8c00)'
+//   },
+//   {
+//     icon: 'bi-patch-check-fill',
+//     emoji: null,
+//     value: '95%',
+//     label: 'Tiến độ hoàn thành',
+//     bg: 'linear-gradient(135deg, #ab47bc, #8e24aa)'
+//   }
+// ]);
 
-// Dữ liệu newStartCard đã bị dư thừa, giữ lại statCardsData và miniStatCardsData vì chúng được sử dụng.
-// const newStartCard = [ ... ] // Removed as it's not used and duplicates statCardsData intent.
-
+// Dữ liệu cho PendingTasksCard
+const pendingTasksData = ref([
+  { title: 'Kiểm tra bài tập ngữ pháp N4', dueDate: 'Hôm nay, 17:00' },
+  { title: 'Duyệt nội dung bài học mới', dueDate: 'Ngày mai, 10:00' },
+  { title: 'Phản hồi bình luận của học viên', dueDate: 'Ngày mai, 14:00' },
+  { title: 'Chuẩn bị tài liệu cho buổi webinar', dueDate: 'Thứ 2, 09:00' },
+]);
 </script>
 
 <style scoped>
@@ -304,20 +314,6 @@ const miniStatCardsData = [
 }
 .text-grey-darken-1 {
   color: #616161 !important; /* Điều chỉnh màu chữ xám đậm hơn một chút */
-}
-
-/* Time Filter Select */
-.time-filter {
-  max-width: 200px;
-}
-.time-filter :deep(.v-field) {
-  border-radius: 12px; /* Bo tròn input filter */
-  background-color: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-.time-filter :deep(.v-field__prepend-inner span) {
-    font-size: 1.2rem; /* Kích thước emoji trong input filter */
-    margin-top: 2px;
 }
 
 /* Common Card Styles */
@@ -353,7 +349,6 @@ const miniStatCardsData = [
 .performance-table,
 .leaderboard-table {
   color: #333333;
-  /* Sử dụng :deep() để style các phần tử con của v-data-table */
 }
 .performance-table :deep(thead th),
 .leaderboard-table :deep(thead th) {
@@ -382,7 +377,6 @@ const miniStatCardsData = [
 }
 
 /* Recent Activities Card */
-/* Đảm bảo component RecentActivitiesCard đã được cập nhật để sử dụng các class này nếu cần */
 .activity-item {
   padding: 10px 0;
   border-bottom: 1px solid #F5F5F5;
@@ -398,40 +392,5 @@ const miniStatCardsData = [
 .activity-subtitle {
   font-size: 0.85rem;
   color: #666666 !important;
-}
-
-/* Styles for MiniStatCards (assuming it uses these classes) */
-.mini-stat-card {
-  background-color: #FFFFFF !important;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  height: 120px; /* Chiều cao cố định */
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-.mini-stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
-}
-.mini-stat-icon {
-  font-size: 3rem; /* Lớn hơn cho emoji trong mini stat card */
-  line-height: 1;
-  color: #FFFFFF; /* Icon color from prop, but emoji is already colored */
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); /* Thêm bóng cho emoji */
-}
-.mini-stat-value {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #333333;
-  margin-top: 8px;
-}
-.mini-stat-label {
-  font-size: 0.9rem;
-  color: #666666;
-  text-align: center;
 }
 </style>

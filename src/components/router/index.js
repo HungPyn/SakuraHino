@@ -60,6 +60,11 @@ const routes = [
         name: 'Packages',
         component: () => import('@/components/admin/SubscriptionPlansView.vue')
 },
+{
+        path: 'settings-general',
+        name: 'Settings-general',
+        component: () => import('@/components/admin/GeneralSettingsView.vue')
+},
     ]
   }
 ];

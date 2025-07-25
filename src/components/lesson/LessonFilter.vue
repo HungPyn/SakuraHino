@@ -2,11 +2,11 @@
   <div class="card mb-4 shadow-sm">
     <div class="card-body">
       <div class="row g-3 align-items-center">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <input
             type="text"
             class="form-control"
-            placeholder="Tìm kiếm theo tên/chủ đề bài học..."
+            placeholder="Tìm kiếm theo tên/mô tả bài học..."
             :value="searchText"
             @input="$emit('update:searchText', $event.target.value)"
           />
@@ -26,16 +26,15 @@
         <div class="col-md-3">
           <select
             class="form-select"
-            :value="filterStatus"
-            @change="$emit('update:filterStatus', $event.target.value)"
+            :value="filterTopicId"
+            @change="$emit('update:filterTopicId', $event.target.value)"
           >
-            <option value="">Tất cả Trạng thái</option>
-            <option value="draft">Nháp</option>
-            <option value="published">Đã xuất bản</option>
+            <option value="">Tất cả Chủ đề</option>
+            <option v-for="topic in availableTopics" :key="topic.id" :value="topic.id">{{ topic.name }}</option>
           </select>
         </div>
 
-        <div class="col-md-2">
+        <div class="col-md-3">
           <button class="btn btn-outline-secondary w-100" @click="$emit('reset-filters')">
             <i class="bi bi-x-circle me-2"></i>Reset
           </button>
@@ -51,14 +50,18 @@ import { defineProps, defineEmits } from 'vue';
 defineProps({
   searchText: String,
   filterLevel: String,
-  filterStatus: String,
+  filterTopicId: [String, Number],
   availableLevels: {
     type: Array,
-    default: () => [] // Nên là rỗng nếu muốn cha truyền vào
+    default: () => []
+  },
+  availableTopics: {
+    type: Array,
+    default: () => []
   }
 });
 
-defineEmits(['update:searchText', 'update:filterLevel', 'update:filterStatus', 'reset-filters']);
+defineEmits(['update:searchText', 'update:filterLevel', 'update:filterTopicId', 'reset-filters']);
 </script>
 
 <style scoped>

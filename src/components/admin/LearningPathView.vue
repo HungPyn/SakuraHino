@@ -1,17 +1,15 @@
 <template>
   <div class="learning-path-view-container">
     <div class="learning-path-header">
-      <h1 class=" bi-book learning-path-title">  Quản lý Lộ trình Học</h1>
+      <h1 class="bi-book learning-path-title"> Quản lý Lộ trình Học</h1>
       <button class="btn btn-primary btn-add-new" @click="openAdd">
         <i class="bi bi-plus-circle me-2"></i> Tạo lộ trình mới
       </button>
     </div>
 
-    <LearningStats :stats="stats" class="mb-4" />
-
     <div class="card learning-path-toolbar-card mb-4">
-      <div class="card-body d-flex align-items-center justify-content-between">
-        <div class="search-input-group flex-grow-1 me-3">
+      <div class="card-body d-flex align-items-center justify-content-between flex-wrap">
+        <div class="search-input-group flex-grow-1 me-3 mb-2 mb-md-0">
           <input
             type="text"
             class="form-control search-input"
@@ -22,25 +20,24 @@
           <i class="bi bi-search search-icon"></i>
         </div>
 
-        <div class="items-per-page-group">
-          <label for="itemsPerPage" class="me-2 text-muted">Mục mỗi trang:</label>
-          <select id="itemsPerPage" v-model="itemsPerPage" class="form-select form-select-sm" @change="currentPage = 1">
-            <option :value="5">5</option>
-            <option :value="10">10</option>
-            <option :value="20">20</option>
-            <option :value="50">50</option>
-          </select>
-        </div>
+        <LearningPathFilter
+          v-model:filterStatus="filterStatus"
+          v-model:filterProgress="filterProgress"
+          v-model:filterDateRange="filterDateRange"
+          @reset-filters="resetAdvancedFilters"
+        />
       </div>
     </div>
 
     <div class="card learning-path-table-card">
       <div class="card-body p-0">
         <LearningTable
-          :data="paginatedPaths" @edit="openEdit"
+          :data="paginatedPaths"
+          @edit="openEdit"
           @delete="handleDelete"
           @detail="openDetail"
         />
+        <p v-if="paginatedPaths.length === 0" class="text-center text-muted py-4 m-0">Không có lộ trình nào phù hợp với bộ lọc.</p>
       </div>
     </div>
 
@@ -77,59 +74,106 @@
 </template>
 
 <script>
-// Make sure learningPathService returns a mutable array or an object that can be mutated
-import { stats, learningPaths } from '../../services/learningPathService';
-
-import LearningStats from '../learning-path/LearningStats.vue'
-import LearningTable from '../learning-path/LearningTable.vue'
-import LearningPopup from '../learning-path/LearningPopup.vue'
+// Loại bỏ 'stats' khỏi import nếu nó chỉ được dùng cho LearningStats
+import { learningPaths } from '../../services/learningPathService'; 
+// Loại bỏ LearningStats khỏi import nếu không sử dụng nữa
+// import LearningStats from '../learning-path/LearningStats.vue';
+import LearningTable from '../learning-path/LearningTable.vue';
+import LearningPopup from '../learning-path/LearningPopup.vue';
 import NotificationToast from '../share/NotificationToast.vue';
-import Pagination from '../share/Pagination.vue'; // Import Pagination component
+import Pagination from '../share/Pagination.vue';
+import LearningPathFilter from '../learning-path/LearningPathFilter.vue';
 
 export default {
   components: {
-    LearningStats,
+    // Loại bỏ LearningStats khỏi danh sách components
+    // LearningStats,
     LearningTable,
     LearningPopup,
     NotificationToast,
-    Pagination, // Add Pagination component
+    Pagination,
+    LearningPathFilter,
   },
   data() {
     return {
-      stats: [...stats], // Assuming stats array is small and doesn't need pagination
-      paths: [...learningPaths], // This will be the full dataset
+      // Xóa 'stats: [...stats],' nếu bạn đã loại bỏ import 'stats'
+      // stats: [...stats], 
+      paths: [...learningPaths],
       keyword: '',
       showPopup: false,
       popupMode: 'add', // 'add', 'edit', 'detail'
       selectedData: null,
-      // Dữ liệu cho Toast Notification
       toastMessage: '',
       toastType: 'success',
 
-      // Pagination data
       currentPage: 1,
-      itemsPerPage: 10, // Default items per page
+      itemsPerPage: 10,
+
+      // Advanced Filters State
+      filterStatus: '', // 'active', 'completed', 'inactive'
+      filterProgress: '', // 'lt50', '50to75', 'gt75', 'completed' (less than 50%, 50-75%, greater than 75%, greater than 75%, completed)
+      filterDateRange: '', // '7days', '30days', '90days', 'all'
     };
   },
   computed: {
     filteredPaths() {
-      if (!this.keyword) return this.paths;
-      return this.paths.filter(
-        p =>
-          p.name.toLowerCase().includes(this.keyword.toLowerCase()) ||
-          p.pathName.toLowerCase().includes(this.keyword.toLowerCase())
-      );
+      let result = [...this.paths];
+
+      // 1. Filter by Keyword
+      if (this.keyword) {
+        const query = this.keyword.toLowerCase();
+        result = result.filter(
+          p =>
+            (p.name && p.name.toLowerCase().includes(query)) || // Tên người dùng
+            (p.pathName && p.pathName.toLowerCase().includes(query)) // Tên lộ trình
+        );
+      }
+
+      // 2. Filter by Status
+      if (this.filterStatus) {
+        result = result.filter(p => p.status === this.filterStatus);
+      }
+
+      // 3. Filter by Progress (assuming `progress` is a number from 0-100 and `isCompleted` if available)
+      if (this.filterProgress) {
+        result = result.filter(p => {
+          const progressValue = parseFloat(p.progress); // Convert progress to number
+          if (this.filterProgress === 'lt50') return progressValue < 50;
+          if (this.filterProgress === '50to75') return progressValue >= 50 && progressValue <= 75;
+          if (this.filterProgress === 'gt75') return progressValue > 75 && progressValue < 100;
+          if (this.filterProgress === 'completed') return progressValue === 100 || p.isCompleted; // Assuming a boolean isCompleted
+          return true;
+        });
+      }
+
+      // 4. Filter by Date Range (assuming `startDate` or `createdAt` field in your path data)
+      // For simplicity, let's assume `createdAt` as a string 'YYYY-MM-DD' or similar
+      if (this.filterDateRange && this.filterDateRange !== 'all') {
+        const now = new Date();
+        result = result.filter(p => {
+          const pathDate = new Date(p.createdAt || p.startDate); // Use a relevant date field
+          if (isNaN(pathDate.getTime())) return false; // Skip if date is invalid
+
+          const diffTime = Math.abs(now - pathDate);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          if (this.filterDateRange === '7days') return diffDays <= 7;
+          if (this.filterDateRange === '30days') return diffDays <= 30;
+          if (this.filterDateRange === '90days') return diffDays <= 90;
+          return true;
+        });
+      }
+
+      return result;
     },
-    // Computed property for total pages
     totalPages() {
       return Math.ceil(this.filteredPaths.length / this.itemsPerPage);
     },
-    // Computed property for paginated data
     paginatedPaths() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
       return this.filteredPaths.slice(start, end);
-    }
+    },
   },
   methods: {
     openAdd() {
@@ -151,61 +195,107 @@ export default {
       this.showPopup = false;
       this.selectedData = null;
     },
-    handleSave(data) {
+    async handleSave(data) {
       let message = '';
-      let toastType = 'success'; // Default to success
+      let toastType = 'success';
+      let confirmMessage = '';
+
       if (this.popupMode === 'add') {
-        const newId = this.paths.length > 0 ? Math.max(...this.paths.map(p => p.id)) + 1 : 1;
-        this.paths.push({ ...data, id: newId });
-        message = 'Thêm lộ trình mới thành công!';
+        confirmMessage = 'Bạn có muốn THÊM lộ trình mới này không?';
       } else { // 'edit'
-        const index = this.paths.findIndex(p => p.id === data.id);
-        if (index !== -1) {
-          this.paths[index] = { ...data };
-          message = 'Cập nhật lộ trình thành công!';
-        } else {
-          message = 'Cập nhật lộ trình thất bại!'; // Trường hợp không tìm thấy
-          toastType = 'error';
-        }
+        confirmMessage = 'Bạn có muốn CẬP NHẬT lộ trình này không?';
       }
-      this.closePopup();
-      this.showToast(message, toastType);
+
+      // Ask for user confirmation
+      if (!confirm(confirmMessage)) {
+        this.showToast('Đã hủy thao tác.', 'info');
+        return;
+      }
+
+      try {
+        if (this.popupMode === 'add') {
+          const newId = this.paths.length > 0 ? Math.max(...this.paths.map(p => p.id)) + 1 : 1;
+          this.paths.push({ ...data, id: newId });
+          message = 'Thêm lộ trình mới thành công!';
+        } else { // 'edit'
+          const index = this.paths.findIndex(p => p.id === data.id);
+          if (index !== -1) {
+            this.paths[index] = { ...data };
+            message = 'Cập nhật lộ trình thành công!';
+          } else {
+            message = 'Cập nhật lộ trình thất bại: Không tìm thấy lộ trình để cập nhật.';
+            toastType = 'error';
+          }
+        }
+        this.showToast(message, toastType);
+        this.closePopup();
+      } catch (error) {
+        console.error("Lỗi khi lưu lộ trình:", error);
+        this.showToast('Đã xảy ra lỗi khi lưu lộ trình.', 'error');
+      }
     },
-    handleDelete(item) {
-      if (confirm(`Bạn có chắc chắn muốn xóa lộ trình của "${item.name}" - "${item.pathName}" không?`)) {
+    async handleDelete(item) {
+      const confirmMessage = `Bạn có chắc chắn muốn XÓA lộ trình của "${item.name}" - "${item.pathName}" không? Hành động này không thể hoàn tác.`;
+      if (!confirm(confirmMessage)) {
+        this.showToast('Đã hủy thao tác xóa.', 'info');
+        return;
+      }
+
+      try {
         const initialLength = this.paths.length;
         this.paths = this.paths.filter(p => p.id !== item.id);
         if (this.paths.length < initialLength) {
-            this.showToast('Xóa lộ trình thành công!', 'success');
-            // Adjust current page if the last item of a page was deleted
-            if (this.paginatedPaths.length === 0 && this.currentPage > 1) {
-                this.currentPage--;
-            }
+          this.showToast('Xóa lộ trình thành công!', 'success');
+          // Adjust current page if the last item of a page was deleted
+          if (this.paginatedPaths.length === 0 && this.currentPage > 1) {
+            this.currentPage--;
+          }
         } else {
-            this.showToast('Xóa lộ trình thất bại!', 'error');
+          this.showToast('Xóa lộ trình thất bại: Không tìm thấy lộ trình để xóa.', 'error');
         }
+      } catch (error) {
+        console.error("Lỗi khi xóa lộ trình:", error);
+        this.showToast('Đã xảy ra lỗi khi xóa lộ trình.', 'error');
       }
     },
     handleSearch(keyword) {
       this.keyword = keyword;
       this.currentPage = 1; // Reset to first page on search
     },
-    // Method to handle page changes from Pagination component
     handlePageChange(page) {
       this.currentPage = page;
     },
-    // Phương thức để hiển thị toast notification
+    resetAdvancedFilters() {
+      this.filterStatus = '';
+      this.filterProgress = '';
+      this.filterDateRange = '';
+      this.currentPage = 1; // Reset page after resetting filters
+      this.showToast('Đã đặt lại bộ lọc nâng cao.', 'info');
+    },
     showToast(message, type = 'success') {
       this.toastMessage = message;
       this.toastType = type;
-      // Gọi phương thức show() của component NotificationToast thông qua ref
       this.$refs.notificationToast.show();
-    }
+    },
   },
   mounted() {
-    // Optionally, if your learningPathService.js fetches data asynchronously
-    // you might want to call a loadPaths method here, similar to BadgeView's loadBadges.
-    // For now, it directly uses imported arrays.
+    // In a real application, you would fetch learning paths from an API here.
+    // E.g., learningPathService.fetchLearningPaths().then(data => this.paths = data);
+  },
+  watch: {
+    // Watch advanced filters to reset page when they change
+    filterStatus() {
+      this.currentPage = 1;
+    },
+    filterProgress() {
+      this.currentPage = 1;
+    },
+    filterDateRange() {
+      this.currentPage = 1;
+    },
+    itemsPerPage() {
+      this.currentPage = 1; // Reset to page 1 when itemsPerPage changes
+    }
   }
 };
 </script>
@@ -300,19 +390,19 @@ export default {
 }
 
 .items-per-page-group {
-    display: flex;
-    align-items: center;
-    margin-left: auto; /* Push to the right */
+  display: flex;
+  align-items: center;
+  margin-left: auto; /* Push to the right */
 }
 
 .items-per-page-group .form-select {
-    width: auto; /* Auto width based on content */
-    min-width: 80px; /* Minimum width for select */
-    border-radius: 0.5rem;
-    height: 45px; /* Match search input height */
-    font-size: 1rem;
-    padding-left: 0.75rem;
-    padding-right: 2rem; /* Space for dropdown arrow */
+  width: auto; /* Auto width based on content */
+  min-width: 80px; /* Minimum width for select */
+  border-radius: 0.5rem;
+  height: 45px; /* Match search input height */
+  font-size: 1rem;
+  padding-left: 0.75rem;
+  padding-right: 2rem; /* Space for dropdown arrow */
 }
 
 /* Table Card */
@@ -340,6 +430,37 @@ export default {
 }
 
 /* Responsive adjustments */
+@media (max-width: 992px) {
+  .learning-path-toolbar-card .card-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-input-group {
+    width: 100%;
+    max-width: 100%;
+    margin-right: 0 !important;
+    margin-bottom: 1rem; /* Add margin below search on smaller screens */
+  }
+  /* Ensure filter component also stacks vertically */
+  .learning-path-toolbar-card .learning-path-filter-container {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  .items-per-page-group {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+  .items-per-page-group label {
+    white-space: nowrap;
+  }
+  .items-per-page-group .form-select {
+    flex-grow: 0;
+    max-width: 120px;
+  }
+}
+
+
 @media (max-width: 768px) {
   .learning-path-view-container {
     padding: 1rem;
@@ -359,28 +480,7 @@ export default {
     padding: 0.6rem 1rem;
     font-size: 0.9rem;
   }
-  .learning-path-toolbar-card .card-body {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .search-input-group {
-    width: 100%;
-    max-width: 100%;
-    margin-bottom: 1rem;
-    margin-right: 0 !important; /* Override me-3 */
-  }
-  .items-per-page-group {
-    width: 100%;
-    margin-left: 0; /* Remove auto margin */
-    justify-content: flex-end; /* Align right on small screens */
-  }
-  .items-per-page-group label {
-      white-space: nowrap; /* Prevent label from wrapping */
-  }
-  .items-per-page-group .form-select {
-      flex-grow: 0; /* Don't grow */
-      max-width: 120px; /* Limit width of select box */
-  }
+  /* Toolbar flex-direction already set to column for 992px and below */
 }
 
 @media (max-width: 576px) {

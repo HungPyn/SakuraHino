@@ -1,50 +1,115 @@
 <template>
-  <div class="entertainment-toolbar-container d-flex justify-content-between mb-4 p-3">
-    <div class="search-input-wrapper">
-      <i class="bi bi-search search-icon"></i>
-      <input
-        type="text"
-        class="form-control custom-search-input"
-        placeholder="Tìm theo tên truyện..."
-        v-model="keyword"
-        @input="$emit('search', keyword)"
-      />
-    </div>
+  <div class="entertainment-toolbar-card card mb-4">
+    <div class="card-body d-flex align-items-center justify-content-between flex-wrap">
+      <div class="search-input-group flex-grow-1 me-3 mb-2 mb-md-0">
+        <input
+          type="text"
+          class="form-control search-input"
+          placeholder="Tìm kiếm theo tiêu đề..."
+          v-model="internalKeyword"
+          @input="onSearchInput"
+        />
+        <i class="bi bi-search search-icon"></i>
+      </div>
 
-    <button class="btn btn-primary custom-add-button" @click="$emit('add')">
-      <i class="bi bi-plus-circle-fill me-2"></i> Thêm bộ truyện
-    </button>
+      <div class="filter-group d-flex align-items-center flex-wrap gap-3 me-3 mb-2 mb-md-0">
+        <div class="d-flex align-items-center">
+          <label for="filterGenre" class="me-2 text-muted">Thể loại:</label>
+          <select id="filterGenre" v-model="internalFilterGenre" class="form-select form-select-sm" @change="emitFilters">
+            <option value="all">Tất cả</option>
+            <option value="story">Truyện ngắn</option>
+            <option value="comic">Truyện tranh</option>
+            <option value="game">Trò chơi</option>
+            <option value="quiz">Câu đố</option>
+            <option value="other">Khác</option>
+          </select>
+        </div>
+
+        <div class="d-flex align-items-center">
+          <label for="filterStatus" class="me-2 text-muted">Trạng thái:</label>
+          <select id="filterStatus" v-model="internalFilterStatus" class="form-select form-select-sm" @change="emitFilters">
+            <option value="all">Tất cả</option>
+            <option value="published">Đã xuất bản</option>
+            <option value="draft">Bản nháp</option>
+            <option value="archived">Lưu trữ</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn btn-outline-secondary btn-sm me-3 mb-2 mb-md-0" @click="resetFilters">
+        <i class="bi bi-arrow-counterclockwise me-1"></i> Đặt lại
+      </button>
+
+      <button class="btn btn-primary btn-add-new" @click="emitAdd">
+        <i class="bi bi-plus-circle me-2"></i> Thêm mới
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { debounce } from 'lodash'; // Cần cài đặt lodash: npm install lodash
 
 export default {
-  emits: ['search', 'add'], // Khai báo các emits rõ ràng
-  setup() {
-    const keyword = ref('');
-
+  // Cập nhật emits để bao gồm các bộ lọc mới
+  emits: ['search', 'add', 'filter-genre', 'filter-status', 'reset-filters'],
+  data() {
     return {
-      keyword,
+      internalKeyword: '',
+      internalFilterGenre: 'all',  // Thể loại mặc định
+      internalFilterStatus: 'all', // Trạng thái mặc định
     };
   },
+  created() {
+    this.onSearchInput = debounce(this.emitSearch, 300);
+  },
+  methods: {
+    emitSearch() {
+      this.$emit('search', this.internalKeyword);
+    },
+    emitFilters() {
+      // Gửi cả hai bộ lọc cùng lúc để đảm bảo tính nhất quán
+      this.$emit('filter-genre', this.internalFilterGenre);
+      this.$emit('filter-status', this.internalFilterStatus);
+    },
+    emitAdd() {
+      this.$emit('add');
+    },
+    resetFilters() {
+      this.internalKeyword = '';
+      this.internalFilterGenre = 'all';
+      this.internalFilterStatus = 'all';
+      this.emitSearch(); // Reset keyword
+      this.emitFilters(); // Reset filters
+      this.$emit('reset-filters'); // Báo cho component cha biết đã reset
+    }
+  }
 };
 </script>
 
 <style scoped>
-.entertainment-toolbar-container {
-  background-color: #ffffff;
+.entertainment-toolbar-card {
+  border: none;
   border-radius: 0.75rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Đổ bóng nhẹ nhàng */
-  padding: 1rem 1.5rem; /* Tăng padding */
-  align-items: center; /* Căn giữa theo chiều dọc */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  background-color: #ffffff;
 }
 
-.search-input-wrapper {
+.search-input-group {
   position: relative;
-  width: 50%; /* Giữ nguyên chiều rộng */
-  max-width: 400px; /* Giới hạn chiều rộng tối đa */
+  max-width: 400px;
+}
+
+.search-input {
+  border-radius: 0.5rem;
+  padding-left: 2.5rem;
+  height: 45px;
+  border-color: #e0e0e0;
+}
+
+.search-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 .search-icon {
@@ -52,86 +117,82 @@ export default {
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #6c757d; /* Màu xám cho icon */
-  font-size: 1.1rem;
+  color: #888;
 }
 
-.custom-search-input {
-  padding: 0.75rem 1rem 0.75rem 2.8rem; /* Tăng padding trái để chừa chỗ cho icon */
+.filter-group label {
+  font-weight: 500;
+  color: #555;
+  white-space: nowrap;
+}
+
+.filter-group .form-select {
   border-radius: 0.5rem;
-  border: 1px solid #ced4da;
-  transition: all 0.2s ease;
+  height: 45px;
   font-size: 0.95rem;
-  color: #343a40;
+  border-color: #e0e0e0;
 }
 
-.custom-search-input::placeholder {
-  color: #a0a0a0;
-}
-
-.custom-search-input:focus {
-  border-color: #80bdff;
-  box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
-  outline: none;
-}
-
-.custom-add-button {
-  background-color: #007bff; /* Màu xanh dương */
+.filter-group .form-select:focus {
   border-color: #007bff;
-  color: #fff;
-  padding: 0.75rem 1.5rem; /* Tăng padding */
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn-add-new {
+  background-color: #007bff;
+  border-color: #007bff;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  display: flex; /* Dùng flex để căn giữa icon và chữ */
-  align-items: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2); /* Đổ bóng nhẹ */
+  transition: all 0.2s ease-in-out;
 }
 
-.custom-add-button:hover {
+.btn-add-new:hover {
   background-color: #0056b3;
-  border-color: #004085;
-  transform: translateY(-2px); /* Hiệu ứng nhấc lên */
-  box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3); /* Đổ bóng mạnh hơn khi hover */
-}
-
-.custom-add-button i {
-  font-size: 1.2rem; /* Kích thước icon lớn hơn */
+  border-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
-  .entertainment-toolbar-container {
-    flex-direction: column; /* Xếp chồng các phần tử trên màn hình nhỏ */
-    align-items: stretch; /* Kéo dài các phần tử */
-    padding: 1rem;
+@media (max-width: 992px) {
+  .entertainment-toolbar-card .card-body {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .search-input-wrapper {
-    width: 100%; /* Chiếm toàn bộ chiều rộng */
-    max-width: none;
-    margin-bottom: 1rem; /* Khoảng cách giữa input và button */
+  .search-input-group {
+    max-width: 100%;
+    margin-right: 0 !important;
+    margin-bottom: 1rem !important;
   }
 
-  .custom-search-input {
-    padding: 0.6rem 1rem 0.6rem 2.5rem;
-    font-size: 0.9rem;
+  .filter-group {
+    width: 100%;
+    margin-left: 0 !important;
+    margin-bottom: 1rem;
+    justify-content: space-between; /* Spread out filters */
   }
 
-  .search-icon {
-    left: 0.8rem;
-    font-size: 1rem;
+  .filter-group > div {
+    flex-grow: 1; /* Allow filter dropdowns to expand */
   }
 
-  .custom-add-button {
-    width: 100%; /* Chiếm toàn bộ chiều rộng */
-    padding: 0.6rem 1rem;
-    font-size: 0.95rem;
+  .filter-group select {
+    width: 100%;
   }
 
-  .custom-add-button i {
-    font-size: 1.1rem;
+  .btn-outline-secondary,
+  .btn-add-new {
+    width: 100%;
+    margin-right: 0 !important;
+    margin-bottom: 1rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .filter-group {
+    flex-direction: column;
   }
 }
 </style>

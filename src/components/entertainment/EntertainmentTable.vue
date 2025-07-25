@@ -1,212 +1,181 @@
 <template>
-  <div class="entertainment-table-container">
-    <table class="table custom-table">
-      <thead class="custom-thead">
-        <tr>
-          <th>Tên truyện</th>
-          <th>Số chương</th>
-          <th>Chủ đề</th>
-          <th>Nội dung</th>
-          <th class="text-center">Hành động</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="story in stories" :key="story.id" class="custom-row">
-          <td>{{ story.title }}</td>
-          <td>{{ story.chapterCount }}</td>
-          <td>{{ story.topic }}</td>
-          <td>
-            <div class="story-content-preview">{{ story.content }}</div>
-          </td>
-          <td class="text-center actions-column">
-            <button class="btn btn-sm btn-edit me-2" @click="$emit('edit', story)">
-              <i class="bi bi-pencil-square"></i>
-            </button>
-            <button class="btn btn-sm btn-delete" @click="$emit('delete', story.id)">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-        <tr v-if="stories.length === 0">
-          <td colspan="5" class="text-center no-data-row">Không có dữ liệu</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="entertainment-table-container card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Tiêu đề</th>
+              <th scope="col">Thể loại</th>
+              <th scope="col">Trạng thái</th>
+              <th scope="col">Chương</th> <th scope="col">Chủ đề</th> <th scope="col">Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="stories.length === 0">
+              <td colspan="7" class="text-center py-4 text-muted">Không có nội dung giải trí nào.</td>
+            </tr>
+            <tr v-for="story in stories" :key="story.id">
+              <td>{{ story.id }}</td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <img
+                    :src="story.imageUrl || 'https://via.placeholder.com/50x50?text=No+Image'"
+                    alt="Story Image"
+                    class="rounded-circle me-3"
+                    width="50"
+                    height="50"
+                    loading="lazy"
+                  />
+                  <div class="story-info">
+                    <h6 class="mb-0 text-dark">{{ story.title }}</h6>
+                    <small class="text-muted text-truncate d-block" style="max-width: 200px;">{{ story.description }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span :class="['badge', getGenreBadgeClass(story.genre)]">{{ formatGenre(story.genre) }}</span>
+              </td>
+              <td>
+                <span :class="['badge', getStatusBadgeClass(story.status)]">{{ formatStatus(story.status) }}</span>
+              </td>
+              <td>{{ story.chapter !== null ? story.chapter : '-' }}</td> <td>{{ story.topic || '-' }}</td> <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-info" @click="$emit('edit', story)" title="Chỉnh sửa">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button class="btn btn-sm btn-danger" @click="confirmDelete(story.id)" title="Xóa">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 export default {
-  props: ['stories'],
-  emits: ['edit', 'delete'] // Khai báo các emits để dễ quản lý
+  props: {
+    stories: {
+      type: Array,
+      required: true,
+    },
+  },
+  emits: ['edit', 'delete'],
+  methods: {
+    confirmDelete(id) {
+      if (confirm('Bạn có chắc chắn muốn xóa nội dung giải trí này không?')) {
+        this.$emit('delete', id);
+      }
+    },
+    getGenreBadgeClass(genre) {
+      switch (genre) {
+        case 'story': return 'bg-primary';
+        case 'comic': return 'bg-info';
+        case 'game': return 'bg-warning text-dark';
+        case 'quiz': return 'bg-danger';
+        case 'other': return 'bg-secondary';
+        default: return 'bg-light text-dark';
+      }
+    },
+    formatGenre(genre) {
+      switch (genre) {
+        case 'story': return 'Truyện ngắn';
+        case 'comic': return 'Truyện tranh';
+        case 'game': return 'Trò chơi';
+        case 'quiz': return 'Câu đố';
+        case 'other': return 'Khác';
+        default: return genre;
+      }
+    },
+    getStatusBadgeClass(status) {
+      switch (status) {
+        case 'published': return 'bg-success';
+        case 'draft': return 'bg-secondary';
+        case 'archived': return 'bg-warning text-dark';
+        default: return 'bg-light text-dark';
+      }
+    },
+    formatStatus(status) {
+      switch (status) {
+        case 'published': return 'Đã xuất bản';
+        case 'draft': return 'Bản nháp';
+        case 'archived': return 'Lưu trữ';
+        default: return status;
+      }
+    },
+  },
 };
 </script>
 
 <style scoped>
 .entertainment-table-container {
-  overflow-x: auto; /* Cho phép cuộn ngang trên màn hình nhỏ */
-  margin-top: 1.5rem; /* Khoảng cách với toolbar */
-  background-color: #ffffff;
+  border: none;
   border-radius: 0.75rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Đổ bóng nhẹ cho toàn bộ bảng */
-}
-.custom-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 0.8rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  overflow: hidden; /* Ensures rounded corners are applied */
+  margin-top: 1.5rem; /* Add margin to separate from toolbar */
 }
 
-.custom-table th {
-  background-color: #e9ecef;
-  color: #495057;
+.table {
+  min-width: 800px; /* Ensure table doesn't get too small */
+}
+
+.table th,
+.table td {
+  padding: 1rem;
+  white-space: nowrap; /* Prevent text wrapping in columns */
+}
+
+.table thead th {
   font-weight: 600;
-  padding: 1rem 1.25rem;
-  border-bottom: none;
-  text-align: left;
-}
-
-
-.custom-thead {
-  background-color: #eef2f7; /* Màu nền nhẹ nhàng cho header */
-}
-
-.custom-thead th {
-  padding: 1rem 1.25rem;
-  font-weight: 600;
-  color: #344767;
-  text-align: left;
-  border-bottom: 1px solid #dee2e6;
-  vertical-align: middle;
-  font-size: 0.95rem;
-}
-
-/* Rounded corners for thead */
-.custom-thead tr:first-child th:first-child {
-  border-top-left-radius: 0.75rem;
-}
-
-.custom-thead tr:first-child th:last-child {
-  border-top-right-radius: 0.75rem;
-}
-
-
-.custom-table tbody tr {
-  transition: background-color 0.2s ease;
-}
-
-.custom-table tbody tr:nth-child(even) {
-  background-color: #f8fafd; /* Sọc ngựa cho các hàng chẵn */
-}
-
-.custom-table tbody tr:hover {
-  background-color: #e9f2ff; /* Màu khi hover */
-}
-
-.custom-table td {
-  padding: 1rem 1.25rem;
-  vertical-align: middle;
-  border-top: 1px solid #e9ecef;
-  color: #495057;
-  font-size: 0.9rem;
-}
-
-/* No border on the first cell of each row for a cleaner look */
-.custom-table tbody tr td:first-child {
-  border-left: none;
-}
-.custom-table tbody tr td:last-child {
-  border-right: none;
-}
-
-
-/* Content preview for long text */
-.story-content-preview {
-  max-height: 80px; /* Tăng chiều cao để hiển thị nhiều hơn */
-  overflow: hidden;
-  text-overflow: ellipsis; /* Thêm dấu ba chấm nếu nội dung quá dài */
-  display: -webkit-box;
-  -webkit-line-clamp: 3; /* Giới hạn 3 dòng */
-  -webkit-box-orient: vertical;
-  line-height: 1.4; /* Khoảng cách dòng */
+  color: #555;
+  text-transform: uppercase;
   font-size: 0.85rem;
 }
 
-/* Actions column styling */
-.actions-column {
-  white-space: nowrap; /* Ngăn các nút bị xuống dòng */
-  min-width: 120px; /* Đảm bảo đủ rộng cho 2 nút */
+.table tbody tr:hover {
+  background-color: #f0f4f8; /* Lighter hover effect */
 }
 
-/* Custom button styles */
-.btn-edit,
-.btn-delete {
-  border-radius: 0.5rem;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.8rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Đổ bóng nhẹ cho nút */
+.badge {
+  padding: 0.5em 0.8em;
+  border-radius: 0.35rem;
+  font-weight: 600;
+  font-size: 0.75em;
+  letter-spacing: 0.5px;
 }
 
-.btn-edit {
-  background-color: #28a745; /* Màu xanh lá cây */
-  color: #fff;
-  border-color: #28a745;
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.3rem;
 }
 
-.btn-edit:hover {
-  background-color: #218838;
-  border-color: #1e7e34;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+img.rounded-circle {
+  object-fit: cover;
+  flex-shrink: 0; /* Prevent image from shrinking */
 }
 
-.btn-delete {
-  background-color: #dc3545; /* Màu đỏ */
-  color: #fff;
-  border-color: #dc3545;
-}
-
-.btn-delete:hover {
-  background-color: #c82333;
-  border-color: #bd2130;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
-}
-
-/* Icon styling inside buttons */
-.btn-edit i,
-.btn-delete i {
-  font-size: 0.9rem;
-}
-
-/* No data row */
-.no-data-row {
-  padding: 2rem !important;
-  color: #6c757d;
-  font-style: italic;
+.story-info h6 {
   font-size: 1rem;
+  font-weight: 600;
+}
+
+.story-info small {
+  font-size: 0.8rem;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .custom-thead th,
-  .custom-table td {
-    padding: 0.8rem 1rem;
-    font-size: 0.85rem;
-  }
-
-  .story-content-preview {
-    max-height: 60px; /* Giảm chiều cao trên di động */
-    -webkit-line-clamp: 2; /* Giới hạn 2 dòng trên di động */
-  }
-
-  .btn-edit,
-  .btn-delete {
-    padding: 0.3rem 0.5rem;
-    font-size: 0.75rem;
+  .table-responsive {
+    border: 1px solid #e9ecef; /* Add border for scrollable area */
+    border-radius: 0.75rem;
   }
 }
 </style>

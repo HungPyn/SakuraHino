@@ -1,22 +1,40 @@
 <template>
-  <v-row>
-    <v-col cols="12" sm="6" md="3" v-for="(card, i) in data" :key="i">
-      <v-card class="dashboard-card pa-4 d-flex align-center" :style="{ borderLeft: `4px solid ${card.color}` }">
-        <v-icon :color="card.color" class="mr-3">{{ card.icon }}</v-icon>
-        <div>
-          <div class="text-h6 font-weight-bold">{{ card.value }}</div>
-          <div class="subtitle-2">{{ card.title }}</div>
-        </div>
-        <div class="ml-auto text-sm" :class="card.percentage >= 0 ? 'text-success' : 'text-error'">
-          {{ card.percentage >= 0 ? '+' : '' }}{{ card.percentage }}%
-        </div>
-      </v-card>
+  <v-row class="stat-cards-grid">
+    <v-col
+      v-for="(card, index) in data"
+      :key="index"
+      cols="12"
+      sm="6"
+      md="3"
+    >
+      <StatCard
+        :title="card.title"
+        :value="card.value"
+        :change-percentage="card.changePercentage"
+        :change-positive="card.changePositive"
+        :icon="card.icon"
+        :emoji="card.emoji"
+        :icon-bg-color="card.iconBgColor"
+        :icon-color="card.iconColor"
+      />
     </v-col>
   </v-row>
 </template>
 
 <script setup>
+import StatCard from '../StatCard.vue'; // Đảm bảo đường dẫn đúng
+
 const props = defineProps({
-  data: { type: Array, default: () => [] }
-})
+  data: {
+    type: Array,
+    required: true
+  }
+});
 </script>
+
+<style scoped>
+.stat-cards-grid {
+  /* Có thể thêm các style grid container nếu cần */
+  margin-top: 16px; /* Khoảng cách với phần tử phía trên */
+}
+</style>
