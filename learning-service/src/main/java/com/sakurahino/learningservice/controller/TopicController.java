@@ -69,6 +69,6 @@ public class TopicController {
     @PreAuthorize("hasRole('ADMIN')")
     public SuccessResponse delete(@PathVariable Integer id) {
         topicService.delete(id);
-        return new SuccessResponse();
+        return new SuccessResponse("Xoas thành công");
     }
 }
