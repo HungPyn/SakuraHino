@@ -23,7 +23,6 @@ public class UserLessonCompleteController {
     private final UserLessonCompleteService userLessonCompleteService;
     //cho service result nội bộ
     @PostMapping("/comlete/create")
-    @PreAuthorize("hasRole('ADMIN')")
     public SuccessResponse createCompelete(@Valid @RequestBody UserLessonCompleteRequest completeRequest){
         userLessonCompleteService.saveComplete(completeRequest);
         return new SuccessResponse("Thêm kết quả thành công");
