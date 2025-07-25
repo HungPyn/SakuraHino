@@ -35,6 +35,5 @@ build/
 # Bỏ qua tất cả file .json trong thư mục credentials
 /src/main/resources/credentials/*.json
 
-# Nhưng vẫn giữ thư mục credentials (để không bị mất khi clone)
-/src/main/resources/credentials/
+# Nhưng vẫn giữ file .gitkeep
 !src/main/resources/credentials/.gitkeep
