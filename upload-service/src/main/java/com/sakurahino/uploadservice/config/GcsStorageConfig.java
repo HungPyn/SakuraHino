@@ -6,6 +6,7 @@ import com.google.cloud.storage.StorageOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,13 +22,13 @@ public class GcsStorageConfig {
 
     @Bean
     public Storage storage() throws IOException {
-        // Loại bỏ tiền tố "file:" nếu có
-        String path = credentialsLocation.replaceFirst("^file:(//)?", "");
-        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(path));
+        GoogleCredentials credentials = GoogleCredentials.fromStream(
+                new ClassPathResource("credentials/sakuranihongo-200e5-fd43217e81bb.json").getInputStream()
+        );
 
         return StorageOptions.newBuilder()
                 .setCredentials(credentials)
-                .setProjectId(projectId) // <- Thêm dòng này
+                .setProjectId(projectId)
                 .build()
                 .getService();
     }

@@ -2,6 +2,7 @@ package com.sakurahino.learningservice.service.impl;
 
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.ex.ResourceException;
+import com.sakurahino.learningservice.dto.LessonQuestionResponse;
 import com.sakurahino.learningservice.dto.UserLessonCompleteRequest;
 import com.sakurahino.learningservice.entity.Lesson;
 import com.sakurahino.learningservice.entity.LessonQuestion;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -49,5 +51,11 @@ public class UserLessonCompleteServiceImpl implements UserLessonCompleteService 
            throw new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Không tìm kết quả này (id): "+id);
         }
         userCompletionRepository.delete(userLessonCompletion.get());
+    }
+
+    // ném ra 1 list câu hỏi để test
+    @Override
+    public List<LessonQuestionResponse> getQuestionsTest() {
+        return List.of();
     }
 }

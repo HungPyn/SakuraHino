@@ -105,6 +105,9 @@ public class AuthServiceImpl implements AuthService {
     public ForgotPasswordEmailResponse getEmailByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new AppException(ExceptionCode.USER_BLOCKED);
+        }
         return new ForgotPasswordEmailResponse(user.getEmail());
     }
 

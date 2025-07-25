@@ -16,7 +16,7 @@ spring:
     gcp:
       project-id: sakuranihongo-200e5
       credentials:
-        location: file:///D:/sakuranihongo-200e5-fd43217e81bb.json
+        location: classpath:credentials/sakuranihongo-200e5-fd43217e81bb.json
 
 gcp:
   storage:

@@ -26,7 +26,6 @@
         <module>discovery-server</module>
         <module>api-gateway</module>
         <module>amqp-client</module>
-        <module>result-service</module>
         <module>clients</module>
         <module>auth-service</module>
         <module>user-service</module>

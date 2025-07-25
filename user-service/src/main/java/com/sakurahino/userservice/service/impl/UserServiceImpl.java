@@ -127,7 +127,10 @@ public class UserServiceImpl  implements UserService {
         log.info("Admin updating user ID: {}", userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
-
+        if (!user.getEmail().equals(dto.getEmail()) &&
+                userRepository.existsByEmail(dto.getEmail())) {
+            throw new AppException(ExceptionCode.EMAIL_TON_TAI);
+        }
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setStatus(dto.getStatus());
@@ -148,6 +151,10 @@ public class UserServiceImpl  implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
 
+        if (!user.getEmail().equals(dto.getEmail()) &&
+                userRepository.existsByEmail(dto.getEmail())) {
+            throw new AppException(ExceptionCode.EMAIL_TON_TAI);
+        }
         if (file != null && !file.isEmpty()) {
             log.debug("User {} is updating avatar", userId);
             String oldUrl = user.getAvatarUrl();

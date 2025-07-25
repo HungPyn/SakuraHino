@@ -15,5 +15,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Page<User> findAllByRoleOrderByDayCreationDesc(Role role, Pageable pageable);
 
+    long countByDayCreationAfter(Instant dayCreationAfter);
+
 }
 
