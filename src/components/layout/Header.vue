@@ -6,59 +6,73 @@
     </div>
     <div class="header-right">
       <span class="current-date">{{ currentDate }}</span>
-      <div class="icon-buttons">
-        <button class="icon-button">
-          <font-awesome-icon icon="fas fa-bell" />
-          <span class="notification-badge">3</span>
-        </button>
-        <button class="icon-button">
-          <font-awesome-icon icon="fas fa-question-circle" />
-        </button>
-      </div>
-      <div class="user-profile">
-        <img src="../img/admin_picture.png" alt="Admin Avatar" class="user-avatar" />
-        <div class="user-info">
-          <span class="user-name">Nguyễn Thị Trinh</span>
-          <span class="user-role">Quản trị viên</span>
+      <div class="icon-buttons"></div>
+
+      <!-- Dropdown Bootstrap -->
+      <div class="dropdown">
+        <div
+          class="user-profile dropdown-toggle d-flex align-items-center"
+          id="userDropdown"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+          style="cursor: pointer"
+        >
+          <img
+            src="../img/admin_picture.png"
+            alt="Admin Avatar"
+            class="user-avatar"
+            style="width: 40px; height: 40px; border-radius: 50%"
+          />
+          <div class="user-info ms-2">
+            <span class="user-name d-block">Admin</span>
+            <span class="user-role d-block text-muted">Quản trị viên</span>
+          </div>
         </div>
-        <font-awesome-icon icon="fas fa-caret-down" class="dropdown-icon" />
+        <!-- Dropdown Menu -->
+        <ul
+          class="dropdown-menu dropdown-menu-end"
+          aria-labelledby="userDropdown"
+        >
+          <li>
+            <button class="dropdown-item" @click="logout">Đăng xuất</button>
+          </li>
+        </ul>
       </div>
     </div>
   </header>
 </template>
 
-<script>
-import { defineComponent, ref, onMounted, onUnmounted } from 'vue';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale'; // For Vietnamese date formatting
+<script setup>
+import { ref, onMounted, onUnmounted } from "vue";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
+import authService from "../../services/authService";
+import { useRouter } from "vue-router";
 
-export default defineComponent({
-  name: 'Header',
-  setup() {
-    const currentDate = ref('');
-    let intervalId = null;
+const router = useRouter();
 
-    const updateDate = () => {
-      // Format date in Vietnamese: "Thứ Năm, Ngày 29 Tháng 6, 2025" (Example for date-fns)
-      currentDate.value = format(new Date(), "EEEE, 'Ngày' dd 'Tháng' MM,yyyy", { locale: vi });
-    };
+const currentDate = ref("");
+let intervalId = null;
 
-    onMounted(() => {
-      updateDate();
-      // Update every minute to keep the time current
-      intervalId = setInterval(updateDate, 60000);
-    });
+const updateDate = () => {
+  currentDate.value = format(new Date(), "EEEE, 'Ngày' dd 'Tháng' MM,yyyy", {
+    locale: vi,
+  });
+};
+const logout = async () => {
+  await authService.logOut();
+  router.push("/");
+};
 
-    onUnmounted(() => {
-      if (intervalId) {
-        clearInterval(intervalId); // Clear interval on component unmount
-      }
-    });
+onMounted(() => {
+  updateDate();
+  intervalId = setInterval(updateDate, 60000);
+});
 
-    return {
-      currentDate,
-    };
-  },
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
 });
 </script>
 
@@ -79,7 +93,9 @@ export default defineComponent({
 .search-bar {
   display: flex;
   align-items: center;
-  background-color: var(--background-light); /* Light background for search bar */
+  background-color: var(
+    --background-light
+  ); /* Light background for search bar */
   border-radius: var(--border-radius-button);
   padding: 10px 15px;
   width: 300px; /* Fixed width for search bar for consistency */
@@ -145,7 +161,9 @@ export default defineComponent({
   position: absolute;
   top: -5px;
   right: -5px;
-  background-color: var(--primary-color); /* Primary color for notification badge */
+  background-color: var(
+    --primary-color
+  ); /* Primary color for notification badge */
   color: var(--text-white);
   font-size: 10px;
   font-weight: 700;

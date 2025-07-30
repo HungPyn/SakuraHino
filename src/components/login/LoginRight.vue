@@ -11,7 +11,14 @@
           <label for="username">Tên đăng nhập</label>
           <div class="input-with-icon">
             <i class="input-icon icon-user-circle"></i>
-            <input type="text" id="username" v-model="username" placeholder="Nhập tên đăng nhập" required class="form-control" />
+            <input
+              type="text"
+              id="username"
+              v-model="username"
+              placeholder="Nhập tên đăng nhập"
+              required
+              class="form-control"
+            />
           </div>
         </div>
 
@@ -19,8 +26,21 @@
           <label for="password">Mật khẩu</label>
           <div class="input-with-icon">
             <i class="input-icon icon-lock"></i>
-            <input :type="passwordFieldType" id="password" v-model="password" placeholder="Nhập mật khẩu" required class="form-control" />
-            <i :class="['toggle-password-icon', showPassword ? 'icon-eye-slash' : 'icon-eye']" @click="togglePasswordVisibility"></i>
+            <input
+              :type="passwordFieldType"
+              id="password"
+              v-model="password"
+              placeholder="Nhập mật khẩu"
+              required
+              class="form-control"
+            />
+            <i
+              :class="[
+                'toggle-password-icon',
+                showPassword ? 'icon-eye-slash' : 'icon-eye',
+              ]"
+              @click="togglePasswordVisibility"
+            ></i>
           </div>
         </div>
 
@@ -57,34 +77,67 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue';
+import { ref, defineEmits } from "vue";
+import authService from "@/services/authService";
+import { jwtDecode } from "jwt-decode"; // ✅ ĐÚNG với phiên bản mới
+import { useToast } from "vue-toastification";
 
-const username = ref('');
-const password = ref('');
+const toast = useToast(); // Sử dụng Toast từ thư viện toastify hoặc tương tự
+const username = ref("");
+const password = ref("");
 const rememberMe = ref(false);
 const showPassword = ref(false);
+//ghi nhớ đăng nhập
+if (localStorage.getItem("rememberMe") === "true") {
+  username.value = localStorage.getItem("username") || "";
+  password.value = localStorage.getItem("password") || "";
+  rememberMe.value = true;
+}
+const passwordFieldType = ref("password");
 
-const passwordFieldType = ref('password');
-
-const emits = defineEmits(['login-success']); // Định nghĩa emit event
+const emits = defineEmits(["login-success"]); // Định nghĩa emit event
 
 const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value;
-  passwordFieldType.value = showPassword.value ? 'text' : 'password';
+  passwordFieldType.value = showPassword.value ? "text" : "password";
 };
 
-const handleLogin = () => {
-  // Logic đăng nhập thực tế sẽ ở đây
-  console.log('Username:', username.value);
-  console.log('Password:', password.value);
-  console.log('Remember Me:', rememberMe.value);
+const handleLogin = async () => {
+  try {
+    const data = await authService.login(username.value, password.value);
+    const token = data.token;
+    const jwtDecodedToken = jwtDecode(token);
+    const role = jwtDecodedToken.role;
+    const userId = jwtDecodedToken.userId;
 
-  if (username.value === 'Ntrinh' && password.value === '052003') {
-    alert('Đăng nhập thành công!');
-    emits('login-success'); // Gửi event lên component cha
-  } else {
-    alert('Tên đăng nhập hoặc mật khẩu không đúng!');
+    if (role === "ADMIN") {
+      localStorage.setItem("token", token); // Lưu token vào localStorage
+      localStorage.setItem("userId", userId); // Lưu userId vào localStorage
+      console.log("Đã lưu token:", localStorage.getItem("token"));
+      console.log("Đã lưu User ID:", localStorage.getItem("userId"));
+      if (rememberMe.value) {
+        localStorage.setItem("rememberMe", "true");
+        localStorage.setItem("username", username.value);
+        localStorage.setItem("password", password.value);
+      } else {
+        localStorage.removeItem("rememberMe");
+      }
+      emits("login-success"); // Gửi event lên component cha
+    } else {
+      toast.error("Bạn không có quyền truy cập vào trang này!");
+      return;
+    }
+  } catch (error) {
+    console.error("Lỗi đăng nhập:", error.message);
+    toast.error(error.message || "Tên đăng nhập hoặc mật khẩu không đúng!");
   }
+
+  // if (username.value === "Ntrinh" && password.value === "052003") {
+  //   alert("Đăng nhập thành công!");
+  //   emits("login-success"); // Gửi event lên component cha
+  // } else {
+  //   alert("Tên đăng nhập hoặc mật khẩu không đúng!");
+  // }
 };
 </script>
 
@@ -92,7 +145,7 @@ const handleLogin = () => {
 /* Biến màu sắc cho panel bên phải và các phần tử chung */
 :root {
   --primary-gradient-start: #8e2de2; /* Tím */
-  --primary-gradient-end: #4a00e0;   /* Tím đậm hơn */
+  --primary-gradient-end: #4a00e0; /* Tím đậm hơn */
   --primary-color-light: #f1e9fb; /* Màu tím nhạt cho badge */
   --text-dark: #333;
   --text-light: #666;
@@ -174,11 +227,18 @@ const handleLogin = () => {
   font-size: 1.1rem;
 }
 /* Placeholder icons for inputs */
-.icon-user-circle::before { content: "👤"; }
-.icon-lock::before { content: "🔒"; }
-.icon-eye::before { content: "👁️"; }
-.icon-eye-slash::before { content: "🚫"; }
-
+.icon-user-circle::before {
+  content: "👤";
+}
+.icon-lock::before {
+  content: "🔒";
+}
+.icon-eye::before {
+  content: "👁️";
+}
+.icon-eye-slash::before {
+  content: "🚫";
+}
 
 .form-control {
   width: 100%;
@@ -275,17 +335,17 @@ const handleLogin = () => {
 
 .divider::before,
 .divider::after {
-  content: '';
+  content: "";
   flex: 1;
   border-bottom: 1px solid var(--border-color);
 }
 
 .divider:not(:empty)::before {
-  margin-right: .25em;
+  margin-right: 0.25em;
 }
 
 .divider:not(:empty)::after {
-  margin-left: .25em;
+  margin-left: 0.25em;
 }
 
 .main-functions {
@@ -322,13 +382,18 @@ const handleLogin = () => {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 .function-item:hover .function-icon {
-    background-color: rgba(var(--primary-gradient-start), 0.2);
+  background-color: rgba(var(--primary-gradient-start), 0.2);
 }
 /* Placeholder icons for main functions */
-.icon-users-alt::before { content: "🧑‍💻"; }
-.icon-book::before { content: "📚"; }
-.icon-chart-line::before { content: "📊"; }
-
+.icon-users-alt::before {
+  content: "🧑‍💻";
+}
+.icon-book::before {
+  content: "📚";
+}
+.icon-chart-line::before {
+  content: "📊";
+}
 
 /* Responsive adjustments for right panel */
 @media (max-width: 992px) {

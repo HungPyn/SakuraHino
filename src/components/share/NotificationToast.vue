@@ -17,11 +17,11 @@ export default {
   props: {
     message: {
       type: String,
-      required: true,
+      default: "",
     },
     type: {
       type: String,
-      default: 'success', // 'success', 'error', 'info', 'warning'
+      default: "success", // 'success', 'error', 'info', 'warning'
     },
     duration: {
       type: Number,
@@ -44,16 +44,16 @@ export default {
     },
     iconClass() {
       switch (this.type) {
-        case 'success':
-          return 'bi-check-circle-fill';
-        case 'error':
-          return 'bi-x-circle-fill';
-        case 'info':
-          return 'bi-info-circle-fill';
-        case 'warning':
-          return 'bi-exclamation-triangle-fill';
+        case "success":
+          return "bi-check-circle-fill";
+        case "error":
+          return "bi-x-circle-fill";
+        case "info":
+          return "bi-info-circle-fill";
+        case "warning":
+          return "bi-exclamation-triangle-fill";
         default:
-          return 'bi-info-circle-fill';
+          return "bi-info-circle-fill";
       }
     },
   },
@@ -83,8 +83,8 @@ export default {
       if (this.isVisible) {
         this.show();
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -148,10 +148,12 @@ export default {
 }
 
 /* Transition styles */
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.5s, transform 0.5s;
 }
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
   transform: translateY(20px);
 }
