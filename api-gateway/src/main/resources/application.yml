@@ -50,19 +50,12 @@ spring:
             - RewritePath=/lesson/(?<remaining>.*),/lesson/${remaining}
 
 
-        - id: result-service-user
-          uri: lb://result-service
+        - id: user-service
+          uri: lb://user-service
           predicates:
-            - Path=/user/result/**
+            - Path=/api/users/**
           filters:
-            - RewritePath=/user/result/(?<remaining>.*),/user/result/${remaining}
-
-        - id: result-service-admin
-          uri: lb://result-service
-          predicates:
-            - Path=/admin/result/**
-          filters:
-            - RewritePath=/admin/result/(?<remaining>.*),/admin/result/${remaining}
+            - RewritePath=/api/users/(?<remaining>.*),/api/users/${remaining}
 
 
 jwt:
