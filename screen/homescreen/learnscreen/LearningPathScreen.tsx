@@ -10,6 +10,7 @@ import {
   Modal,
 } from "react-native";
 import {
+  GuidebookSvg,
   ActiveBookSvg,
   LockedBookSvg,
   CheckmarkSvg,
@@ -38,6 +39,7 @@ import { BottomBar } from "../../../components/custombar/BottomBar";
 import { Tab } from "../../../components/custombar/useBottomBarItems";
 import TopBar from "../../../components/TopBar";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { RootStackParamList } from "../../../types/navigatorType";
 // --- Constants ---
 const COLORS = {
   white: "#FFFFFF",
@@ -56,29 +58,27 @@ const COLORS = {
 };
 
 // --- Navigation ---
-type RootStackParamList = {
-  Lesson: { practice?: boolean; "fast-forward"?: number; "sign-up"?: boolean };
-  Guidebook: { code: string; unitNumber: number };
-  LearningPath: undefined;
-  Shop: undefined;
-  Profile: undefined;
-  Leaderboards: undefined;
-};
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // --- Helper Functions ---
 type TileStatus = "LOCKED" | "ACTIVE" | "COMPLETE";
 
 const tileStatus = (tile: Tile, lessonsCompleted: number): TileStatus => {
-  const lessonsPerTile = 4;
-  const tilesCompleted = Math.floor(lessonsCompleted / lessonsPerTile);
   const allTiles = units.flatMap((unit) => unit.tiles);
   const tileIndex = allTiles.findIndex((t) => t === tile);
 
-  if (tileIndex < 0) return "LOCKED";
-  if (tileIndex < tilesCompleted) return "COMPLETE";
-  if (tileIndex > tilesCompleted) return "LOCKED";
-  return "ACTIVE";
+  if (tileIndex < 0) {
+    return "LOCKED";
+  }
+  if (tileIndex < lessonsCompleted) {
+    return "COMPLETE";
+  }
+  else if (tileIndex === lessonsCompleted) {
+    return "ACTIVE";
+  }
+  else {
+    return "LOCKED";
+  }
 };
 
 const getTileLeftOffset = (index: number, unitNumber: number): number => {
@@ -259,7 +259,6 @@ const TileTooltip = ({
   };
 
   const config = statusConfig[status];
-
   return (
     <Modal
       visible={isVisible}
@@ -360,7 +359,7 @@ const UnitHeader = ({
           })
         }
       >
-        <Text style={styles.guidebookText}>Guidebook</Text>
+        <GuidebookSvg width={24} height={24} fill={"#FFFFFF"} />
       </TouchableOpacity>
     </View>
   );
@@ -368,20 +367,19 @@ const UnitHeader = ({
 
 const UnitSection = ({ unit }: { unit: Unit }) => {
   const navigation = useNavigation<NavigationProp>();
+
   const [selectedTileIndex, setSelectedTileIndex] = useState<null | number>(
     null
   );
   const lessonsCompleted = useBoundStore((state) => state.lessonsCompleted);
-  const increaseLessonsCompleted = useBoundStore(
-    (state) => state.increaseLessonsCompleted
-  );
-  const increaseLingots = useBoundStore((state) => state.increaseLingots);
+
   const language = useBoundStore((state) => state.language);
-  type TileStatus = "LOCKED" | "UNLOCKED" | "COMPLETED"; // Khai báo trùng lặp, nên bỏ
   const handleTilePress = (tile: any, index: number, status: any) => {
     if (tile.type === "fast-forward" && status === "LOCKED") {
-      navigation.navigate("Lesson", { "fast-forward": unit.unitNumber });
-    } else if (status !== "LOCKED") {
+      navigation.navigate("LessonScreen2", {
+        "fast-forward": unit.unitNumber,
+      });
+    } else {
       setSelectedTileIndex(index);
     }
   };
@@ -452,11 +450,13 @@ const UnitSection = ({ unit }: { unit: Unit }) => {
           unit={unit}
           onStart={() => {
             setSelectedTileIndex(null);
-            navigation.navigate("Lesson", {});
+            navigation.navigate("LessonScreen2", {
+              unitNumber: unit.unitNumber,
+            });
           }}
           onPractice={() => {
             setSelectedTileIndex(null);
-            navigation.navigate("Lesson", { practice: true });
+            navigation.navigate("LessonScreen2", { practice: true });
           }}
         />
       )}

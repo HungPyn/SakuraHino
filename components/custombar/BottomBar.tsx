@@ -1,24 +1,18 @@
-// src/components/BottomBar.tsx (tạo file mới này)
 import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useBottomBarItems, Tab } from "./useBottomBarItems"; // Đảm bảo đường dẫn đúng
+import { useBottomBarItems, Tab } from "./useBottomBarItems"; 
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-
-// Cần định nghĩa lại RootStackParamList nếu nó chưa được định nghĩa toàn cục
-// hoặc đảm bảo nó được import ở đây.
-// Tôi sẽ định nghĩa lại tạm thời ở đây cho ví dụ:
 type RootStackParamList = {
-  LearningPath: undefined; // Màn hình chính
+  LearningPath: undefined; 
   Shop: undefined;
   Profile: undefined;
   Leaderboards: undefined;
-  Lesson: { "fast-forward"?: number; practice?: boolean; "sign-up"?: boolean }; // Bổ sung tham số sign-up cho Profile
+  Lesson: { "fast-forward"?: number; practice?: boolean; "sign-up"?: boolean }; 
   Guidebook: { code: string; unitNumber: number };
 };
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-// --- Constants --- (Có thể đã được định nghĩa ở LearningPathScreen, cần nhất quán)
 const COLORS = {
   white: "#FFFFFF",
   gray100: "#f3f4f6",
@@ -40,8 +34,6 @@ export const BottomBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
   const navigation = useNavigation<NavigationProp>();
 
   const handlePress = (href: string) => {
-    // Điều chỉnh logic điều hướng tùy thuộc vào cấu trúc router của bạn
-    // Ví dụ: /learn -> LearningPath, /shop -> Shop, /profile -> Profile, /leaderboard -> Leaderboards
     if (href === "/learn") {
       navigation.navigate("LearningPath");
     } else if (href === "/shop") {
@@ -49,11 +41,10 @@ export const BottomBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
     } else if (href.startsWith("/profile")) {
       navigation.navigate("Profile");
     } else if (href.startsWith("/learn?sign-up")) {
-      navigation.navigate("Lesson", { "sign-up": true }); // Giả định màn hình Lesson xử lý logic đăng ký
+      navigation.navigate("Lesson", { "sign-up": true }); 
     } else if (href === "/leaderboard") {
       navigation.navigate("Leaderboards");
     }
-    // Thêm các điều kiện khác nếu có nhiều đường dẫn khác
   };
 
   return (
@@ -74,10 +65,7 @@ export const BottomBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
               ]}
             >
               {item.icon}
-              {/* sr-only không có trong React Native.
-                  Nếu bạn muốn một text ẩn cho trình đọc màn hình, bạn có thể dùng accessibilityLabel.
-                  Hoặc hiển thị text thật nếu muốn. */}
-              {/* <Text style={styles.itemText}>{item.name}</Text> */}
+             
             </View>
           </TouchableOpacity>
         );
@@ -118,10 +106,5 @@ const styles = StyleSheet.create({
     borderColor: "#84d8ff", // border-[#84d8ff]
     backgroundColor: "#ddf4ff", // bg-[#ddf4ff]
   },
-  // Nếu bạn muốn hiển thị tên tab dưới icon:
-  // itemText: {
-  //   fontSize: 12,
-  //   color: COLORS.gray500, // Chọn màu phù hợp
-  //   marginTop: 4,
-  // },
+
 });
