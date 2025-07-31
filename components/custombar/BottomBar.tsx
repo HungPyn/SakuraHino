@@ -1,14 +1,14 @@
 import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useBottomBarItems, Tab } from "./useBottomBarItems"; 
+import { useBottomBarItems, Tab } from "./useBottomBarItems";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 type RootStackParamList = {
-  LearningPath: undefined; 
+  LearningPath: undefined;
   Shop: undefined;
   Profile: undefined;
   Leaderboards: undefined;
-  Lesson: { "fast-forward"?: number; practice?: boolean; "sign-up"?: boolean }; 
+  Lesson: { "fast-forward"?: number; practice?: boolean; "sign-up"?: boolean };
   Guidebook: { code: string; unitNumber: number };
 };
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -41,9 +41,9 @@ export const BottomBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
     } else if (href.startsWith("/profile")) {
       navigation.navigate("Profile");
     } else if (href.startsWith("/learn?sign-up")) {
-      navigation.navigate("Lesson", { "sign-up": true }); 
-    } else if (href === "/leaderboard") {
-      navigation.navigate("Leaderboards");
+      navigation.navigate("Lesson", { "sign-up": true });
+    } else if (href === "/Leaderboard") {
+      navigation.navigate("Leaderboard");
     }
   };
 
@@ -65,7 +65,6 @@ export const BottomBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
               ]}
             >
               {item.icon}
-             
             </View>
           </TouchableOpacity>
         );
@@ -106,5 +105,4 @@ const styles = StyleSheet.create({
     borderColor: "#84d8ff", // border-[#84d8ff]
     backgroundColor: "#ddf4ff", // bg-[#ddf4ff]
   },
-
 });

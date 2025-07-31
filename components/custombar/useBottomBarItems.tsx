@@ -7,7 +7,7 @@ type BottomBarItem = {
   icon: JSX.Element;
 };
 
-export type Tab = "Learn" | "Shop" | "Profile" | "Leaderboards";
+export type Tab = "Learn" | "Shop" | "Profile" | "Leaderboard";
 
 export const useBottomBarItems = () => {
   const loggedIn = useBoundStore((x) => x.loggedIn); // Giả định useBoundStore có thuộc tính loggedIn
@@ -141,7 +141,7 @@ export const useBottomBarItems = () => {
 
   if (loggedIn) {
     bottomBarItems.splice(1, 0, {
-      name: "Leaderboards",
+      name: "Leaderboard",
       href: "/leaderboard",
       icon: (
         // Svg cho icon Leaderboards

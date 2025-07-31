@@ -13,6 +13,7 @@ import QuickPracticeScreen from "../screen/homescreen/practicescreen/QuickPracti
 import LessonScreen2 from "../screen/homescreen/learnscreen/LessonScreen2";
 // SỬA DÒNG NÀY: Thêm tên file ResultScreen vào cuối đường dẫn
 import ResultScreen from "../screen/homescreen/learnscreen/ResultScreen"; // <-- Đảm bảo đây là đường dẫn chính xác đến file ResultScreen của bạn (ResultScreen.tsx)
+import Leaderboard from "../screen/homescreen/leaderboard/Leaderboard";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -34,6 +35,12 @@ export default function RootNavigator() {
         component={RegisterScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="Leaderboard"
+        component={Leaderboard}
+        options={{ headerShown: false }}
+      />
+
       <Stack.Screen
         name="Main"
         component={MainTabNavigator}

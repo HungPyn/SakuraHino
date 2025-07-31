@@ -27,11 +27,11 @@ export default function WelcomeScreen({ navigation }: Props) {
       if (isLoggedIn === "true") {
         navigation.replace("Home");
       } else if (hasOpened === "true") {
-        navigation.replace("Login");
+        navigation.navigate("Login", { login: true });
       } else {
         await AsyncStorage.setItem("hasOpenedApp", "true");
         setTimeout(() => {
-          navigation.replace("Login");
+          navigation.navigate("Login", { login: true });
         }, 3000);
       }
 
