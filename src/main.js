@@ -4,6 +4,9 @@ import App from "./App.vue";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+// 🧁 Import SweetAlert2
+import VueSweetalert2 from "vue-sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
 
 import router from "./components/router"; // Assuming your router setup
 import Toast from "vue-toastification";
@@ -87,5 +90,6 @@ app
   .use(router) // Integrate Vue Router
   .use(vuetify) // Integrate Vuetify
   .use(Toast, options)
+  .use(VueSweetalert2) // ✅ SweetAlert2 riêng
   .component("font-awesome-icon", FontAwesomeIcon) // Register Font Awesome component globally
   .mount("#app");

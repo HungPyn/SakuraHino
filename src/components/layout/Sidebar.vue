@@ -14,7 +14,11 @@
           </router-link>
         </li> -->
         <li class="nav-item">
-          <router-link to="/admin/statistics" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/statistics"
+            class="nav-link"
+            active-class="active"
+          >
             <i class="bi bi-bar-chart-line nav-icon"></i>
             Thống kê
           </router-link>
@@ -29,31 +33,47 @@
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/personal-path" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/personal-path"
+            class="nav-link"
+            active-class="active"
+          >
             <i class="bi bi-map nav-icon"></i>
             Lộ trình học cá nhân
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/badges" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/badges"
+            class="nav-link"
+            active-class="active"
+          >
             <i class="bi bi-award nav-icon"></i>
             Huy hiệu người dùng
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/admin/reminders" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/reminders"
+            class="nav-link"
+            active-class="active"
+          >
             <i class="bi bi-bell nav-icon"></i>
             Nhắc nhở
           </router-link>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <router-link to="/admin/entertainment" class="nav-link" active-class="active">
             <i class="bi bi-controller nav-icon"></i>
             Giải trí
           </router-link>
-        </li>
+        </li> -->
         <li class="nav-item">
-          <router-link to="/admin/community" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/community"
+            class="nav-link"
+            active-class="active"
+          >
             <i class="bi bi-people nav-icon"></i>
             Cộng đồng
           </router-link>
@@ -62,7 +82,17 @@
         <!-- User Management Section -->
         <li class="nav-item category-title">Quản lý người dùng</li>
         <li class="nav-item">
-          <router-link to="/admin/packages" class="nav-link" active-class="active">
+          <router-link to="/admin/user" class="nav-link" active-class="active">
+            <i class="bi bi-person nav-icon"></i>
+            Quản lý người dùng
+          </router-link>
+        </li>
+        <li class="nav-item">
+          <router-link
+            to="/admin/packages"
+            class="nav-link"
+            active-class="active"
+          >
             <i class="bi bi-box-seam nav-icon"></i>
             Quản lý Gói & Đăng ký
           </router-link>
@@ -71,7 +101,11 @@
         <!-- System Settings Section -->
         <li class="nav-item category-title">Cài đặt hệ thống</li>
         <li class="nav-item">
-          <router-link to="/admin/settings-general" class="nav-link" active-class="active">
+          <router-link
+            to="/admin/settings-general"
+            class="nav-link"
+            active-class="active"
+          >
             <i class="bi bi-gear nav-icon"></i>
             Cài đặt chung
           </router-link>
@@ -82,10 +116,10 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: 'Sidebar',
+  name: "Sidebar",
 });
 </script>
 
@@ -115,7 +149,9 @@ export default defineComponent({
   height: 45px;
   width: auto;
   margin-right: 15px;
-  border-radius: var(--border-radius-tag); /* Small radius for logo background */
+  border-radius: var(
+    --border-radius-tag
+  ); /* Small radius for logo background */
 }
 
 .app-name {

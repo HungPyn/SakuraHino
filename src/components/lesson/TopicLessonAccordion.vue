@@ -26,10 +26,6 @@
             class="accordion-button d-flex align-items-center"
             :class="{ collapsed: activeTopicId !== topic.id }"
             type="button"
-            data-bs-toggle="collapse"
-            :data-bs-target="'#collapse' + topic.id"
-            :aria-expanded="activeTopicId === topic.id ? 'true' : 'false'"
-            :aria-controls="'collapse' + topic.id"
             @click="toggleAccordion(topic.id)"
           >
             <img
@@ -88,8 +84,6 @@
           :id="'collapse' + topic.id"
           class="accordion-collapse collapse"
           :class="{ show: activeTopicId === topic.id }"
-          :aria-labelledby="'heading' + topic.id"
-          :data-bs-parent="'#topicAccordion'"
         >
           <div class="accordion-body">
             <div
@@ -220,11 +214,6 @@ async function fetchTopicsWithLessons() {
       .sort((a, b) => a.name.localeCompare(b.name)); // Sort topics alphabetically
 
     topicsWithLessons.value = groupedTopics;
-
-    // Expand the first topic by default if there are topics
-    if (topicsWithLessons.value.length > 0 && activeTopicId.value === null) {
-      activeTopicId.value = topicsWithLessons.value[0].id;
-    }
   } catch (error) {
     console.error("Error fetching topics and lessons for accordion:", error);
     // You might want to emit an error toast here if NotificationToast is available

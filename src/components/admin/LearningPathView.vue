@@ -1,14 +1,16 @@
 <template>
   <div class="learning-path-view-container">
     <div class="learning-path-header">
-      <h1 class="bi-book learning-path-title"> Quản lý Lộ trình Học</h1>
+      <h1 class="bi-book learning-path-title">Quản lý Lộ trình Học</h1>
       <button class="btn btn-primary btn-add-new" @click="openAdd">
         <i class="bi bi-plus-circle me-2"></i> Tạo lộ trình mới
       </button>
     </div>
 
     <div class="card learning-path-toolbar-card mb-4">
-      <div class="card-body d-flex align-items-center justify-content-between flex-wrap">
+      <div
+        class="card-body d-flex align-items-center justify-content-between flex-wrap"
+      >
         <div class="search-input-group flex-grow-1 me-3 mb-2 mb-md-0">
           <input
             type="text"
@@ -37,7 +39,12 @@
           @delete="handleDelete"
           @detail="openDetail"
         />
-        <p v-if="paginatedPaths.length === 0" class="text-center text-muted py-4 m-0">Không có lộ trình nào phù hợp với bộ lọc.</p>
+        <p
+          v-if="paginatedPaths.length === 0"
+          class="text-center text-muted py-4 m-0"
+        >
+          Không có lộ trình nào phù hợp với bộ lọc.
+        </p>
       </div>
     </div>
 
@@ -51,7 +58,12 @@
 
     <Teleport to="body">
       <div v-if="showPopup" class="modal-backdrop fade show"></div>
-      <div v-if="showPopup" class="modal custom-modal" tabindex="-1" style="display: block;">
+      <div
+        v-if="showPopup"
+        class="modal custom-modal"
+        tabindex="-1"
+        style="display: block"
+      >
         <div class="modal-dialog modal-dialog-centered modal-lg">
           <div class="modal-content">
             <LearningPopup
@@ -75,14 +87,14 @@
 
 <script>
 // Loại bỏ 'stats' khỏi import nếu nó chỉ được dùng cho LearningStats
-import { learningPaths } from '../../services/learningPathService'; 
+import { learningPaths } from "../../services/learningPathService";
 // Loại bỏ LearningStats khỏi import nếu không sử dụng nữa
 // import LearningStats from '../learning-path/LearningStats.vue';
-import LearningTable from '../learning-path/LearningTable.vue';
-import LearningPopup from '../learning-path/LearningPopup.vue';
-import NotificationToast from '../share/NotificationToast.vue';
-import Pagination from '../share/Pagination.vue';
-import LearningPathFilter from '../learning-path/LearningPathFilter.vue';
+import LearningTable from "../learning-path/LearningTable.vue";
+import LearningPopup from "../learning-path/LearningPopup.vue";
+import NotificationToast from "../share/NotificationToast.vue";
+import Pagination from "../share/Pagination.vue";
+import LearningPathFilter from "../learning-path/LearningPathFilter.vue";
 
 export default {
   components: {
@@ -97,22 +109,22 @@ export default {
   data() {
     return {
       // Xóa 'stats: [...stats],' nếu bạn đã loại bỏ import 'stats'
-      // stats: [...stats], 
+      // stats: [...stats],
       paths: [...learningPaths],
-      keyword: '',
+      keyword: "",
       showPopup: false,
-      popupMode: 'add', // 'add', 'edit', 'detail'
+      popupMode: "add", // 'add', 'edit', 'detail'
       selectedData: null,
-      toastMessage: '',
-      toastType: 'success',
+      toastMessage: "",
+      toastType: "success",
 
       currentPage: 1,
       itemsPerPage: 10,
 
       // Advanced Filters State
-      filterStatus: '', // 'active', 'completed', 'inactive'
-      filterProgress: '', // 'lt50', '50to75', 'gt75', 'completed' (less than 50%, 50-75%, greater than 75%, greater than 75%, completed)
-      filterDateRange: '', // '7days', '30days', '90days', 'all'
+      filterStatus: "", // 'active', 'completed', 'inactive'
+      filterProgress: "", // 'lt50', '50to75', 'gt75', 'completed' (less than 50%, 50-75%, greater than 75%, greater than 75%, completed)
+      filterDateRange: "", // '7days', '30days', '90days', 'all'
     };
   },
   computed: {
@@ -123,7 +135,7 @@ export default {
       if (this.keyword) {
         const query = this.keyword.toLowerCase();
         result = result.filter(
-          p =>
+          (p) =>
             (p.name && p.name.toLowerCase().includes(query)) || // Tên người dùng
             (p.pathName && p.pathName.toLowerCase().includes(query)) // Tên lộ trình
         );
@@ -131,35 +143,38 @@ export default {
 
       // 2. Filter by Status
       if (this.filterStatus) {
-        result = result.filter(p => p.status === this.filterStatus);
+        result = result.filter((p) => p.status === this.filterStatus);
       }
 
       // 3. Filter by Progress (assuming `progress` is a number from 0-100 and `isCompleted` if available)
       if (this.filterProgress) {
-        result = result.filter(p => {
+        result = result.filter((p) => {
           const progressValue = parseFloat(p.progress); // Convert progress to number
-          if (this.filterProgress === 'lt50') return progressValue < 50;
-          if (this.filterProgress === '50to75') return progressValue >= 50 && progressValue <= 75;
-          if (this.filterProgress === 'gt75') return progressValue > 75 && progressValue < 100;
-          if (this.filterProgress === 'completed') return progressValue === 100 || p.isCompleted; // Assuming a boolean isCompleted
+          if (this.filterProgress === "lt50") return progressValue < 50;
+          if (this.filterProgress === "50to75")
+            return progressValue >= 50 && progressValue <= 75;
+          if (this.filterProgress === "gt75")
+            return progressValue > 75 && progressValue < 100;
+          if (this.filterProgress === "completed")
+            return progressValue === 100 || p.isCompleted; // Assuming a boolean isCompleted
           return true;
         });
       }
 
       // 4. Filter by Date Range (assuming `startDate` or `createdAt` field in your path data)
       // For simplicity, let's assume `createdAt` as a string 'YYYY-MM-DD' or similar
-      if (this.filterDateRange && this.filterDateRange !== 'all') {
+      if (this.filterDateRange && this.filterDateRange !== "all") {
         const now = new Date();
-        result = result.filter(p => {
+        result = result.filter((p) => {
           const pathDate = new Date(p.createdAt || p.startDate); // Use a relevant date field
           if (isNaN(pathDate.getTime())) return false; // Skip if date is invalid
 
           const diffTime = Math.abs(now - pathDate);
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-          if (this.filterDateRange === '7days') return diffDays <= 7;
-          if (this.filterDateRange === '30days') return diffDays <= 30;
-          if (this.filterDateRange === '90days') return diffDays <= 90;
+          if (this.filterDateRange === "7days") return diffDays <= 7;
+          if (this.filterDateRange === "30days") return diffDays <= 30;
+          if (this.filterDateRange === "90days") return diffDays <= 90;
           return true;
         });
       }
@@ -177,17 +192,17 @@ export default {
   },
   methods: {
     openAdd() {
-      this.popupMode = 'add';
+      this.popupMode = "add";
       this.selectedData = null;
       this.showPopup = true;
     },
     openEdit(item) {
-      this.popupMode = 'edit';
+      this.popupMode = "edit";
       this.selectedData = { ...item };
       this.showPopup = true;
     },
     openDetail(item) {
-      this.popupMode = 'detail';
+      this.popupMode = "detail";
       this.selectedData = { ...item };
       this.showPopup = true;
     },
@@ -196,66 +211,75 @@ export default {
       this.selectedData = null;
     },
     async handleSave(data) {
-      let message = '';
-      let toastType = 'success';
-      let confirmMessage = '';
+      let message = "";
+      let toastType = "success";
+      let confirmMessage = "";
 
-      if (this.popupMode === 'add') {
-        confirmMessage = 'Bạn có muốn THÊM lộ trình mới này không?';
-      } else { // 'edit'
-        confirmMessage = 'Bạn có muốn CẬP NHẬT lộ trình này không?';
+      if (this.popupMode === "add") {
+        confirmMessage = "Bạn có muốn THÊM lộ trình mới này không?";
+      } else {
+        // 'edit'
+        confirmMessage = "Bạn có muốn CẬP NHẬT lộ trình này không?";
       }
 
       // Ask for user confirmation
       if (!confirm(confirmMessage)) {
-        this.showToast('Đã hủy thao tác.', 'info');
+        this.showToast("Đã hủy thao tác.", "info");
         return;
       }
 
       try {
-        if (this.popupMode === 'add') {
-          const newId = this.paths.length > 0 ? Math.max(...this.paths.map(p => p.id)) + 1 : 1;
+        if (this.popupMode === "add") {
+          const newId =
+            this.paths.length > 0
+              ? Math.max(...this.paths.map((p) => p.id)) + 1
+              : 1;
           this.paths.push({ ...data, id: newId });
-          message = 'Thêm lộ trình mới thành công!';
-        } else { // 'edit'
-          const index = this.paths.findIndex(p => p.id === data.id);
+          message = "Thêm lộ trình mới thành công!";
+        } else {
+          // 'edit'
+          const index = this.paths.findIndex((p) => p.id === data.id);
           if (index !== -1) {
             this.paths[index] = { ...data };
-            message = 'Cập nhật lộ trình thành công!';
+            message = "Cập nhật lộ trình thành công!";
           } else {
-            message = 'Cập nhật lộ trình thất bại: Không tìm thấy lộ trình để cập nhật.';
-            toastType = 'error';
+            message =
+              "Cập nhật lộ trình thất bại: Không tìm thấy lộ trình để cập nhật.";
+            toastType = "error";
           }
         }
         this.showToast(message, toastType);
         this.closePopup();
       } catch (error) {
         console.error("Lỗi khi lưu lộ trình:", error);
-        this.showToast('Đã xảy ra lỗi khi lưu lộ trình.', 'error');
+        this.showToast("Đã xảy ra lỗi khi lưu lộ trình.", "error");
       }
     },
     async handleDelete(item) {
       const confirmMessage = `Bạn có chắc chắn muốn XÓA lộ trình của "${item.name}" - "${item.pathName}" không? Hành động này không thể hoàn tác.`;
       if (!confirm(confirmMessage)) {
-        this.showToast('Đã hủy thao tác xóa.', 'info');
+        this.showToast("Đã hủy thao tác xóa.", "info");
         return;
       }
 
       try {
         const initialLength = this.paths.length;
-        this.paths = this.paths.filter(p => p.id !== item.id);
+        this.paths = this.paths.filter((p) => p.id !== item.id);
         if (this.paths.length < initialLength) {
-          this.showToast('Xóa lộ trình thành công!', 'success');
+          this.showToast("Xóa lộ trình thành công!", "success");
           // Adjust current page if the last item of a page was deleted
           if (this.paginatedPaths.length === 0 && this.currentPage > 1) {
             this.currentPage--;
           }
         } else {
-          this.showToast('Xóa lộ trình thất bại: Không tìm thấy lộ trình để xóa.', 'error');
+          this.showToast(
+            "Xóa lộ trình thất bại: Không tìm thấy lộ trình để xóa.",
+            "error"
+          );
         }
       } catch (error) {
         console.error("Lỗi khi xóa lộ trình:", error);
-        this.showToast('Đã xảy ra lỗi khi xóa lộ trình.', 'error');
+        this.showToast("Đã xảy ra lỗi khi xóa lộ trình.", "error");
       }
     },
     handleSearch(keyword) {
@@ -266,13 +290,13 @@ export default {
       this.currentPage = page;
     },
     resetAdvancedFilters() {
-      this.filterStatus = '';
-      this.filterProgress = '';
-      this.filterDateRange = '';
+      this.filterStatus = "";
+      this.filterProgress = "";
+      this.filterDateRange = "";
       this.currentPage = 1; // Reset page after resetting filters
-      this.showToast('Đã đặt lại bộ lọc nâng cao.', 'info');
+      this.showToast("Đã đặt lại bộ lọc nâng cao.", "info");
     },
-    showToast(message, type = 'success') {
+    showToast(message, type = "success") {
       this.toastMessage = message;
       this.toastType = type;
       this.$refs.notificationToast.show();
@@ -295,8 +319,8 @@ export default {
     },
     itemsPerPage() {
       this.currentPage = 1; // Reset to page 1 when itemsPerPage changes
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -459,7 +483,6 @@ export default {
     max-width: 120px;
   }
 }
-
 
 @media (max-width: 768px) {
   .learning-path-view-container {

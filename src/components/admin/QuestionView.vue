@@ -14,14 +14,22 @@
       </div>
 
       <div class="table-responsive">
-        <table class="table table-striped table-hover table-sm">
+        <div
+          v-if="questions.length === 0"
+          class="alert alert-warning text-center"
+          role="alert"
+        >
+          Chưa có câu hỏi nào được tạo cho bài học này.
+        </div>
+
+        <table v-else class="table table-striped table-hover table-sm">
           <thead>
             <tr>
               <th>#</th>
               <th>Loại câu hỏi</th>
               <th>Câu hỏi</th>
               <th>Từ đích</th>
-              <th>số lựa chọn</th>
+              <th>Số lựa chọn</th>
               <th>Hành động</th>
             </tr>
           </thead>
@@ -41,13 +49,13 @@
               <td>{{ q.choices.length }}</td>
               <td>
                 <button
-                  @click="editQuestion(q.id)"
+                  @click="editQuestion(q)"
                   class="btn btn-warning btn-sm me-2"
                 >
                   Sửa
                 </button>
                 <button
-                  @click="viewQuestionDetail(q.id)"
+                  @click="deleteQuestion(q.id)"
                   class="btn btn-danger btn-sm"
                 >
                   Xóa
@@ -58,28 +66,25 @@
         </table>
       </div>
     </div>
+
+    <!-- Modal form -->
+    <QuestionFormModal
+      ref="questionModalRef"
+      :lessonId="currentLessonId"
+      @question-saved="handleQuestionSaved"
+    />
   </div>
-  <QuestionFormModal
-    ref="questionModalRef"
-    :lessonId="currentLessonId"
-    @question-saved="handleQuestionSaved"
-  />
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router"; // Import useRoute để lấy route params
-import QuestionFormModal from "../lesson/QuestionFormModal.vue"; // Import component con
-// const lessonId = router.params.lessonId;
+import { useRoute } from "vue-router";
+import QuestionFormModal from "../lesson/QuestionFormModal.vue";
 
-const route = useRoute(); // Lấy đối tượng route
-const currentLessonId = ref(null); // Biến để lưu lessonId hiện tại
-
-// Các biến trạng thái để điều khiển form con (modal)
-const showQuestionForm = ref(false); // Điều khiển ẩn/hiện modal
-const currentQuestion = ref(null); // Dữ liệu câu hỏi được chỉnh sửa hoặc tạo mới
-const isEditing = ref(false); // true nếu đang sửa, false nếu đang thêm
-
+const route = useRoute();
+const currentLessonId = ref(Number(route.params.lessonId || 101)); // fallback to 101
+const questionModalRef = ref(null);
+const isEditing = ref(false);
 const questions = ref([]);
 
 const questionTypeMap = {
@@ -91,128 +96,45 @@ const questionTypeMap = {
   WRITING: "Viết",
 };
 
-const getQuestionTypeName = (type) => {
-  return questionTypeMap[type] || type;
-};
+const getQuestionTypeName = (type) => questionTypeMap[type] || type;
 
-// --- Hàm cho nút "Thêm câu hỏi mới" ---
 const openNewQuestionForm = () => {
-  isEditing.value = false; // Đặt trạng thái là thêm mới
-  currentQuestion.value = {
-    id: null,
-    lessonId: currentLessonId.value, // TRUYỀN lessonId VÀO initialQuestion
-    questionType: "MULTIPLE_CHOICE_TEXT_ONLY",
-    promptTextTemplate: "",
-    targetWordNative: "",
-    targetLanguageCode: "ja", // Mặc định Nhật Bản
-    optionsLanguageCode: "vi", // Mặc định Tiếng Việt
-    audioUrlQuestions: null,
-    choices: [
-      // Khởi tạo 4 lựa chọn trống mặc định
-      {
-        id: null,
-        lessonQuestionId: null,
-        textForeign: "",
-        textRomaji: "",
-        imageUrl: null,
-        audioUrlForeign: null,
-        isCorrect: false,
-        textBlock: "",
-        meaning: "",
-      },
-      {
-        id: null,
-        lessonQuestionId: null,
-        textForeign: "",
-        textRomaji: "",
-        imageUrl: null,
-        audioUrlForeign: null,
-        isCorrect: false,
-        textBlock: "",
-        meaning: "",
-      },
-      {
-        id: null,
-        lessonQuestionId: null,
-        textForeign: "",
-        textRomaji: "",
-        imageUrl: null,
-        audioUrlForeign: null,
-        isCorrect: false,
-        textBlock: "",
-        meaning: "",
-      },
-      {
-        id: null,
-        lessonQuestionId: null,
-        textForeign: "",
-        textRomaji: "",
-        imageUrl: null,
-        audioUrlForeign: null,
-        isCorrect: false,
-        textBlock: "",
-        meaning: "",
-      },
-    ],
-  };
-  showQuestionForm.value = true; // Hiển thị form con
+  isEditing.value = false;
+  questionModalRef.value.openModal({ mode: "create" });
 };
 
-// Hàm khi bấm "Sửa" trên từng hàng
-const editQuestion = (questionIdToEdit) => {
-  isEditing.value = true; // Đặt trạng thái là chỉnh sửa
-  // Tìm câu hỏi trong mảng `questions`
-  const questionToEdit = questions.value.find((q) => q.id === questionIdToEdit);
-  if (questionToEdit) {
-    // Tạo bản sao sâu để tránh chỉnh sửa trực tiếp dữ liệu trong danh sách
-    currentQuestion.value = JSON.parse(JSON.stringify(questionToEdit));
-    showQuestionForm.value = true; // Hiển thị form con
-  } else {
-    alert("Không tìm thấy câu hỏi để chỉnh sửa.");
-  }
+const editQuestion = (question) => {
+  if (!question) return alert("Không tìm thấy câu hỏi.");
+  questionModalRef.value.openModal({
+    ...question,
+  });
 };
-
-// Hàm xử lý khi form con emit 'question-saved'
 const handleQuestionSaved = (savedQuestion) => {
-  if (isEditing.value) {
-    // Logic cập nhật câu hỏi hiện có trong danh sách
-    const index = questions.value.findIndex((q) => q.id === savedQuestion.id);
-    if (index !== -1) {
-      questions.value[index] = savedQuestion;
-    }
-    alert("Cập nhật câu hỏi thành công!");
+  const index = questions.value.findIndex((q) => q.id === savedQuestion.id);
+  if (index !== -1) {
+    questions.value[index] = savedQuestion;
   } else {
-    // Logic thêm câu hỏi mới vào danh sách
     questions.value.push(savedQuestion);
-    alert("Thêm câu hỏi mới thành công!");
   }
-  closeQuestionForm(); // Đóng form sau khi lưu
-  // TODO: Ở đây bạn sẽ gọi API để lưu/cập nhật dữ liệu lên server
-  console.log("Dữ liệu câu hỏi đã lưu:", savedQuestion);
 };
 
-// Hàm đóng form con (modal)
-const closeQuestionForm = () => {
-  showQuestionForm.value = false;
-  currentQuestion.value = null; // Reset dữ liệu form
-};
-
-// Hàm xóa câu hỏi (ví dụ, bạn có thể triển khai popup xác nhận)
 const deleteQuestion = (id) => {
-  if (confirm(`Bạn có chắc chắn muốn xóa câu hỏi ID: ${id} không?`)) {
+  if (confirm("Bạn có chắc chắn muốn xóa câu hỏi này?")) {
     questions.value = questions.value.filter((q) => q.id !== id);
-    alert("Xóa câu hỏi thành công!");
-    // TODO: Gọi API xóa câu hỏi
   }
 };
 
 const importFromExcel = () => {
-  alert('Chức năng "Thêm bằng file Excel" sẽ được phát triển sau.');
+  alert("Chức năng import sẽ được phát triển sau.");
 };
-onMounted(async () => {
-  // Giả lập fetch từ API, bạn nên thay bằng fetch thực tế từ backend
-  // Đây là mảng dữ liệu mock mà bạn đã cung cấp
-  const mockData = [
+
+onMounted(() => {
+  // Load mock data
+  questions.value = getMockData();
+});
+
+function getMockData() {
+  return [
     {
       id: 1,
       lessonId: 101,
@@ -403,39 +325,6 @@ onMounted(async () => {
           textBlock: "Tôi là giáo viên",
           meaning: null,
         },
-        {
-          id: 402,
-          lessonQuestionId: 4,
-          textForeign: null,
-          textRomaji: null,
-          imageUrl: null,
-          audioUrlForeign: null,
-          isCorrect: false,
-          textBlock: "Giáo viên là tôi",
-          meaning: null,
-        },
-        {
-          id: 403,
-          lessonQuestionId: 4,
-          textForeign: null,
-          textRomaji: null,
-          imageUrl: null,
-          audioUrlForeign: null,
-          isCorrect: false,
-          textBlock: "Là tôi giáo viên",
-          meaning: null,
-        },
-        {
-          id: 404,
-          lessonQuestionId: 4,
-          textForeign: null,
-          textRomaji: null,
-          imageUrl: null,
-          audioUrlForeign: null,
-          isCorrect: false,
-          textBlock: "Giáo viên tôi là",
-          meaning: null,
-        },
       ],
     },
     {
@@ -495,11 +384,9 @@ onMounted(async () => {
       ],
     },
   ];
-  questions.value = mockData; // Gán dữ liệu mock vào biến `questions`
-  console.log("Danh sách câu hỏi:", questions.value);
-});
+}
 </script>
 
 <style scoped>
-/* Tùy chỉnh nếu cần */
+/* Tùy chỉnh giao diện nếu cần */
 </style>

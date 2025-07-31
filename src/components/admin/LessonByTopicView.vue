@@ -136,7 +136,7 @@ async function fetchTopicStats() {
 
     topicStats.totalTopics = topics.length;
     topicStats.activeTopics = topics.filter(
-      (t) => t.status === "active"
+      (t) => t.status === "PUBLISHED"
     ).length;
 
     let totalLessonsCount = 0;
@@ -144,7 +144,7 @@ async function fetchTopicStats() {
 
     topics.forEach((topic) => {
       const lessonsInTopic = lessons.filter(
-        (lesson) => lesson.topic_id === topic.id
+        (lesson) => lesson.topicId === topic.id
       );
       totalLessonsCount += lessonsInTopic.length;
       topicLessonCounts.set(topic.name, lessonsInTopic.length);
