@@ -4,7 +4,6 @@
       <thead class="custom-reminder-table-header">
         <tr>
           <th>Loại nhắc nhở</th>
-          <th>Đã tiếp cận</th>
           <th>Ngày tạo</th>
           <th>Trạng thái</th>
           <th class="text-center">Hành động</th>
@@ -13,22 +12,33 @@
       <tbody>
         <tr v-for="item in reminders" :key="item.id" class="table-row-hover">
           <td>{{ item.type }}</td>
-          <td>{{ item.reachCount }}</td>
           <td>{{ item.createdAt }}</td>
           <td>
-            <span :class="['status-badge', getStatusClass(item.status)]">{{ item.status }}</span>
+            <span :class="['status-badge', getStatusClass(item.status)]">{{
+              item.status
+            }}</span>
           </td>
           <td class="text-center action-buttons-cell">
-            <button class="btn btn-sm btn-outline-primary btn-icon-only me-1" title="Chỉnh sửa" @click="$emit('edit', item)">
+            <button
+              class="btn btn-sm btn-outline-primary btn-icon-only me-1"
+              title="Chỉnh sửa"
+              @click="$emit('edit', item)"
+            >
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn btn-sm btn-outline-danger btn-icon-only" title="Xóa" @click="$emit('delete', item.id)">
+            <button
+              class="btn btn-sm btn-outline-danger btn-icon-only"
+              title="Xóa"
+              @click="$emit('delete', item.id)"
+            >
               <i class="bi bi-trash"></i>
             </button>
           </td>
         </tr>
         <tr v-if="reminders.length === 0">
-          <td colspan="5" class="text-center text-muted py-4">Không có nhắc nhở nào để hiển thị.</td>
+          <td colspan="5" class="text-center text-muted py-4">
+            Không có nhắc nhở nào để hiển thị.
+          </td>
         </tr>
       </tbody>
     </table>
@@ -37,19 +47,25 @@
 
 <script>
 export default {
-  props: ['reminders'],
+  props: ["reminders"],
   methods: {
     getStatusClass(status) {
       switch (status) {
-        case 'Đang hoạt động': return 'bg-primary-subtle text-primary';
-        case 'Tạm dừng': return 'bg-danger-subtle text-danger';
-        case 'Kết thúc': return 'bg-dark-subtle text-dark';
-        case 'Đã hoàn thành': return 'bg-dark-subtle text-purple';
-        case 'Đang chờ': return 'bg-dark-subtle text-success';
-        default: return 'bg-light text-muted'; // Fallback
+        case "Đang hoạt động":
+          return "bg-primary-subtle text-primary";
+        case "Tạm dừng":
+          return "bg-danger-subtle text-danger";
+        case "Kết thúc":
+          return "bg-dark-subtle text-dark";
+        case "Đã hoàn thành":
+          return "bg-dark-subtle text-purple";
+        case "Đang chờ":
+          return "bg-dark-subtle text-success";
+        default:
+          return "bg-light text-muted"; // Fallback
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -126,15 +142,26 @@ export default {
 }
 
 /* Custom Bootstrap-like subtle colors */
-.bg-success-subtle { background-color: var(--bs-success-bg-subtle, #d1e7dd); }
-.text-success { color: var(--bs-success-text-emphasis, #0f5132); }
+.bg-success-subtle {
+  background-color: var(--bs-success-bg-subtle, #d1e7dd);
+}
+.text-success {
+  color: var(--bs-success-text-emphasis, #0f5132);
+}
 
-.bg-warning-subtle { background-color: var(--bs-warning-bg-subtle, #fff3cd); }
-.text-warning { color: var(--bs-warning-text-emphasis, #664d03); }
+.bg-warning-subtle {
+  background-color: var(--bs-warning-bg-subtle, #fff3cd);
+}
+.text-warning {
+  color: var(--bs-warning-text-emphasis, #664d03);
+}
 
-.bg-secondary-subtle { background-color: var(--bs-secondary-bg-subtle, #e2e3e5); }
-.text-secondary { color: var(--bs-secondary-text-emphasis, #41464b); }
-
+.bg-secondary-subtle {
+  background-color: var(--bs-secondary-bg-subtle, #e2e3e5);
+}
+.text-secondary {
+  color: var(--bs-secondary-text-emphasis, #41464b);
+}
 
 /* Action Buttons */
 .action-buttons-cell {

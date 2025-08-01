@@ -6,7 +6,6 @@
           <th>Tên huy hiệu</th>
           <th>Mô tả</th>
           <th>Icon</th>
-          <th>Màu sắc</th>
           <th class="text-center">Hành động</th>
         </tr>
       </thead>
@@ -14,23 +13,29 @@
         <tr v-for="badge in badges" :key="badge.id" class="table-row-hover">
           <td>
             <div class="d-flex align-items-center">
-              <i :class="['bi', badge.icon || 'bi-question-circle']" :style="{ color: badge.color || '#6c757d', fontSize: '1.25rem' }" class="me-2"></i>
+              <i
+                :class="['bi', badge.icon || 'bi-question-circle']"
+                :style="{
+                  color: badge.color || '#6c757d',
+                  fontSize: '1.25rem',
+                }"
+                class="me-2"
+              ></i>
               <span>{{ badge.name }}</span>
             </div>
           </td>
           <td>{{ badge.description }}</td>
           <td>
             <div class="d-flex align-items-center">
-              <i :class="['bi', badge.icon || 'bi-question-circle']" :style="{ color: badge.color || '#6c757d', fontSize: '1.5rem' }" class="me-2"></i>
-              <span class="text-muted small">{{ badge.icon || 'N/A' }}</span>
+              <i
+                :class="['bi', badge.icon || 'bi-question-circle']"
+                :style="{ color: badge.color || '#6c757d', fontSize: '1.5rem' }"
+                class="me-2"
+              ></i>
+              <span class="text-muted small">{{ badge.icon || "N/A" }}</span>
             </div>
           </td>
-          <td>
-            <div class="color-display-wrapper">
-              <span class="color-box" :style="{ backgroundColor: badge.color || '#adb5bd' }"></span>
-              <span class="color-value text-muted small">{{ badge.color || 'N/A' }}</span>
-            </div>
-          </td>
+
           <td class="action-cell text-center">
             <div class="btn-group action-buttons" role="group">
               <button
@@ -59,10 +64,14 @@
         </tr>
         <tr v-if="badges.length === 0">
           <td colspan="5" class="text-center text-muted py-4">
-            <div class="d-flex flex-column align-items-center justify-content-center py-3">
-                <i class="bi bi-award-fill display-4 text-secondary mb-3"></i>
-                <p class="h5 text-secondary">Chưa có huy hiệu nào được tạo.</p>
-                <p class="text-muted">Hãy thêm huy hiệu đầu tiên của bạn để bắt đầu!</p>
+            <div
+              class="d-flex flex-column align-items-center justify-content-center py-3"
+            >
+              <i class="bi bi-award-fill display-4 text-secondary mb-3"></i>
+              <p class="h5 text-secondary">Chưa có huy hiệu nào được tạo.</p>
+              <p class="text-muted">
+                Hãy thêm huy hiệu đầu tiên của bạn để bắt đầu!
+              </p>
             </div>
           </td>
         </tr>
@@ -79,7 +88,7 @@ export default {
       default: () => [],
     },
   },
-  emits: ['edit', 'delete', 'view'], // Explicitly declare emitted events
+  emits: ["edit", "delete", "view"], // Explicitly declare emitted events
 };
 </script>
 

@@ -1,20 +1,39 @@
 <template>
-  <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5);">
+  <div
+    class="modal fade show d-block"
+    tabindex="-1"
+    role="dialog"
+    style="background: rgba(0, 0, 0, 0.5)"
+  >
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
-            {{ mode === 'add' ? 'Thêm Huy hiệu mới' : mode === 'edit' ? 'Chỉnh sửa Huy hiệu' : 'Chi tiết Huy hiệu' }}
+            {{
+              mode === "add"
+                ? "Thêm Huy hiệu mới"
+                : mode === "edit"
+                ? "Chỉnh sửa Huy hiệu"
+                : "Chi tiết Huy hiệu"
+            }}
           </h5>
-          <button type="button" class="btn-close" @click="$emit('close')"></button>
+          <button
+            type="button"
+            class="btn-close"
+            @click="$emit('close')"
+          ></button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="submit">
             <div class="row g-3">
               <div class="col-md-6">
-                <label for="badgeName" class="form-label required-label">Tên huy hiệu</label>
+                <label for="badgeName" class="form-label required-label"
+                  >Tên huy hiệu</label
+                >
                 <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-award"></i></span>
+                  <span class="input-group-text"
+                    ><i class="bi bi-award"></i
+                  ></span>
                   <input
                     id="badgeName"
                     v-model.trim="form.name"
@@ -23,13 +42,19 @@
                     :disabled="isDetailMode"
                   />
                 </div>
-                <div v-if="errors.name" class="invalid-feedback d-block">{{ errors.name }}</div>
+                <div v-if="errors.name" class="invalid-feedback d-block">
+                  {{ errors.name }}
+                </div>
               </div>
 
               <div class="col-md-6">
-                <label for="icon" class="form-label required-label">Icon (Bootstrap icon class)</label>
+                <label for="icon" class="form-label required-label"
+                  >Icon (Bootstrap icon class)</label
+                >
                 <div class="input-group">
-                  <span class="input-group-text"><i :class="['bi', form.icon || 'bi-question-circle']"></i></span>
+                  <span class="input-group-text"
+                    ><i :class="['bi', form.icon || 'bi-question-circle']"></i
+                  ></span>
                   <input
                     id="icon"
                     type="text"
@@ -40,30 +65,20 @@
                     placeholder="vd: bi-star-fill"
                   />
                 </div>
-                <div v-if="errors.icon" class="invalid-feedback d-block">{{ errors.icon }}</div>
-                <small class="form-text text-muted ms-1">Ví dụ: `bi-star-fill`, `bi-shield-fill`...</small>
-              </div>
-
-              <div class="col-md-6">
-                <label for="color" class="form-label required-label">Màu sắc</label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-palette-fill"></i></span>
-                  <input
-                    id="color"
-                    type="color"
-                    v-model="form.color"
-                    class="form-control form-control-color"
-                    :class="{ 'is-invalid': errors.color }"
-                    :disabled="isDetailMode"
-                  />
+                <div v-if="errors.icon" class="invalid-feedback d-block">
+                  {{ errors.icon }}
                 </div>
-                <div v-if="errors.color" class="invalid-feedback d-block">{{ errors.color }}</div>
+                <small class="form-text text-muted ms-1"
+                  >Ví dụ: `bi-star-fill`, `bi-shield-fill`...</small
+                >
               </div>
 
               <div class="col-md-6">
                 <label for="points" class="form-label">Điểm thưởng</label>
                 <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-award-fill"></i></span>
+                  <span class="input-group-text"
+                    ><i class="bi bi-award-fill"></i
+                  ></span>
                   <input
                     id="points"
                     type="number"
@@ -74,14 +89,19 @@
                     min="0"
                   />
                 </div>
-                <div v-if="errors.points" class="invalid-feedback d-block">{{ errors.points }}</div>
+                <div v-if="errors.points" class="invalid-feedback d-block">
+                  {{ errors.points }}
+                </div>
               </div>
 
-
               <div class="col-12">
-                <label for="description" class="form-label required-label">Mô tả</label>
+                <label for="description" class="form-label required-label"
+                  >Mô tả</label
+                >
                 <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                  <span class="input-group-text"
+                    ><i class="bi bi-card-text"></i
+                  ></span>
                   <textarea
                     id="description"
                     v-model.trim="form.description"
@@ -91,19 +111,33 @@
                     rows="3"
                   ></textarea>
                 </div>
-                <div v-if="errors.description" class="invalid-feedback d-block">{{ errors.description }}</div>
+                <div v-if="errors.description" class="invalid-feedback d-block">
+                  {{ errors.description }}
+                </div>
               </div>
             </div>
           </form>
         </div>
         <div class="modal-footer" v-if="!isDetailMode">
-          <button type="button" class="btn btn-secondary" @click="$emit('close')">Hủy</button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="$emit('close')"
+          >
+            Hủy
+          </button>
           <button type="button" class="btn btn-primary" @click="submit">
-            {{ mode === 'edit' ? 'Cập nhật' : 'Thêm mới' }}
+            {{ mode === "edit" ? "Cập nhật" : "Thêm mới" }}
           </button>
         </div>
         <div class="modal-footer" v-else>
-          <button type="button" class="btn btn-secondary" @click="$emit('close')">Đóng</button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="$emit('close')"
+          >
+            Đóng
+          </button>
         </div>
       </div>
     </div>
@@ -119,25 +153,24 @@ export default {
     },
     mode: {
       type: String,
-      default: 'add', // 'add', 'edit', 'detail'
+      default: "add", // 'add', 'edit', 'detail'
     },
   },
-  emits: ['save', 'close'],
+  emits: ["save", "close"],
   data() {
     return {
       form: this.badge ? { ...this.badge } : this.initializeForm(),
       errors: {
-        name: '',
-        description: '',
-        icon: '',
-        color: '',
-        points: '', // Thêm lỗi cho points nếu bạn sử dụng nó
+        name: "",
+        description: "",
+        icon: "",
+        points: "", // Thêm lỗi cho points nếu bạn sử dụng nó
       },
     };
   },
   computed: {
     isDetailMode() {
-      return this.mode === 'detail';
+      return this.mode === "detail";
     },
   },
   watch: {
@@ -151,7 +184,8 @@ export default {
     },
     mode: {
       handler(newMode) {
-        if (newMode === 'add' && !this.badge) { // Only re-initialize if it's 'add' mode and no initial badge data
+        if (newMode === "add" && !this.badge) {
+          // Only re-initialize if it's 'add' mode and no initial badge data
           this.form = this.initializeForm();
         }
         this.resetErrors();
@@ -163,20 +197,20 @@ export default {
     initializeForm() {
       return {
         id: null,
-        name: '',
-        description: '',
-        icon: 'bi-star-fill', // Default icon
-        color: '#0d6efd',    // Default Bootstrap primary blue
-        points: 0,           // Default points (if you use it)
+        name: "",
+        description: "",
+        icon: "bi-star-fill", // Default icon
+        color: "#0d6efd", // Default Bootstrap primary blue
+        points: 0, // Default points (if you use it)
       };
     },
     resetErrors() {
       this.errors = {
-        name: '',
-        description: '',
-        icon: '',
-        color: '',
-        points: '',
+        name: "",
+        description: "",
+        icon: "",
+        color: "",
+        points: "",
       };
     },
     validateForm() {
@@ -184,60 +218,63 @@ export default {
       let isValid = true;
 
       // Validate Tên huy hiệu
-      if (!this.form.name || this.form.name.trim() === '') {
-        this.errors.name = 'Tên huy hiệu không được để trống.';
+      if (!this.form.name || this.form.name.trim() === "") {
+        this.errors.name = "Tên huy hiệu không được để trống.";
         isValid = false;
       } else if (this.form.name.trim().length < 3) {
-        this.errors.name = 'Tên huy hiệu phải có ít nhất 3 ký tự.';
+        this.errors.name = "Tên huy hiệu phải có ít nhất 3 ký tự.";
         isValid = false;
       }
 
       // Validate Mô tả
-      if (!this.form.description || this.form.description.trim() === '') {
-        this.errors.description = 'Mô tả không được để trống.';
+      if (!this.form.description || this.form.description.trim() === "") {
+        this.errors.description = "Mô tả không được để trống.";
         isValid = false;
       } else if (this.form.description.trim().length < 10) {
-        this.errors.description = 'Mô tả phải có ít nhất 10 ký tự.';
+        this.errors.description = "Mô tả phải có ít nhất 10 ký tự.";
         isValid = false;
       }
 
       // Validate Icon
-      if (!this.form.icon || this.form.icon.trim() === '') {
-        this.errors.icon = 'Icon không được để trống.';
+      if (!this.form.icon || this.form.icon.trim() === "") {
+        this.errors.icon = "Icon không được để trống.";
         isValid = false;
-      } else if (!this.form.icon.startsWith('bi-')) {
-          this.errors.icon = 'Icon phải bắt đầu bằng "bi-" (ví dụ: bi-star-fill).';
-          isValid = false;
+      } else if (!this.form.icon.startsWith("bi-")) {
+        this.errors.icon =
+          'Icon phải bắt đầu bằng "bi-" (ví dụ: bi-star-fill).';
+        isValid = false;
       }
 
-
       // Validate Màu sắc
-      if (!this.form.color || this.form.color.trim() === '') {
-        this.errors.color = 'Màu sắc không được để trống.';
+      if (!this.form.color || this.form.color.trim() === "") {
+        this.errors.color = "Màu sắc không được để trống.";
         isValid = false;
       }
       // You could add a regex here to validate hex color format if needed
 
       // Validate Điểm thưởng (nếu có)
-      if (this.form.points === null || this.form.points === undefined || this.form.points === '') {
-        this.errors.points = 'Điểm thưởng không được để trống.';
+      if (
+        this.form.points === null ||
+        this.form.points === undefined ||
+        this.form.points === ""
+      ) {
+        this.errors.points = "Điểm thưởng không được để trống.";
         isValid = false;
       } else if (isNaN(this.form.points) || this.form.points < 0) {
-        this.errors.points = 'Điểm thưởng phải là số không âm.';
+        this.errors.points = "Điểm thưởng phải là số không âm.";
         isValid = false;
       }
-
 
       return isValid;
     },
     submit() {
       if (this.isDetailMode) {
-        this.$emit('close');
+        this.$emit("close");
         return;
       }
 
       if (this.validateForm()) {
-        this.$emit('save', this.form);
+        this.$emit("save", this.form);
       } else {
         // Có thể thêm một thông báo chung ở đây nếu muốn
         // this.$emit('show-toast', 'Vui lòng kiểm tra lại các trường bị lỗi!', 'error');
@@ -297,7 +334,7 @@ export default {
 
 /* Required field indicator */
 .required-label::after {
-  content: ' *';
+  content: " *";
   color: #dc3545; /* Bootstrap danger red */
   font-weight: normal;
 }
@@ -335,7 +372,7 @@ export default {
 .input-group:has(.form-control.is-invalid) .input-group-text,
 .input-group:has(.form-select.is-invalid) .input-group-text,
 .input-group:has(.form-control-color.is-invalid) .input-group-text {
-    border-color: #dc3545; /* Change border color of input-group-text on error */
+  border-color: #dc3545; /* Change border color of input-group-text on error */
 }
 
 .invalid-feedback.d-block {
@@ -352,10 +389,10 @@ export default {
 }
 
 .form-control-color::-webkit-color-swatch-wrapper {
-    padding: 0;
+  padding: 0;
 }
 .form-control-color::-webkit-color-swatch {
-    border-radius: 0.25rem;
-    border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  border: 1px solid #dee2e6;
 }
 </style>

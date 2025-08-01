@@ -5,15 +5,22 @@
         <div class="modal-header custom-popup-header">
           <h5 class="modal-title custom-popup-title">
             <i :class="modalIcon" class="me-2"></i>
-            {{ localReminder.id ? 'Chỉnh sửa nhắc nhở' : 'Thêm nhắc nhở mới' }}
+            {{ localReminder.id ? "Chỉnh sửa nhắc nhở" : "Thêm nhắc nhở mới" }}
           </h5>
-          <button type="button" class="btn-close custom-close-button" @click="$emit('close')" aria-label="Close"></button>
+          <button
+            type="button"
+            class="btn-close custom-close-button"
+            @click="$emit('close')"
+            aria-label="Close"
+          ></button>
         </div>
 
         <div class="modal-body custom-popup-body">
           <form @submit.prevent="save">
             <div class="mb-3">
-              <label for="title" class="form-label custom-label">Tiêu đề nhắc nhở <span class="text-danger">*</span></label>
+              <label for="title" class="form-label custom-label"
+                >Tiêu đề nhắc nhở <span class="text-danger">*</span></label
+              >
               <input
                 type="text"
                 id="title"
@@ -21,14 +28,19 @@
                 v-model="localReminder.title"
                 :class="{ 'is-invalid': !localReminder.title && formSubmitted }"
               />
-              <div class="invalid-feedback" v-if="!localReminder.title && formSubmitted">
+              <div
+                class="invalid-feedback"
+                v-if="!localReminder.title && formSubmitted"
+              >
                 Tiêu đề nhắc nhở không được để trống.
               </div>
             </div>
 
             <div class="row">
               <div class="col-md-6 mb-3">
-                <label for="userName" class="form-label custom-label">Người tạo</label>
+                <label for="userName" class="form-label custom-label"
+                  >Người tạo</label
+                >
                 <input
                   type="text"
                   id="userName"
@@ -37,7 +49,9 @@
                 />
               </div>
               <div class="col-md-6 mb-3">
-                <label for="time" class="form-label custom-label">Thời gian</label>
+                <label for="time" class="form-label custom-label"
+                  >Thời gian</label
+                >
                 <input
                   type="time"
                   id="time"
@@ -49,7 +63,9 @@
 
             <div class="row">
               <div class="col-md-6 mb-3">
-                <label for="type" class="form-label custom-label">Loại nhắc nhở</label>
+                <label for="type" class="form-label custom-label"
+                  >Loại nhắc nhở</label
+                >
                 <input
                   type="text"
                   id="type"
@@ -58,34 +74,31 @@
                 />
               </div>
               <div class="col-md-6 mb-3">
-                <label for="createdAt" class="form-label custom-label">Ngày tạo <span class="text-danger">*</span></label>
+                <label for="createdAt" class="form-label custom-label"
+                  >Ngày tạo <span class="text-danger">*</span></label
+                >
                 <input
                   type="date"
                   id="createdAt"
                   class="form-control custom-input"
                   v-model="localReminder.createdAt"
-                  :class="{ 'is-invalid': !localReminder.createdAt && formSubmitted }"
+                  :class="{
+                    'is-invalid': !localReminder.createdAt && formSubmitted,
+                  }"
                 />
-                <div class="invalid-feedback" v-if="!localReminder.createdAt && formSubmitted">
+                <div
+                  class="invalid-feedback"
+                  v-if="!localReminder.createdAt && formSubmitted"
+                >
                   Ngày tạo không được để trống.
                 </div>
               </div>
             </div>
 
             <div class="mb-3">
-              <label for="reachCount" class="form-label custom-label">Số người đã tiếp cận</label>
-              <input
-                type="number"
-                id="reachCount"
-                class="form-control custom-input"
-                :value="localReminder.reachCount"
-                disabled
-              />
-              <small class="form-text text-muted">Trường này được cập nhật tự động từ hệ thống và không thể chỉnh sửa.</small>
-            </div>
-
-            <div class="mb-3">
-              <label for="status" class="form-label custom-label">Trạng thái</label>
+              <label for="status" class="form-label custom-label"
+                >Trạng thái</label
+              >
               <select
                 id="status"
                 class="form-select custom-select"
@@ -101,7 +114,11 @@
         </div>
 
         <div class="modal-footer custom-popup-footer">
-          <button type="button" class="btn btn-secondary custom-cancel-button" @click="$emit('close')">
+          <button
+            type="button"
+            class="btn btn-secondary custom-cancel-button"
+            @click="$emit('close')"
+          >
             Hủy
           </button>
           <button
@@ -119,7 +136,7 @@
 </template>
 
 <script>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed } from "vue";
 
 export default {
   props: {
@@ -128,17 +145,16 @@ export default {
       default: null,
     },
   },
-  emits: ['save', 'close'],
+  emits: ["save", "close"],
   setup(props, { emit }) {
     const localReminder = ref({
       id: null,
-      title: '',
-      userName: '',
-      time: '09:00',
-      type: '',
-      reachCount: 0,
+      title: "",
+      userName: "",
+      time: "09:00",
+      type: "",
       createdAt: new Date().toISOString().slice(0, 10),
-      status: 'Đang chờ'
+      status: "Đang chờ",
     });
 
     const formSubmitted = ref(false);
@@ -150,18 +166,22 @@ export default {
         if (newVal) {
           localReminder.value = { ...newVal };
           if (localReminder.value.createdAt) {
-            localReminder.value.createdAt = new Date(localReminder.value.createdAt).toISOString().slice(0, 10);
+            localReminder.value.createdAt = new Date(
+              localReminder.value.createdAt
+            )
+              .toISOString()
+              .slice(0, 10);
           }
         } else {
           localReminder.value = {
             id: null,
-            title: '',
-            userName: '',
-            time: '09:00',
-            type: '',
+            title: "",
+            userName: "",
+            time: "09:00",
+            type: "",
             reachCount: 0,
             createdAt: new Date().toISOString().slice(0, 10),
-            status: 'Đang chờ'
+            status: "Đang chờ",
           };
         }
       },
@@ -175,11 +195,11 @@ export default {
     const save = () => {
       formSubmitted.value = true;
       if (!isFormValid.value) return;
-      emit('save', { ...localReminder.value });
+      emit("save", { ...localReminder.value });
     };
 
     const modalIcon = computed(() =>
-      localReminder.value.id ? 'bi bi-pencil-square' : 'bi bi-plus-circle-fill'
+      localReminder.value.id ? "bi bi-pencil-square" : "bi bi-plus-circle-fill"
     );
 
     return {
@@ -187,9 +207,9 @@ export default {
       save,
       modalIcon,
       isFormValid,
-      formSubmitted
+      formSubmitted,
     };
-  }
+  },
 };
 </script>
 
