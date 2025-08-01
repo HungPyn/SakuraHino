@@ -4,27 +4,20 @@ import { useBoundStore } from "../../hooks/useBoundStore";
 type BottomBarItem = {
   name: Tab;
   href: string;
-  icon: JSX.Element;
+  icon: any;
 };
 
 export type Tab = "Learn" | "Shop" | "Profile" | "Leaderboard";
 
 export const useBottomBarItems = () => {
-  const loggedIn = useBoundStore((x) => x.loggedIn); // Giả định useBoundStore có thuộc tính loggedIn
+  const loggedIn = useBoundStore((x) => x.loggedIn);
 
   const bottomBarItems: BottomBarItem[] = [
     {
       name: "Learn",
-      href: "/learn", // href vẫn giữ để định danh mục tiêu
+      href: "/learn",
       icon: (
-        // Svg cho icon Learn
-        <Svg
-          width="32"
-          height="32"
-          viewBox="0 0 32 32"
-          fill="none"
-          // className="h-[50px] w-[50px]" // Bỏ className, sẽ dùng style trong React Native
-        >
+        <Svg width="32" height="32" viewBox="0 0 32 32" fill="none">
           <Path
             d="M24.5852 25.2658C24.2883 26.8243 22.9257 27.9519 21.3392 27.9519H10.6401C9.05354 27.9519 7.69094 26.8243 7.39408 25.2658L4.98096 12.5969L15.9001 4.52225L26.9988 12.5941L24.5852 25.2658Z"
             fill="#FFC800"
@@ -51,14 +44,7 @@ export const useBottomBarItems = () => {
       name: "Shop",
       href: "/shop",
       icon: (
-        // Svg cho icon Shop
-        <Svg
-          width="46"
-          height="46"
-          viewBox="0 0 46 46"
-          fill="none"
-          // className="h-[50px] w-[50px]"
-        >
+        <Svg width="46" height="46" viewBox="0 0 46 46" fill="none">
           <Path
             d="M40 36V17H6V36C6 38.2091 7.73969 40 9.88571 40H36.1143C38.2603 40 40 38.2091 40 36Z"
             fill="#A56644"
@@ -96,14 +82,7 @@ export const useBottomBarItems = () => {
       name: "Profile",
       href: loggedIn ? "/profile" : "/learn?sign-up",
       icon: (
-        // Svg cho icon Profile
-        <Svg
-          width="46"
-          height="46"
-          viewBox="0 0 46 46"
-          fill="none"
-          // className="h-[50px] w-[50px]"
-        >
+        <Svg width="46" height="46" viewBox="0 0 46 46" fill="none">
           <Path
             fillRule="evenodd"
             clipRule="evenodd"
@@ -144,7 +123,6 @@ export const useBottomBarItems = () => {
       name: "Leaderboard",
       href: "/leaderboard",
       icon: (
-        // Svg cho icon Leaderboards
         <Svg width="46" height="46" viewBox="0 0 46 46" fill="none">
           <Path
             d="M7 9.5C7 7.84314 8.34315 6.5 10 6.5H36C37.6569 6.5 39 7.84315 39 9.5V23.5C39 32.3366 31.8366 39.5 23 39.5C14.1634 39.5 7 32.3366 7 23.5V9.5Z"

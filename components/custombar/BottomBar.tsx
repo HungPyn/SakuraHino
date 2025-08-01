@@ -3,14 +3,8 @@ import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useBottomBarItems, Tab } from "./useBottomBarItems";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-type RootStackParamList = {
-  LearningPath: undefined;
-  Shop: undefined;
-  Profile: undefined;
-  Leaderboards: undefined;
-  Lesson: { "fast-forward"?: number; practice?: boolean; "sign-up"?: boolean };
-  Guidebook: { code: string; unitNumber: number };
-};
+import { RootStackParamList } from "../../types/navigatorType";
+
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const COLORS = {
@@ -35,14 +29,18 @@ export const BottomBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
 
   const handlePress = (href: string) => {
     if (href === "/learn") {
-      navigation.navigate("LearningPath");
+      navigation.navigate("LearningPathScreen");
     } else if (href === "/shop") {
       navigation.navigate("Shop");
     } else if (href.startsWith("/profile")) {
       navigation.navigate("Profile");
     } else if (href.startsWith("/learn?sign-up")) {
-      navigation.navigate("Lesson", { "sign-up": true });
-    } else if (href === "/Leaderboard") {
+      navigation.navigate("LessonScreen2", {
+        unitNumber: 1,
+        "fast-forward": 0,
+        practice: false,
+      });
+    } else if (href === "/leaderboard") {
       navigation.navigate("Leaderboard");
     }
   };

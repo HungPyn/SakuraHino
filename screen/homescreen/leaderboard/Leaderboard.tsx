@@ -5,15 +5,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  ScrollView, // Thêm ScrollView cho nội dung có thể cuộn
-  Platform, // Để xử lý các sự khác biệt nhỏ giữa iOS/Android nếu cần
+  ScrollView,
+  Platform,
 } from "react-native";
 import { useNavigation, StackActions } from "@react-navigation/native";
 import dayjs from "dayjs";
-import weekday from "dayjs/plugin/weekday"; // Cần plugin weekday cho dayjs().day()
+import weekday from "dayjs/plugin/weekday";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
-// Import các SVGs của bạn (đảm bảo chúng là các component React Native SVG)
 import {
   BronzeLeagueSvg,
   FirstPlaceSvg,
@@ -23,14 +22,15 @@ import {
   LockedLeagueSvg,
   SecondPlaceSvg,
   ThirdPlaceSvg,
-} from "../../../components/Svgs"; // Điều chỉnh đường dẫn phù hợp
+} from "../../../components/Svgs";
 
-import { useBoundStore } from "../../../hooks/useBoundStore"; // Điều chỉnh đường dẫn phù hợp
-import { BottomBar } from "../../../components/custombar/BottomBar"; // Điều chỉnh đường dẫn phù hợp
-import { useLeaderboardUsers } from "./useLeaderboardUsers"; // Điều chỉnh đường dẫn phù hợp
-import type { RootStackParamList } from "../../../types/navigatorType"; // Điều chỉnh đường dẫn phù hợp
+import { useBoundStore } from "../../../hooks/useBoundStore";
+import { BottomBar } from "../../../components/custombar/BottomBar";
+import { useLeaderboardUsers } from "./useLeaderboardUsers";
+import type { RootStackParamList } from "../../../types/navigatorType";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-dayjs.extend(weekday); // Kích hoạt plugin weekday
+dayjs.extend(weekday);
 
 type LeaderboardScreenNavigationProp = NativeStackScreenProps<
   RootStackParamList,
@@ -55,7 +55,6 @@ const LeaderboardExplanationSection = () => {
 
       <View style={leaderboardStyles.explanationSpacer}></View>
 
-      {/* Đảm bảo LeaderboardExplanationSvg là một component SVG của React Native */}
       <LeaderboardExplanationSvg />
     </View>
   );
@@ -64,31 +63,29 @@ const LeaderboardExplanationSection = () => {
 type TimeLeftUnit = "days" | "hours" | "minutes";
 
 const timeUntilStartOfWeek = (units: TimeLeftUnit): number => {
-  const startOfWeekDay = 0; // Sunday
-  const startOfWeekHour = 20; // 8 PM
+  const startOfWeekDay = 0;
+  const startOfWeekHour = 20;
   const now = dayjs();
 
   let nextSunday = now.startOf("day").weekday(startOfWeekDay);
 
-  // Nếu hôm nay là Chủ Nhật và chưa đến 8 PM, thì đó là Chủ Nhật này
-  // Ngược lại, nếu đã qua 8 PM hoặc không phải Chủ Nhật, thì tính Chủ Nhật tuần sau
   if (now.weekday() === startOfWeekDay && now.hour() < startOfWeekHour) {
-    // Không cần làm gì, nextSunday đã là Chủ Nhật hiện tại
   } else {
-    // Nếu đã qua Chủ Nhật hiện tại hoặc chưa đến Chủ Nhật, tìm Chủ Nhật tiếp theo
     if (now.weekday() === startOfWeekDay && now.hour() >= startOfWeekHour) {
-      nextSunday = nextSunday.add(1, 'week');
+      nextSunday = nextSunday.add(1, "week");
     } else if (now.weekday() > startOfWeekDay) {
-        nextSunday = nextSunday.add(1, 'week');
+      nextSunday = nextSunday.add(1, "week");
     }
   }
 
-  // Đặt giờ cho nextSunday
-  nextSunday = nextSunday.hour(startOfWeekHour).minute(0).second(0).millisecond(0);
+  nextSunday = nextSunday
+    .hour(startOfWeekHour)
+    .minute(0)
+    .second(0)
+    .millisecond(0);
 
   return nextSunday.diff(now, units);
 };
-
 
 const timeLeft = (): `${number} ${TimeLeftUnit}` => {
   const days = timeUntilStartOfWeek("days");
@@ -100,13 +97,11 @@ const timeLeft = (): `${number} ${TimeLeftUnit}` => {
     return `${hours} hours`;
   }
   const minutes = timeUntilStartOfWeek("minutes");
-  // Đảm bảo không trả về 0 minutes nếu thực sự chưa đến lúc
   if (minutes > 0) {
     return `${minutes} minutes`;
   }
-  return `0 minutes`; // Hoặc một thông báo khác khi thời gian đã đến
+  return `0 minutes`;
 };
-
 
 const defaultPicture = "https://placekitten.com/100/100";
 
@@ -166,8 +161,7 @@ const Leaderboard = () => {
 
   useEffect(() => {
     if (!loggedIn) {
-      // Thay đổi router.push thành navigation.dispatch(StackActions.replace)
-      navigation.dispatch(StackActions.replace("Login")); // Giả sử 'Login' là tên màn hình đăng nhập của bạn
+      navigation.dispatch(StackActions.replace("Login"));
     }
   }, [loggedIn, navigation]);
 
@@ -176,20 +170,18 @@ const Leaderboard = () => {
     lessonsToUnlockLeaderboard - lessonsCompleted;
   const leaderboardIsUnlocked = lessonsCompleted >= lessonsToUnlockLeaderboard;
 
-  const leaderboardLeague = "Bronze League"; // Giá trị này có thể động hơn trong thực tế
+  const leaderboardLeague = "Bronze League";
 
-  const leaderboardUsers = useLeaderboardUsers(); // Hook này cần tương thích với RN
+  const leaderboardUsers = useLeaderboardUsers();
 
   return (
-    <View style={leaderboardStyles.mainContainer}>
-     
+    <SafeAreaView style={leaderboardStyles.mainContainer}>
       <ScrollView
         contentContainerStyle={leaderboardStyles.scrollViewContentContainer}
       >
         <View style={leaderboardStyles.contentWrapper}>
           {!leaderboardIsUnlocked && (
             <>
-              {/* Đảm bảo LeaderboardBannerSvg là component SVG của React Native */}
               <LeaderboardBannerSvg width={300} height={150} />
               <Text style={leaderboardStyles.unlockTitle}>
                 Unlock Leaderboards!
@@ -253,12 +245,9 @@ const Leaderboard = () => {
             </>
           )}
         </View>
-        {/* LeaderboardExplanationSection chỉ hiển thị trên màn hình lớn (web), nên thường sẽ bị ẩn trên RN */}
-        {/* Để giả lập "hidden xl:flex", chúng ta có thể dùng Platform hoặc ẩn nó hoàn toàn nếu không cần thiết trên mobile */}
-        {/* {!leaderboardIsUnlocked && <LeaderboardExplanationSection />} */}
       </ScrollView>
-      <BottomBar selectedTab="Leaderboards" />
-    </View>
+      <BottomBar selectedTab="Leaderboard" />
+    </SafeAreaView>
   );
 };
 
@@ -406,7 +395,7 @@ const leaderboardStyles = StyleSheet.create({
     fontWeight: "bold",
   },
   profileXpText: {
-    shrink: 0, // shrink-0
+    flexShrink: 0, // shrink-0
     color: "#6B7280", // gray-500
   },
 
@@ -418,7 +407,7 @@ const leaderboardStyles = StyleSheet.create({
     // For now, I'll keep it defined but note it would be conditionally rendered.
     // Equivalent to: hidden h-fit w-96 shrink-0 gap-5 rounded-2xl border-2 border-gray-200 p-6 xl:flex
     width: 384, // w-96 (96 * 4 = 384px)
-    maxHeight: "fit-content", // h-fit
+
     flexShrink: 0, // shrink-0
     gap: 20, // gap-5
     borderRadius: 16, // rounded-2xl

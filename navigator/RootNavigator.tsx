@@ -14,6 +14,9 @@ import LessonScreen2 from "../screen/homescreen/learnscreen/LessonScreen2";
 // SỬA DÒNG NÀY: Thêm tên file ResultScreen vào cuối đường dẫn
 import ResultScreen from "../screen/homescreen/learnscreen/ResultScreen"; // <-- Đảm bảo đây là đường dẫn chính xác đến file ResultScreen của bạn (ResultScreen.tsx)
 import Leaderboard from "../screen/homescreen/leaderboard/Leaderboard";
+import ShopScreen from "../screen/homescreen/shop/ShopScreen";
+import SettingsAccount from "../screen/profile/SettingsAccount";
+import ProfileScreen from "../screen/profile/ProfileScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -23,6 +26,21 @@ export default function RootNavigator() {
       <Stack.Screen
         name="Welcome"
         component={WelcomeScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Shop"
+        component={ShopScreen} // Đảm bảo bạn đã tạo ShopScreen
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="SettingsAccount"
+        component={SettingsAccount} // Đảm bảo bạn đã tạo ShopScreen
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen} // Đảm bảo bạn đã tạo ShopScreen
         options={{ headerShown: false }}
       />
       <Stack.Screen

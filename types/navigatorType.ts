@@ -19,17 +19,20 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   Home: undefined;
   Leaderboard: undefined;
-  Main: NavigatorScreenParams<MainTabParamList>; 
+  Main: NavigatorScreenParams<MainTabParamList>;
   LessonScreen: { practice: boolean } | undefined;
+  Shop: undefined;
   QuickPractice: { type: PracticeType };
   LearningPathScreen: undefined;
+  SettingsAccount:undefined;
+  ProfileScreen: undefined;
   LessonScreen2: {
     unitNumber?: number;
     "fast-forward"?: number;
     practice?: boolean;
   };
   Guidebook: { code: string; unitNumber: number };
-  LearningPath: undefined; 
+  LearningPath: undefined;
   Profile: undefined;
   Result: { type: string; xp: number; commitTime: string };
 };
