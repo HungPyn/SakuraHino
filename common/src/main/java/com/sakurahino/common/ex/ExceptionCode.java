@@ -24,10 +24,12 @@ public enum ExceptionCode {
     LOI_SERVER(1012, "Lỗi logic"),
 
 
-    // dùng ỏ topic service
+    // dùng ỏ learning service
     CHU_DE_KHONG_TON_TAI(2001, "Chủ đề không tồn tại"),
     LEVEL_KHONG_TON_TAI(2002,"Cấp độ không tôn tại"),
-
+    LESSON_DA_TON_TAI(2003,"Tên bài học đã tồn tại"),
+    MAX_PUBLIC_LESSON_REACHED(2004,"Số lượng bài học xuất bản đã tối ta"),
+    LESSON_KHONG_TON_TAI(2005,"Bài học không tồn tại"),
 
     //Upload-serivce
     FILE_NOT_NULL(3001,"Ảnh không được trống"),

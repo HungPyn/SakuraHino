@@ -1,16 +1,8 @@
 package com.sakurahino.learningservice.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import com.sakurahino.learningservice.enums.LearningStatus;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,6 +12,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
@@ -34,21 +27,34 @@ public class Lesson {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Size(max = 255)
-    @NotNull(message = "tên bài học không được để trống")
-    @Column(name = "lesson_name", nullable = false)
+    @Column(name = "lesson_name")
     private String lessonName;
 
-    @Column(name = "day_creation")
-    private Instant dayCreation;
+    @Column(name = "create_at")
+    private Instant createdAt;
+
+    @Column(name = "position")
+    private int position;
+
+    @Column(name = "max_questions")
+    private Integer maxQuestions;
+
+    @Column(name = "update_at")
+    private Instant updateAt;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private LearningStatus status;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id", nullable = false)
     private Topic topic;
 
-    @Column(name = "complete")
-    private Boolean complete = false;
+    @OneToMany(mappedBy = "lesson", fetch = FetchType.LAZY)
+    private List<UserLessonStatus> userStatuses;
+
+    @Column(name = "code")
+    String code;
 
 }

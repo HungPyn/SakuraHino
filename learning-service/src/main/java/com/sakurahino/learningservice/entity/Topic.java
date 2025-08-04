@@ -1,11 +1,7 @@
 package com.sakurahino.learningservice.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.sakurahino.learningservice.enums.LearningStatus;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -15,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
@@ -38,7 +35,33 @@ public class Topic {
     @Column(name = "url_image")
     private String urlImage;
 
+    @Column(name = "position")
+    private int position;
+
+    @Column(name = "max_lesson", nullable = false)
+    private int maxLesson;
+
     @Column(name = "create_at")
     private Instant createAt;
+
+    @Column(name = "update_at")
+    private Instant updateAt;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private LearningStatus status;
+
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Lesson> lessons;
+
+    @OneToMany(mappedBy = "topic", fetch = FetchType.LAZY)
+    private List<UserTopicStatus> userStatuses;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "level_id", nullable = false)
+    private Level level;
+
+    @Column(name = "code")
+    private String code;
 
 }

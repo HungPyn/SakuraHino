@@ -31,38 +31,9 @@ spring:
         - id: learning-service
           uri: lb://learning-service
           predicates:
-            - Path=/topic/**
+            - Path=/api/learning/**
           filters:
-            - RewritePath=/topic/(?<remaining>.*),/topic/${remaining}
-
-        - id: learning-service-question
-          uri: lb://learning-service
-          predicates:
-            - Path=/question/**
-          filters:
-            - RewritePath=/question/(?<remaining>.*),/question/${remaining}
-
-        - id: learning-service-lesson
-          uri: lb://learning-service
-          predicates:
-            - Path=/lesson/**
-          filters:
-            - RewritePath=/lesson/(?<remaining>.*),/lesson/${remaining}
-
-
-        - id: result-service-user
-          uri: lb://result-service
-          predicates:
-            - Path=/user/result/**
-          filters:
-            - RewritePath=/user/result/(?<remaining>.*),/user/result/${remaining}
-
-        - id: result-service-admin
-          uri: lb://result-service
-          predicates:
-            - Path=/admin/result/**
-          filters:
-            - RewritePath=/admin/result/(?<remaining>.*),/admin/result/${remaining}
+            - RewritePath=/api/learning/(?<remaining>.*),/learning/${remaining}
 
 
 jwt:

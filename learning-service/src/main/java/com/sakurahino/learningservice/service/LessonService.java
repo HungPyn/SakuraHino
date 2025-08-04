@@ -1,18 +1,17 @@
 package com.sakurahino.learningservice.service;
 
-import com.sakurahino.learningservice.dto.LessonRequest;
-import com.sakurahino.learningservice.dto.LessonResponse;
-
-import java.util.List;
+import com.sakurahino.common.dto.PaginatedResponse;
+import com.sakurahino.learningservice.dto.lesson.LessonRequestDTO;
+import com.sakurahino.learningservice.dto.lesson.LessonResponseDTO;
 
 public interface LessonService {
-    List<LessonResponse> getLessonByTopicIdAdmin(Integer topicId);
-    LessonResponse getLessonById(Integer id);
-    LessonResponse createLesson(LessonRequest lessonRequest);
+    PaginatedResponse<LessonResponseDTO> getLessonByTopicIdAdmin(Integer topicId, int page, int size);
+    LessonResponseDTO getLessonById(Integer id);
+    LessonResponseDTO create(LessonRequestDTO lessonRequest);
 
-    LessonResponse updateLesson(Integer id, LessonRequest lessonRequest);
+    LessonResponseDTO update(Integer id, LessonRequestDTO lessonRequest);
 
-    void deleteLesson(Integer id);
+    void delete(Integer id);
 
 
 }
