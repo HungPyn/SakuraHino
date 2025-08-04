@@ -42,6 +42,12 @@ public class AuthController {
         return new SuccessResponse("Gửi mã code thành công");
     }
 
+    @PostMapping("/check-code")
+    public SuccessResponse checkCode(@RequestBody @Valid ResetPasswordDTO.VerifyCodeRequest dto) {
+        var result = authService.checkCode(dto);
+        return new SuccessResponse(result);
+
+    }
     @PostMapping("/reset-password")
     public SuccessResponse resetPassword(@RequestBody @Valid ResetPasswordDTO.ResetPasswordRequest dto) {
             authService.resetPassword(dto);

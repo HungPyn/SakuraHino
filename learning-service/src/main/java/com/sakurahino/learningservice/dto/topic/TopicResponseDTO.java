@@ -1,19 +1,18 @@
-package com.sakurahino.learningservice.dto;
+package com.sakurahino.learningservice.dto.topic;
 
+import com.sakurahino.learningservice.enums.LearningStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TopicResponse {
+public class TopicResponseDTO {
 
     private Integer id;
 
@@ -23,6 +22,14 @@ public class TopicResponse {
 
     private Instant createAt;
 
-    private Boolean complete = false;
-   private List<LessonResponse> lessons;
+    private Instant updateAt;
+
+    private Integer position;
+
+    private int maxLesson;
+
+    private String level;
+
+    private LearningStatus status;
+
 }

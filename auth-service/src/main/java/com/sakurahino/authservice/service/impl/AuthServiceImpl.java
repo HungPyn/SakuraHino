@@ -144,7 +144,7 @@ public class AuthServiceImpl implements AuthService {
         }
         Instant now = Instant.now();
         Instant expiredAt = resetPassword.getExpiresAt();
-        if (expiredAt.isAfter(now)) {
+        if (expiredAt.isBefore(now)) {
             throw new AppException(ExceptionCode.MA_XAC_NHAN_HET_HAN);
         }
         return true;

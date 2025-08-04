@@ -23,14 +23,8 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/topic/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/topic/**").hasAnyRole("USER", "ADMIN") // Bao gồm cả GET /topic?levelId=...
-                        .requestMatchers("/topic").hasAnyRole("USER", "ADMIN")     // Đảm bảo path gốc cũng match
-                        .requestMatchers("/lesson/**").hasAnyRole("USER", "ADMIN") // Bao gồm cả GET /topic?levelId=...
-                        .requestMatchers("/lesson").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/question/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/question/**").hasAnyRole("USER", "ADMIN") // Bao gồm cả GET /topic?levelId=...
-                        .requestMatchers("/question").hasAnyRole("USER", "ADMIN")     // Đảm bảo path gốc cũng match
+                        .requestMatchers("/learning/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/learning/user/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(userContextFilter, UsernamePasswordAuthenticationFilter.class)

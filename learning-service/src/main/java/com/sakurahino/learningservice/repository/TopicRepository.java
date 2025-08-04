@@ -6,7 +6,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface TopicRepository extends JpaRepository<Topic, Integer> {
-    Page<Topic> findTopicsByOrderByCreateAtDesc(Pageable pageable);
+
+    //admin
+    Page<Topic> findAllByOrderByCreateAtDesc(Pageable pageable);
+
+    List<Topic> findByPositionBetweenOrderByPositionAsc(int positionAfter, int positionAfter1);
+
+    boolean existsByCode(String code);
+
+    Integer findMaxPosition();
 }

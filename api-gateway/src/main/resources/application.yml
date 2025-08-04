@@ -31,32 +31,9 @@ spring:
         - id: learning-service
           uri: lb://learning-service
           predicates:
-            - Path=/topic/**
+            - Path=/api/learning/**
           filters:
-            - RewritePath=/topic/(?<remaining>.*),/topic/${remaining}
-
-        - id: learning-service-question
-          uri: lb://learning-service
-          predicates:
-            - Path=/question/**
-          filters:
-            - RewritePath=/question/(?<remaining>.*),/question/${remaining}
-
-        - id: learning-service-lesson
-          uri: lb://learning-service
-          predicates:
-            - Path=/lesson/**
-          filters:
-            - RewritePath=/lesson/(?<remaining>.*),/lesson/${remaining}
-
-
-        - id: user-service
-          uri: lb://user-service
-          predicates:
-            - Path=/api/users/**
-          filters:
-            - RewritePath=/api/users/(?<remaining>.*),/api/users/${remaining}
-
+            - RewritePath=/api/learning/(?<remaining>.*),/learning/${remaining}
 
 jwt:
   secret: ${JWT_SECRET}

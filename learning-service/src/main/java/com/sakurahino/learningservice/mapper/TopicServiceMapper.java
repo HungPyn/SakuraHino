@@ -1,12 +1,14 @@
 package com.sakurahino.learningservice.mapper;
 
-import com.sakurahino.learningservice.dto.TopicResponse;
+import com.sakurahino.learningservice.dto.topic.TopicResponseDTO;
 import com.sakurahino.learningservice.entity.Topic;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface TopicServiceMapper {
 
-    TopicResponse maptoTopicResponse(Topic topic);
+    @Mapping(source = "level.name",target = "level")
+    TopicResponseDTO mapToTopicResponse(Topic topic);
 
 }

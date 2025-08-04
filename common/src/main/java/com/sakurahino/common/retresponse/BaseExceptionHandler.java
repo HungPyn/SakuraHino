@@ -28,4 +28,6 @@ public abstract class BaseExceptionHandler {
         headers.setContentType(MediaType.APPLICATION_JSON);
         return new ApiResponse(500, "Lỗi hệ thống. Vui lòng thử lại sau.", headers);
     }
+
+
 }
