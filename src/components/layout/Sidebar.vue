@@ -98,7 +98,7 @@
           </router-link>
         </li>
 
-        <!-- System Settings Section -->
+        <!-- System Settings Section
         <li class="nav-item category-title">Cài đặt hệ thống</li>
         <li class="nav-item">
           <router-link
@@ -109,7 +109,7 @@
             <i class="bi bi-gear nav-icon"></i>
             Cài đặt chung
           </router-link>
-        </li>
+        </li> -->
       </ul>
     </nav>
   </aside>

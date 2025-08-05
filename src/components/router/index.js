@@ -76,6 +76,11 @@ const routes = [
         name: "question",
         component: () => import("@/components/admin/QuestionView.vue"),
       },
+      {
+        path: "lesson/:topicId",
+        name: "lesson",
+        component: () => import("@/components/admin/LessonView.vue"),
+      },
     ],
   },
 ];

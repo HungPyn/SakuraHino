@@ -60,10 +60,20 @@
                 class="form-control"
                 :class="{ 'is-invalid': errors.url_image }"
                 id="topicImageUrl"
+                @change="handleImageUpload"
               />
               <div class="invalid-feedback" v-if="errors.url_image">
                 {{ errors.url_image }}
               </div>
+            </div>
+            <div v-if="topic.urlImage" class="mt-2 text-center">
+              <p class="text-muted">Ảnh hiện tại:</p>
+              <img
+                :src="topic.urlImage"
+                alt="Ảnh chủ đề"
+                class="img-thumbnail"
+                style="max-width: 200px; height: auto"
+              />
             </div>
             <div class="mb-3">
               <label for="topicStatus" class="form-label"
@@ -76,12 +86,42 @@
                 v-model="topic.status"
                 required
               >
-                <option value="PUBLISHED">Hoạt động</option>
-                <option value="PENDING">Không hoạt động</option>
+                <option v-for="s in status" :key="s" :value="s.status">
+                  {{
+                    s.status === "PUBLISHED"
+                      ? "Xuất bản"
+                      : s.status === "PENDING"
+                      ? "Chờ duyệt"
+                      : s.status === "DELETED"
+                      ? "Xóa"
+                      : "Không xác định"
+                  }}
+                </option>
               </select>
               <div class="invalid-feedback" v-if="errors.status">
                 {{ errors.status }}
               </div>
+            </div>
+            <div class="mb-3">
+              <label for="topicStatus" class="form-label"
+                >Cấp độ
+                <span class="text-danger"
+                  >*<b v-if="topic.level"
+                    >Đã chọn cấp độ: {{ topic.level }}</b
+                  ></span
+                ></label
+              >
+              <select
+                class="form-select"
+                :class="{ 'is-invalid': errors.status }"
+                id="topicStatus"
+                v-model="topic.levelId"
+                required
+              >
+                <option v-for="l in levels" :key="l.id" :value="l.id">
+                  {{ l.level }}
+                </option>
+              </select>
             </div>
             <div class="modal-footer d-flex justify-content-between">
               <button
@@ -104,8 +144,26 @@
 import { ref, reactive, onMounted } from "vue";
 import { Modal } from "bootstrap";
 import topicService from "../../services/topicService";
+import levelService from "@/services/levelService";
+import { useToast } from "vue-toastification";
+import Swal from "sweetalert2";
 
-const emit = defineEmits(["topic-saved"]);
+const toast = useToast();
+
+//xử lí ảnh
+
+const uploadedFile = ref(null); // Biến để lưu trữ tệp đã chọn
+
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    uploadedFile.value = file;
+  } else {
+    uploadedFile.value = null;
+  }
+}
+
+const emit = defineEmits(["topic-done-form"]);
 
 const modalRef = ref(null);
 let bsModal = null;
@@ -116,11 +174,38 @@ const initialTopicState = {
   maxLessson: 5,
   status: "PUBLISHED",
   levelId: 1,
+  level: "",
+  urlImage: "",
 };
 
 const topic = reactive({ ...initialTopicState });
 const isEditMode = ref(false);
 const errors = reactive({});
+const status = ref([]);
+const levels = ref([]);
+
+//lấy level
+const fetchLevels = async () => {
+  try {
+    const response = await levelService.getLevels();
+
+    levels.value = response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách cấp độ:", error);
+    alert("Có lỗi xảy ra khi lấy danh sách cấp độ: " + error.message);
+  }
+};
+// lấy status
+const fetchStatus = async () => {
+  try {
+    const response = await levelService.getStatus();
+
+    status.value = response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách trạng thái:", error);
+    alert("Có lỗi xảy ra khi lấy danh sách trạng thái: " + error.message);
+  }
+};
 
 // Hàm mở modal
 function openModal(topicData = null) {
@@ -128,6 +213,10 @@ function openModal(topicData = null) {
   if (topicData) {
     isEditMode.value = true;
     Object.assign(topic, JSON.parse(JSON.stringify(topicData))); // Deep copy
+    console.log(
+      "Opening modal in edit mode with topic:",
+      JSON.stringify(topic, null, 2)
+    );
   } else {
     isEditMode.value = false;
     Object.assign(topic, initialTopicState); // Reset to initial state
@@ -142,40 +231,66 @@ function closeModal() {
 
 // Hàm lưu chủ đề
 async function saveTopic() {
-  Object.assign(errors, {}); // Clear errors before validation
-
-  const validationResult = topicService.validateTopicData(topic);
-
-  if (!validationResult.isValid) {
-    validationResult.errors.forEach((error) => {
-      // Map error messages to specific fields
-      if (error.includes("Tên chủ đề")) errors.name = error;
-      else if (error.includes("Mô tả")) errors.description = error;
-      else if (error.includes("URL hình ảnh")) errors.url_image = error;
-      else if (error.includes("Trạng thái")) errors.status = error;
-      else if (!errors.general) errors.general = error;
-    });
-    // Fallback if no specific field mapping
-    if (
-      Object.keys(errors).length === 0 &&
-      validationResult.errors.length > 0
-    ) {
-      alert(validationResult.errors.join("\n"));
+  const isNew = !topic.id;
+  if (isNew) {
+    // Kiểm tra nếu là chủ đề mới, cần upload ảnh
+    if (uploadedFile.value == null) {
+      toast.error("Vui lòng chọn ảnh cho chủ đề!");
+      return;
     }
-    return; // Stop if validation fails
-  }
+    const result = await Swal.fire({
+      title: `Xác nhận thêm chủ đề`,
+      text: `Bạn có chắc muốn thêm chủ đề không?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Thêm",
+      cancelButtonText: "Hủy",
+    });
 
-  try {
-    const isNew = !topic.id; // Check if it's a new topic or update
+    if (result.isConfirmed) {
+      try {
+        await topicService.createTopic(topic, uploadedFile.value);
 
-    // Emit 'topic-saved' with 'isNew' flag
-    // The parent (LessonAdminView) will handle the confirmation and then call the service
-    emit("topic-saved", isNew);
+        toast.success(`Đã thêm chủ đề thành công!`);
+        emit("topic-done-form");
+        closeModal(); // Đóng modal sau khi lưu thành công
+        // fetchTopics();
+      } catch (error) {
+        console.error("Lỗi khi thêm chủ đề:", error);
+      }
+    }
+  } else {
+    const id = topic.id;
+    const result = await Swal.fire({
+      title: `Xác nhận chỉnh sửa chủ đề`,
+      text: `Bạn có chắc sửa chủ đề này không?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Lưu ",
+      cancelButtonText: "Hủy",
+    });
 
-    closeModal();
-  } catch (error) {
-    console.error("Error saving topic:", error);
-    alert("Có lỗi xảy ra khi lưu chủ đề: " + error.message);
+    if (result.isConfirmed) {
+      const topicEdit = {
+        name: topic.name,
+        maxLesson: topic.maxLesson,
+        status: topic.status,
+        levelId: topic.levelId,
+        url_image: uploadedFile.value
+          ? uploadedFile.value.name
+          : topic.url_image,
+      };
+      try {
+        await topicService.updateTopic(id, topicEdit, uploadedFile.value);
+
+        toast.success(`Đã sửa chủ đề thành công!`);
+        emit("topic-done-form");
+        closeModal(); // Đóng modal sau khi lưu thành công
+        // fetchTopics();
+      } catch (error) {
+        console.error("Lỗi khi chỉnh sửa chủ đề:", error);
+      }
+    }
   }
 }
 
@@ -191,6 +306,8 @@ onMounted(() => {
     Object.assign(topic, initialTopicState); // Reset form when modal is closed
     Object.assign(errors, {}); // Clear errors
   });
+  fetchLevels();
+  fetchStatus();
 });
 </script>
 

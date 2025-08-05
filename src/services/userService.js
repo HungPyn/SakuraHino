@@ -9,7 +9,7 @@ const toast = useToast(); // Giả sử bạn đang sử dụng Vue Toastificati
 
 const getUsers = async ({ page, size }) => {
   try {
-    const response = await axios.get(BASE_URL + "api/users/admin", {
+    const response = await axios.get(BASE_URL + "/api/users/admin", {
       params: {
         page,
         size,
@@ -35,7 +35,7 @@ const getUsers = async ({ page, size }) => {
 const deleteUser = async (userId) => {
   try {
     const response = await axios.patch(
-      `${BASE_URL}api/users/admin/${userId}`,
+      `${BASE_URL}/api/users/admin/${userId}`,
       null, // <--- ĐỐI SỐ THỨ HAI LÀ `null` (vì không gửi data body)
       {
         headers: {
