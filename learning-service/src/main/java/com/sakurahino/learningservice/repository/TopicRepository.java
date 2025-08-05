@@ -4,6 +4,7 @@ import com.sakurahino.learningservice.entity.Topic;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,5 +19,6 @@ public interface TopicRepository extends JpaRepository<Topic, Integer> {
 
     boolean existsByCode(String code);
 
+    @Query("SELECT MAX(t.position) FROM Topic t")
     Integer findMaxPosition();
 }
