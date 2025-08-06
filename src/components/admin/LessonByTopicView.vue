@@ -1,15 +1,8 @@
 <template>
   <div class="topic-admin-container">
     <div class="main-content flex-grow-1 p-4">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="bi bi-folder2-open learning-path-title">Quản lý Chủ Đề</h1>
-        <button class="btn btn-success" @click="openCreateTopicModal">
-          <i class="bi bi-plus-circle me-2"></i>Thêm chủ đề mới
-        </button>
-      </div>
-
       <!-- Thống kê chủ đề -->
-      <div class="row mb-4">
+      <!-- <div class="row mb-4">
         <div class="col-md-6">
           <div
             class="card p-3 text-center shadow-sm h-100 d-flex flex-column justify-content-center align-items-center"
@@ -30,8 +23,19 @@
             <p class="text-muted mb-0">Chủ Đề đang hoạt động</p>
           </div>
         </div>
+      </div> -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="d-flex align-items-center mb-0">
+          <i class="bi bi-folder2-open me-2 learning-path-title"></i>
+          <span class="learning-path-title">Quản lý Chủ Đề</span>
+          <small class="text-muted ms-2 mt-1"
+            >({{ topics.totalItems }} chủ đề)</small
+          >
+        </h1>
+        <button class="btn btn-success" @click="openCreateTopicModal">
+          <i class="bi bi-plus-circle me-2"></i>Thêm chủ đề mới
+        </button>
       </div>
-
       <!-- Danh sách chủ đề -->
       <TopicLessonAccordion ref="topicAccordion" />
     </div>
@@ -105,7 +109,7 @@ onMounted(async () => {
 }
 
 .learning-path-title {
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: #007bff;
   margin-bottom: 0;
   display: flex;

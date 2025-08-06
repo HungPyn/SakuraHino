@@ -1,4 +1,87 @@
 <template>
+  <div class="card mb-4 p-1 border-0">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label for="keyword" class="form-label font-weight-bold"
+          >Tìm kiếm</label
+        >
+        <input
+          @change="timKiem"
+          v-model="tuKhoa"
+          type="text"
+          class="form-control"
+          id="keyword"
+          placeholder="Nhập từ khóa..."
+        />
+      </div>
+      <div class="col-md-2">
+        <label for="startDate" class="form-label font-weight-bold"
+          >Từ ngày</label
+        >
+        <input
+          @change="timKiem"
+          v-model="startDate"
+          type="date"
+          class="form-control"
+          id="startDate"
+        />
+      </div>
+      <div class="col-md-2">
+        <label for="endDate" class="form-label font-weight-bold"
+          >Đến ngày</label
+        >
+        <input
+          @change="timKiem"
+          v-model="endDate"
+          type="date"
+          class="form-control"
+          id="endDate"
+        />
+      </div>
+      <div class="col-md-2">
+        <label for="statusSelect" class="form-label font-weight-bold"
+          >Cấp độ</label
+        >
+        <select
+          @change="timKiem"
+          v-model="level"
+          class="form-select"
+          id="statusSelect"
+        >
+          <option value="">Tất cả</option>
+          <option v-for="l in levels" :key="l.id" :value="l.id">
+            {{ l.level }}
+          </option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label for="statusSelect" class="form-label font-weight-bold"
+          >Trạng thái</label
+        >
+        <select
+          @change="timKiem"
+          v-model="status"
+          class="form-select"
+          id="statusSelect"
+        >
+          <option value="">Tất cả</option>
+          <option value="PUBLISHED">Đã xuất bản</option>
+          <option value="PENDING">Chờ duyệt</option>
+          <option value="DELETED">Đã xóa</option>
+        </select>
+      </div>
+      <div class="col-md-1">
+        <button
+          type="button"
+          @click="resetFilters"
+          class="btn btn-outline-secondary w-100"
+          title="Đặt lại bộ lọc"
+        >
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </button>
+      </div>
+    </div>
+  </div>
   <div class="topic-lesson-accordion mt-4">
     <div v-if="loading" class="text-center p-5">
       <div class="spinner-border text-primary" role="status">
@@ -131,6 +214,7 @@ import { useRouter } from "vue-router";
 import TopicFormModal from "./TopicFormModal.vue";
 import Swal from "sweetalert2";
 import { useToast } from "vue-toastification";
+import levelService from "@/services/levelService";
 const router = useRouter();
 
 const toast = useToast();
@@ -228,9 +312,49 @@ async function fetchTopics() {
     loading.value = false;
   }
 }
+//lấy level
+const levels = ref({});
+//lấy level
+const fetchLevels = async () => {
+  try {
+    const response = await levelService.getLevels();
 
-onMounted(() => {
-  fetchTopics();
+    levels.value = response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách cấp độ:", error);
+    alert("Có lỗi xảy ra khi lấy danh sách cấp độ: " + error.message);
+  }
+};
+
+//tim kiem
+const tuKhoa = ref("");
+const level = ref("");
+const startDate = ref(null);
+const endDate = ref(null);
+const status = ref("");
+const resetFilters = async () => {
+  level.value = "";
+  tuKhoa.value = "";
+  startDate.value = null;
+  endDate.value = null;
+  status.value = "";
+};
+
+const timKiem = async () => {
+  console.log("Đang thực hiện tìm kiếm với các tham số:");
+  console.log("Từ khóa:", tuKhoa.value);
+  console.log("level:", level.value);
+  console.log("Ngày bắt đầu:", startDate.value);
+  console.log("Ngày kết thúc:", endDate.value);
+  console.log("Trạng thái:", status.value);
+
+  // Thêm logic gọi API tìm kiếm tại đây
+  // ...
+};
+
+onMounted(async () => {
+  await fetchTopics();
+  await fetchLevels();
 });
 </script>
 
@@ -242,15 +366,15 @@ onMounted(() => {
 .accordion-item {
   border: 1px solid #e0e0e0;
   border-radius: 0.75rem;
-  overflow: hidden; /* Ensures border-radius applies to children */
+  overflow: hidden;
 }
 
 .accordion-header .accordion-button {
   background-color: #f8fafd;
   color: #333;
   font-weight: bold;
-  font-size: 1.15rem;
-  padding: 1rem 1.25rem;
+  font-size: 1rem; /* Giảm nhẹ font chữ */
+  padding: 0.5rem 1rem; /* Giảm padding để bớt dày */
   border-bottom: 1px solid #e0e0e0;
 }
 
@@ -274,19 +398,24 @@ onMounted(() => {
   background-color: #ffffff;
 }
 
+/* Giữ nguyên kích thước ảnh, chỉ giảm margin */
 .topic-icon {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #dee2e6;
+  margin-right: 0.75rem !important; /* Giảm margin của ảnh */
 }
 
 .topic-name {
   font-weight: 600;
+  font-size: 0.95rem; /* Giảm nhẹ font tên chủ đề */
 }
 
 .topic-actions .btn {
-  font-size: 0.9rem;
-  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem; /* Giảm nhẹ font nút */
+  padding: 0.3rem 0.6rem; /* Giảm padding nút */
 }
 
 .table thead th {
@@ -299,10 +428,12 @@ onMounted(() => {
 }
 
 .badge {
-  font-size: 0.75em;
-  padding: 0.3em 0.6em;
+  font-size: 0.7em; /* Giảm nhẹ font chữ của badge */
+  padding: 0.2em 0.5em; /* Giảm padding của badge */
   border-radius: 0.4rem;
 }
+
+/* Đảm bảo hiệu ứng hover vẫn hoạt động */
 .accordion-button.topic-hover {
   transition: background-color 0.2s ease-in-out;
 }
@@ -310,14 +441,25 @@ onMounted(() => {
 .accordion-button.topic-hover:hover {
   background-color: #cadfff;
 }
-.topic-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%; /* Làm hình tròn */
-  object-fit: cover; /* Giữ hình không bị méo */
-  border: 2px solid #dee2e6; /* Viền nhẹ nếu muốn */
-}
+
 .accordion-button::after {
   content: none !important;
+}
+
+/* Giảm khoảng cách giữa các phần tử bên trong */
+.accordion-header .accordion-button .me-3 {
+  margin-right: 0.5rem !important; /* Giảm khoảng cách sau icon */
+}
+
+.accordion-header .accordion-button .ms-3 {
+  margin-left: 0.5rem !important; /* Giảm khoảng cách giữa các badge */
+}
+
+.accordion-header .accordion-button .ms-auto {
+  margin-left: 0.75rem !important; /* Giảm khoảng cách của các nút hành động */
+}
+
+.accordion-header .accordion-button .fw-normal {
+  font-size: 0.85rem; /* Kích thước chữ của "Ngày tạo" */
 }
 </style>

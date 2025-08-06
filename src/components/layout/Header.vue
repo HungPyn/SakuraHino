@@ -77,10 +77,10 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   background-color: var(--card-background);
-  padding: 25px 30px;
+  padding: 15px 30px;
   border-radius: var(--border-radius-card);
   box-shadow: 0 2px 8px var(--shadow-light);
-  margin-bottom: 30px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
   gap: 15px;
 }
