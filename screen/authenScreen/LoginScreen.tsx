@@ -1,3 +1,5 @@
+//web client id : 103578990825-t1jcgd55oplasdnd6jvb7plp054o8hdn.apps.googleusercontent.com
+//android client id : 103578990825-uedhnugmdvo7700fpb9ii333nit3bs28.apps.googleusercontent.com
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
@@ -9,6 +11,7 @@ import {
   Linking,
   Platform,
 } from "react-native";
+
 import {
   useNavigation,
   useRoute,
@@ -22,9 +25,17 @@ import {
   GoogleLogoSvg,
 } from "../../components/Svgs";
 import type { RootStackParamList } from "../../types/navigatorType";
+import * as WebBrowser from "expo-web-browser";
+import * as Google from "expo-auth-session/providers/google";
+import * as Linking from "expo-linking";
 
+WebBrowser.maybeCompleteAuthSession();
 // Cập nhật kiểu LoginScreenState để thêm trạng thái "FORGOT_PASSWORD"
-export type LoginScreenState = "HIDDEN" | "LOGIN" | "SIGNUP" | "FORGOT_PASSWORD";
+export type LoginScreenState =
+  | "HIDDEN"
+  | "LOGIN"
+  | "SIGNUP"
+  | "FORGOT_PASSWORD";
 
 type LoginScreenRouteProp = NativeStackScreenProps<
   RootStackParamList,
@@ -65,6 +76,22 @@ export const useLoginScreen = () => {
 
 // --- Component LoginScreen ---
 export const LoginScreen = () => {
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId:
+      "103578990825-uedhnugmdvo7700fpb9ii333nit3bs28.apps.googleusercontent.com",
+    webClientId:
+      "103578990825-t1jcgd55oplasdnd6jvb7plp054o8hdn.apps.googleusercontent.com",
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { authentication } = response;
+      // Bạn có thể xử lý token ở đây, ví dụ:
+      // logIn(authentication.accessToken);
+      console.log("Authentication successful:", authentication);
+      logInAndSetUserProperties(); // Gọi hàm đăng nhập của bạn sau khi thành công
+    }
+  }, [response]);
   const { loginScreenState, setLoginScreenState } = useLoginScreen();
 
   const navigation = useNavigation<LoginScreenNavigationProp>();
@@ -169,11 +196,12 @@ export const LoginScreen = () => {
           <View style={styles.contentArea}>
             <View style={styles.formContainer}>
               <Text style={styles.title}>
-                {loginScreenState === "LOGIN"
-                  ? "Log in"
-                  : loginScreenState === "SIGNUP"
-                  ? "Create your profile"
-                  : "Forgot password?" // Tiêu đề cho màn hình quên mật khẩu
+                {
+                  loginScreenState === "LOGIN"
+                    ? "Log in"
+                    : loginScreenState === "SIGNUP"
+                    ? "Create your profile"
+                    : "Forgot password?" // Tiêu đề cho màn hình quên mật khẩu
                 }
               </Text>
 
@@ -234,7 +262,8 @@ export const LoginScreen = () => {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.socialButton}
-                      onPress={logInAndSetUserProperties}
+                      // Thêm điều kiện `!request` để đảm bảo yêu cầu đã sẵn sàng
+                      onPress={() => request && promptAsync()}
                     >
                       <GoogleLogoSvg
                         width={20}
@@ -306,9 +335,7 @@ export const LoginScreen = () => {
                     style={styles.primaryButton}
                     onPress={logInAndSetUserProperties}
                   >
-                    <Text style={styles.primaryButtonText}>
-                      Create account
-                    </Text>
+                    <Text style={styles.primaryButtonText}>Create account</Text>
                   </TouchableOpacity>
 
                   <View style={styles.dividerContainer}>
@@ -347,7 +374,8 @@ export const LoginScreen = () => {
               {loginScreenState === "FORGOT_PASSWORD" && (
                 <>
                   <Text style={styles.infoText}>
-                    Enter the email associated with your account to reset your password.
+                    Enter the email associated with your account to reset your
+                    password.
                   </Text>
                   <View style={styles.inputGroup}>
                     <TextInput
@@ -369,13 +397,16 @@ export const LoginScreen = () => {
                     style={styles.secondaryButton} // Thêm style mới cho nút quay lại
                     onPress={navigateToLogin}
                   >
-                    <Text style={styles.secondaryButtonText}>Back to Login</Text>
+                    <Text style={styles.secondaryButtonText}>
+                      Back to Login
+                    </Text>
                   </TouchableOpacity>
                 </>
               )}
 
               {/* Footer text: Terms and Privacy (Hiển thị cho cả Login và Signup) */}
-              {(loginScreenState === "LOGIN" || loginScreenState === "SIGNUP") && (
+              {(loginScreenState === "LOGIN" ||
+                loginScreenState === "SIGNUP") && (
                 <>
                   <Text style={styles.termsText}>
                     By signing in to Duolingo, you agree to our{" "}
@@ -403,7 +434,8 @@ export const LoginScreen = () => {
                     .
                   </Text>
                   <Text style={styles.termsText}>
-                    This site is protected by reCAPTCHA Enterprise and the Google{" "}
+                    This site is protected by reCAPTCHA Enterprise and the
+                    Google{" "}
                     <Text
                       style={styles.linkTextBold}
                       onPress={() =>
