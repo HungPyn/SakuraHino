@@ -2,15 +2,44 @@
   <div class="user-management-container">
     <div class="header mb-4 d-flex justify-content-between align-items-center">
       <h1 class="bi-people">Quản lý Người Dùng</h1>
-      <div class="search-box">
-        <input
-          type="text"
-          class="form-control"
-          placeholder="Tìm kiếm theo tên hoặc email..."
-          v-model="keyword"
-          @input="handleSearch"
-        />
-        <i class="bi bi-search search-icon"></i>
+
+      <div class="d-flex align-items-end gap-2">
+        <div class="search-box flex-grow-1">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Tìm kiếm theo tên hoặc email..."
+            v-model="keyword"
+            @change="handleSearch"
+          />
+          <i class="bi bi-search search-icon"></i>
+        </div>
+
+        <div class="flex-grow-1">
+          <label for="userStatus" class="form-label visually-hidden"
+            >Trạng thái:</label
+          >
+          <select
+            @change="handleSearch"
+            class="form-select"
+            id="userStatus"
+            v-model="userStatus"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="ACTIVE">Hoạt động</option>
+            <option value="BLOCKED">Chặn</option>
+            <option value="DELETED">Xóa</option>
+          </select>
+        </div>
+
+        <button
+          type="button"
+          @click="resetFilters"
+          class="btn btn-outline-secondary"
+          title="Đặt lại bộ lọc"
+        >
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </button>
       </div>
     </div>
 
@@ -19,6 +48,7 @@
         <table class="table table-hover">
           <thead class="table-light">
             <tr>
+              <th scope="col">#</th>
               <th scope="col">Avatar</th>
               <th scope="col" class="w-20">Tên người dùng</th>
               <th scope="col">Email</th>
@@ -31,7 +61,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in filteredUsers" :key="user.id">
+            <tr v-for="(user, index) in filteredUsers" :key="user.id">
+              <td>{{ index + 1 }}</td>
               <td>
                 <img
                   :src="user.avatarUrl"
@@ -41,6 +72,7 @@
                   alt="avatar"
                 />
               </td>
+
               <td>{{ user.name }}</td>
               <td>{{ user.email }}</td>
               <td>{{ user.username }}</td>
@@ -221,6 +253,7 @@ const toast = useToast(); // Giả sử bạn đang sử dụng Vue Toastificati
 
 const users = ref([]);
 const keyword = ref("");
+const userStatus = ref("");
 
 const filteredUsers = computed(() => {
   const keywordLower = keyword.value.toLowerCase();
@@ -277,7 +310,7 @@ function editUser(user) {
 
 const updateUser = async () => {
   const result = await Swal.fire({
-    title: `Xác nhận xóa`,
+    title: `Xác nhận chỉnh sửa`,
     text: `Bạn có chắc muốn cập nhật không ?`,
     icon: "warning",
     showCancelButton: true,
@@ -290,7 +323,7 @@ const updateUser = async () => {
       await userService.updateUser(currentUser.value.id, currentUser.value);
       toast.success(`Đã cập nhật!`);
       bsModal.hide(); // Ẩn modal sau khi cập nhật thành công
-      fetchUsers(); // Cập nhật danh sách người dùng sau khi xóa
+      handleSearch(); // Cập nhật danh sách người dùng sau khi xóa
     } catch (error) {
       console.error("Lỗi cập nhật người dùng:", error);
     }
@@ -332,13 +365,31 @@ function goToPage(newPage) {
   }
 }
 
-function handleSearch() {
-  currentPage.value = 0; // Reset về trang đầu tiên (0-indexed) khi tìm kiếm
+//tim kiem
+const resetFilters = async () => {
+  userStatus.value = "";
+  (keyword.value = ""), fetchUsers();
+};
+async function handleSearch() {
+  try {
+    const response = await userService.timKiem(
+      currentPage.value,
+      size.value,
+      keyword.value,
+      userStatus.value
+    );
+
+    users.value = response.items ?? [];
+
+    totalPages.value = response.totalPages ?? 0;
+  } catch (error) {
+    console.error("Lỗi khi tìm lesson:", error);
+  }
 }
 
 // Đặt khối `watch` SAU KHI `currentPage` và `keyword` đã được khai báo
-watch([currentPage, keyword], () => {
-  fetchUsers();
+watch([currentPage], () => {
+  handleSearch();
 });
 
 onMounted(() => {

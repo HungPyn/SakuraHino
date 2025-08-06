@@ -90,6 +90,42 @@ const lessonService = {
       throw error;
     }
   },
+  searchLessons: async (
+    page = 0,
+    size = 10,
+    tuKhoa,
+    topicId,
+    startDate,
+    endDate,
+    status
+  ) => {
+    const processedStartDate = startDate ? startDate + "T00:00:00Z" : null;
+    const processedEndDate = endDate ? endDate + "T23:59:59Z" : null;
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        baseUrl + "/api/learning/admin/lessons/filters",
+        {
+          params: {
+            topicId,
+            page,
+            size,
+            tuKhoa,
+            startDate: processedStartDate,
+            endDate: processedEndDate,
+            status,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi tìm kiếm bài học:", error);
+      throw error;
+    }
+  },
 };
 
 export default lessonService;

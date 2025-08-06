@@ -53,7 +53,7 @@ const deleteUser = async (userId) => {
 const updateUser = async (userId, RequestUserDTO) => {
   try {
     const response = await axios.put(
-      `${BASE_URL}api/users/admin/${userId}`,
+      `${BASE_URL}/api/users/admin/${userId}`,
       RequestUserDTO,
       {
         headers: {
@@ -67,9 +67,29 @@ const updateUser = async (userId, RequestUserDTO) => {
     throw error;
   }
 };
+const timKiem = async (page, size, tuKhoa, status) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/users/admin/filters`, {
+      params: {
+        page,
+        size,
+        tuKhoa,
+        status,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error("Lỗi khi tìm kiếm người dùng:", error.message);
+    throw error;
+  }
+};
 
 export default {
   getUsers,
   deleteUser,
   updateUser,
+  timKiem,
 };

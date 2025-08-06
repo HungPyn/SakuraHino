@@ -356,7 +356,7 @@ const topic = ref({});
 function goToPage(pageNumber) {
   if (pageNumber < 0 || pageNumber >= totalPages.value) return;
   currentPage.value = pageNumber;
-  getLessons();
+  timKiem();
 }
 //lay topic
 const getTopic = async () => {
@@ -475,7 +475,7 @@ const saveLesson = async () => {
           toast.success("Sửa thành công");
 
           lessonModal.value.hide(); // Đóng modal
-          getLessons(); // Tải lại danh sách bài học
+          timKiem(); // Tải lại danh sách bài học
         } else {
           toast.error(response.error);
         }
@@ -500,7 +500,7 @@ const saveLesson = async () => {
           toast.success("Thêm thành công");
 
           lessonModal.value.hide(); // Đóng modal
-          getLessons(); // Tải lại danh sách bài học
+          timKiem(); // Tải lại danh sách bài học
         } else {
           toast.error(response.error);
         }
@@ -521,17 +521,26 @@ const resetFilters = async () => {
   startDate.value = null;
   endDate.value = null;
   status.value = "";
+  getLessons();
 };
 
 const timKiem = async () => {
-  console.log("Đang thực hiện tìm kiếm với các tham số:");
-  console.log("Từ khóa:", tuKhoa.value);
-  console.log("Ngày bắt đầu:", startDate.value);
-  console.log("Ngày kết thúc:", endDate.value);
-  console.log("Trạng thái:", status.value);
+  try {
+    const response = await lessonService.searchLessons(
+      currentPage.value,
+      size.value,
+      tuKhoa.value,
+      topicId.value,
+      startDate.value,
+      endDate.value,
+      status.value
+    );
+    lessons.value = response.data?.items ?? [];
 
-  // Thêm logic gọi API tìm kiếm tại đây
-  // ...
+    totalPages.value = response.data?.totalPages ?? 0;
+  } catch (error) {
+    console.error("Lỗi khi tìm lesson:", error);
+  }
 };
 onMounted(async () => {
   await getTopic();

@@ -117,7 +117,42 @@ const topicService = {
     }
   },
 
-  searchTopics: async (query) => {},
+  searchTopics: async (
+    page = 0,
+    size = 10,
+    tuKhoa,
+    levelId,
+    startDate,
+    endDate,
+    status
+  ) => {
+    const processedStartDate = startDate ? startDate + "T00:00:00Z" : null;
+    const processedEndDate = endDate ? endDate + "T23:59:59Z" : null;
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        baseApi.main + "/api/learning/admin/topics/filters",
+        {
+          params: {
+            page,
+            size,
+            tuKhoa,
+            levelId,
+            startDate: processedStartDate,
+            endDate: processedEndDate,
+            status,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error("Lỗi khi tìm kiếm chủ đề:", error);
+      throw error;
+    }
+  },
 };
 
 export default topicService;

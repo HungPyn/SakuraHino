@@ -65,7 +65,7 @@
           id="statusSelect"
         >
           <option value="">Tất cả</option>
-          <option value="PUBLISHED">Đã xuất bản</option>
+          <option value="PUBLISHED">Hoạt động</option>
           <option value="PENDING">Chờ duyệt</option>
           <option value="DELETED">Đã xóa</option>
         </select>
@@ -230,7 +230,7 @@ const emit = defineEmits([
 //reloadtrang
 const reload = async () => {
   emit("refresh-data");
-  await fetchTopics();
+  await timKiem();
 };
 // CÁC THAY ĐỔI ĐÃ THỰC HIỆN:
 
@@ -297,7 +297,7 @@ const totalPages = ref(0); // Tổng số trang
 function goToPage(pageNumber) {
   if (pageNumber < 0 || pageNumber >= totalPages.value) return;
   currentPage.value = pageNumber;
-  fetchTopics();
+  timKiem();
 }
 
 async function fetchTopics() {
@@ -338,18 +338,30 @@ const resetFilters = async () => {
   startDate.value = null;
   endDate.value = null;
   status.value = "";
+
+  fetchTopics();
 };
 
 const timKiem = async () => {
-  console.log("Đang thực hiện tìm kiếm với các tham số:");
-  console.log("Từ khóa:", tuKhoa.value);
-  console.log("level:", level.value);
-  console.log("Ngày bắt đầu:", startDate.value);
-  console.log("Ngày kết thúc:", endDate.value);
-  console.log("Trạng thái:", status.value);
+  try {
+    loading.value = true;
+    const data = await topicService.searchTopics(
+      currentPage.value,
+      size.value,
+      tuKhoa.value,
+      level.value,
+      startDate.value,
+      endDate.value,
+      status.value
+    );
 
-  // Thêm logic gọi API tìm kiếm tại đây
-  // ...
+    topics.value = data?.items ?? [];
+    totalPages.value = data?.totalPages ?? 0;
+  } catch (error) {
+    console.error("Lỗi khi tìm topics:", error);
+  } finally {
+    loading.value = false;
+  }
 };
 
 onMounted(async () => {
