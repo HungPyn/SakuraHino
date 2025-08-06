@@ -26,6 +26,16 @@ public class AdminUserController {
         PaginatedResponse<ResponseUserDTO> result = userService.getAll(page, size);
         return new SuccessResponse( result);
     }
+    @GetMapping("/filters")
+    public SuccessResponse findByFilters(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam("tuKhoa") String tuKhoa,
+            @RequestParam("status") String status
+    ) {
+        PaginatedResponse<ResponseUserDTO> result = userService.findByFilters(page,size,tuKhoa,status);
+        return new SuccessResponse( result);
+    }
     @PutMapping("/{userId}")
     public SuccessResponse updateUser(@PathVariable("userId") String userId, @Valid @RequestBody RequestUserDTO dto) {
         var result = userService.updateForAdmin(userId, dto);

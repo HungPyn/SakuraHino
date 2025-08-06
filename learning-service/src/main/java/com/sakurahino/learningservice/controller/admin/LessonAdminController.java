@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+
 @RestController
 @RequestMapping("/learning/admin/lessons")
 @RequiredArgsConstructor
@@ -31,11 +33,24 @@ public class LessonAdminController {
         var result = lessonService.getLessonByTopicIdAdmin(topicId,page, size);
         return new SuccessResponse(result);
     }
+    @GetMapping("/filters")
+    public SuccessResponse findByFilters(
+            @RequestParam("topicId") Integer topicId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String tuKhoa,
+            @RequestParam(required = false) Instant startDate,
+            @RequestParam(required = false) Instant endDate,
+            @RequestParam(required = false) String status) {
+        var result = lessonService.findByFilters(tuKhoa,topicId,status,startDate,endDate,page, size);
+        return new SuccessResponse(result);
+    }
     @PostMapping
     public SuccessResponse createLesson(@Valid @RequestBody LessonRequestDTO lessonRequest){
         LessonResponseDTO lessonResponse = lessonService.create(lessonRequest);
         return new SuccessResponse(lessonResponse);
     }
+
     @PutMapping("/{id}")
     public SuccessResponse updateLesson(@PathVariable("id") Integer id, @Valid @RequestBody LessonRequestDTO lessonRequest){
         LessonResponseDTO lessonResponse = lessonService.update(id,lessonRequest);

@@ -15,6 +15,7 @@ public interface UserService {
 
     //admin
     PaginatedResponse<ResponseUserDTO> getAll( int page, int size);
+    PaginatedResponse<ResponseUserDTO> findByFilters( int page, int size, String tuKhoa, String status);
     ResponseUserDTO findByIdForAdmin(String userId);
     void deleteUser(String userId);
     ResponseUserDTO updateForAdmin(String userId,RequestUserDTO dto);

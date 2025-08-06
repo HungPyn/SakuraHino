@@ -52,6 +52,31 @@ public class LessonServiceImpl implements LessonService {
     }
 
     @Override
+    public PaginatedResponse<LessonResponseDTO> findByFilters(String tuKhoa, Integer topicId, String status, Instant startDate, Instant endDate, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Lesson> lessonPage;
+        LearningStatus learningStatus = null;
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                learningStatus = LearningStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Tùy chọn: bạn có thể xử lý lỗi ở đây, ví dụ như log lại
+                // System.err.println("Giá trị status không hợp lệ: " + status);
+            }
+        }
+        lessonPage = lessonRepository.findByFilters(tuKhoa,topicId,learningStatus,startDate,endDate,pageable);
+        List<LessonResponseDTO> responseList = lessonPage.getContent().stream()
+                .map(lessonMapper::mapToLessonResponse).toList();
+        return new PaginatedResponse<>(
+                responseList,
+                lessonPage.getNumber(),
+                (int) lessonPage.getTotalElements(),
+                lessonPage.getTotalPages(),
+                lessonPage.hasNext()
+        );
+    }
+
+    @Override
     public LessonResponseDTO getLessonById(Integer id) {
         Lesson lesson = lessonRepository.findById(id).orElseThrow(()->
                 new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Lesson không tồn tại"));

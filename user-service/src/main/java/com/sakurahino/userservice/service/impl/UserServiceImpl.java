@@ -98,6 +98,28 @@ public class UserServiceImpl  implements UserService {
     }
 
     @Override
+    public PaginatedResponse<ResponseUserDTO> findByFilters(int page, int size, String tuKhoa, String status) {
+        Pageable pageable = PageRequest.of(page, size);
+        UserStatus userStatus = null;
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                userStatus = UserStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+
+            }
+        }
+        Page<User> topicPage = userRepository.findByFilters(tuKhoa,userStatus,Role.USER,pageable);
+
+        List<ResponseUserDTO> responseList = topicPage.getContent().stream()
+                .map(userServiceMapper::toResponseUserDTO)
+                .toList();
+
+        log.debug("Fetched {} users", responseList.size());
+        return new PaginatedResponse<>(responseList, topicPage.getNumber(),
+                (int) topicPage.getTotalElements(), topicPage.getTotalPages(), topicPage.hasNext());
+    }
+
+    @Override
     public ResponseUserDTO findByIdForAdmin(String userId) {
         log.info("Admin fetch user detail for ID: {}", userId);
         User user = userRepository.findById(userId)

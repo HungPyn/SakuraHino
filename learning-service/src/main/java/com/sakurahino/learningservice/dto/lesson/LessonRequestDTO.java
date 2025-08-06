@@ -26,7 +26,7 @@ public class LessonRequestDTO {
     private LearningStatus status;
 
     @NotNull(message = "Số bài học không được trống")
-    @Min(value = 10, message = "Số câu hỏi tối thiểu là 8")
+    @Min(value = 8, message = "Số câu hỏi tối thiểu là 8")
     @Max(value = 15, message = "Số cẩu hỏi tối đa là 15")
     private Integer maxQuestions;
 

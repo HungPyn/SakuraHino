@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 
 @Repository
@@ -26,4 +27,19 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
     boolean existsByLessonNameAndTopicId(String lessonName, Integer topicId);
 
     Long countByTopicIdAndStatus(Integer topicId, LearningStatus status);
+
+
+    @Query("SELECT l FROM Lesson l " +
+            "WHERE (:tuKhoa IS NULL OR l.lessonName LIKE CONCAT('%', :tuKhoa, '%')) " +
+            "  AND (:topicId IS NULL OR l.topic.id = :topicId) " + // <-- Đã bổ sung
+            "  AND (:status IS NULL OR l.status = :status) " +
+            "  AND (:startDate IS NULL OR l.createdAt >= :startDate) " +
+            "  AND (:endDate IS NULL OR l.createdAt < :endDate)")
+    Page<Lesson> findByFilters(
+            @Param("tuKhoa") String tuKhoa,
+            @Param("topicId") Integer topicId, // <-- Đã bổ sung
+            @Param("status") LearningStatus status,
+            @Param("startDate") Instant startDate,
+            @Param("endDate") Instant endDate,
+            Pageable pageable);
 }

@@ -52,6 +52,33 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    public PaginatedResponse<TopicResponseDTO> findByFilters(int page, int size, String tuKhoa, Integer levelId, Instant startDdate, Instant endDate, String status) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Topic> topicPage;
+        LearningStatus learningStatus = null;
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                learningStatus = LearningStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Tùy chọn: bạn có thể xử lý lỗi ở đây, ví dụ như log lại
+                // System.err.println("Giá trị status không hợp lệ: " + status);
+            }
+        }
+        topicPage = topicRepository.findByFilters(tuKhoa,levelId,learningStatus,startDdate,endDate,pageable);
+        List<TopicResponseDTO> responseList = topicPage.getContent().stream()
+                .map(topicServiceMapper::mapToTopicResponse)
+                .toList();
+
+        return new PaginatedResponse<>(
+                responseList,                          // items
+                topicPage.getNumber(),                 // page
+                (int) topicPage.getTotalElements(),    // totalItems (cast từ long → int)
+                topicPage.getTotalPages(),             // totalPages
+                topicPage.hasNext()                    // hasNext
+        );
+    }
+
+    @Override
     public PaginatedResponse<TopicResponseDTO> getAllForAdmin(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Topic> topicPage;

@@ -11,6 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
+
 @RestController
 @RequestMapping("/learning/admin/topics")
 @RequiredArgsConstructor
@@ -32,6 +34,19 @@ public class TopicAdminController {
         TopicResponseDTO topic = topicService.getById(id);
         return new SuccessResponse(topic);
     }
+    @GetMapping("/filters")
+    public SuccessResponse findByFilters(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String tuKhoa,
+            @RequestParam(required = false) Integer levelId,
+            @RequestParam(required = false) Instant startDate,
+            @RequestParam(required = false) Instant endDate,
+            @RequestParam(required = false) String status) {
+
+        var result = topicService.findByFilters(page, size, tuKhoa, levelId, startDate, endDate, status);
+        return new SuccessResponse(result);
+    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public SuccessResponse create(
@@ -50,9 +65,9 @@ public class TopicAdminController {
         return new SuccessResponse(updated);
     }
 
-    @PatchMapping("{/id}")
+    @PatchMapping("/{id}")
     public SuccessResponse delete(@PathVariable Integer id) {
         topicService.delete(id);
-        return new SuccessResponse("Xoas thành công");
+        return new SuccessResponse("Xóa thành công");
     }
 }
