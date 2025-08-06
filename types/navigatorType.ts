@@ -20,13 +20,13 @@ export type RootStackParamList = {
   Home: undefined;
   Leaderboard: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
-  LessonScreen: { practice: boolean } | undefined;
+  // LessonScreen: { practice: boolean } | undefined;
   Shop: undefined;
   QuickPractice: { type: PracticeType };
   LearningPathScreen: undefined;
-  SettingsAccount:undefined;
+  SettingsAccount: undefined;
   ProfileScreen: undefined;
-  LessonScreen2: {
+  Lesson: {
     unitNumber?: number;
     "fast-forward"?: number;
     practice?: boolean;

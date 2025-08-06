@@ -30,25 +30,25 @@ import { RootStackParamList } from "../../../types/navigatorType";
 // Định nghĩa kiểu cho navigation và route
 type LessonScreenNavigationProp = NativeStackScreenProps<
   RootStackParamList,
-  "LessonScreen"
+  "Lesson"
 >["navigation"];
 type LessonScreenRouteProp = any;
 
 // Dữ liệu câu hỏi giả định
 const lessonProblem1 = {
   type: "SELECT_1_OF_3",
-  question: `Which one of these is "the apple"?`,
+  question: `Đâu là một bé trai"?`,
   answers: [
-    { icon: <BoySvg />, name: "el niño" },
-    { icon: <WomanSvg />, name: "la mujer" },
+    { icon: <BoySvg />, name: "男の子" },
+    { icon: <WomanSvg />, name: "女の人" },
   ],
   correctAnswer: 0,
 } as const;
 
 const lessonProblem2 = {
   type: "WRITE_IN_ENGLISH",
-  question: "El niño",
-  answerTiles: ["woman", "milk", "water", "I", "The", "boy"],
+  question: "Đứa trẻ",
+  answerTiles: ["女の人", "牛乳", "水", "私", "その", "男の子"],
   correctAnswer: [4, 5],
 } as const;
 
@@ -741,8 +741,11 @@ const LessonComplete = ({
           >
             <Text style={styles.reviewLessonButtonText}>Review lesson</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.continueButton} onPress={onContinue}>
-            <Text style={styles.continueButtonText}>Continue</Text>
+          <TouchableOpacity
+            style={styles.reviewLessonButton}
+            onPress={onContinue}
+          >
+            <Text style={styles.reviewLessonButtonText}>Continue</Text>
           </TouchableOpacity>
         </View>
       </View>

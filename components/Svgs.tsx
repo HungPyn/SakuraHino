@@ -4105,7 +4105,7 @@ export const BoySvg = ({ style, ...props }: GlobeSvgProps) => {
             <Mask id="mask-2" fill="white">
               <Use xlinkHref="#Path-1" />
             </Mask>
-            <use id="Mask" fill="#FFC6B7" xlinkHref="#Path-1" />
+            <Use id="Mask" fill="#FFC6B7" xlinkHref="#Path-1" />
             <Rect
               id="Rectangle-Copy-7"
               fill="#FF9600"

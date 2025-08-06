@@ -72,11 +72,9 @@ const tileStatus = (tile: Tile, lessonsCompleted: number): TileStatus => {
   }
   if (tileIndex < lessonsCompleted) {
     return "COMPLETE";
-  }
-  else if (tileIndex === lessonsCompleted) {
+  } else if (tileIndex === lessonsCompleted) {
     return "ACTIVE";
-  }
-  else {
+  } else {
     return "LOCKED";
   }
 };
@@ -376,7 +374,7 @@ const UnitSection = ({ unit }: { unit: Unit }) => {
   const language = useBoundStore((state) => state.language);
   const handleTilePress = (tile: any, index: number, status: any) => {
     if (tile.type === "fast-forward" && status === "LOCKED") {
-      navigation.navigate("LessonScreen2", {
+      navigation.navigate("Lesson", {
         "fast-forward": unit.unitNumber,
       });
     } else {
@@ -450,13 +448,13 @@ const UnitSection = ({ unit }: { unit: Unit }) => {
           unit={unit}
           onStart={() => {
             setSelectedTileIndex(null);
-            navigation.navigate("LessonScreen2", {
+            navigation.navigate("Lesson", {
               unitNumber: unit.unitNumber,
             });
           }}
           onPractice={() => {
             setSelectedTileIndex(null);
-            navigation.navigate("LessonScreen2", { practice: true });
+            navigation.navigate("Lesson", { practice: true });
           }}
         />
       )}

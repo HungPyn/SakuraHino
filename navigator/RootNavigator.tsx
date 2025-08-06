@@ -10,13 +10,13 @@ import WelcomeScreen from "../screen/authenScreen/WellcomeScreen";
 import MainTabNavigator from "./MainTabNavigator";
 import LearningPathScreen from "../screen/homescreen/learnscreen/LearningPathScreen";
 import QuickPracticeScreen from "../screen/homescreen/practicescreen/QuickPracticeScreen";
-import LessonScreen2 from "../screen/homescreen/learnscreen/LessonScreen2";
-// SỬA DÒNG NÀY: Thêm tên file ResultScreen vào cuối đường dẫn
-import ResultScreen from "../screen/homescreen/learnscreen/ResultScreen"; // <-- Đảm bảo đây là đường dẫn chính xác đến file ResultScreen của bạn (ResultScreen.tsx)
+// import LessonScreen2 from "../screen/homescreen/learnscreen/LessonScreen2";
+import ResultScreen from "../screen/homescreen/learnscreen/ResultScreen";
 import Leaderboard from "../screen/homescreen/leaderboard/Leaderboard";
 import ShopScreen from "../screen/homescreen/shop/ShopScreen";
 import SettingsAccount from "../screen/profile/SettingsAccount";
 import ProfileScreen from "../screen/profile/ProfileScreen";
+import Lesson from "../screen/homescreen/learnscreen/LearnScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -75,8 +75,8 @@ export default function RootNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="LessonScreen2"
-        component={LessonScreen2}
+        name="Lesson"
+        component={Lesson}
         options={{ headerShown: false }}
       />
       <Stack.Screen
