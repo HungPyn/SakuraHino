@@ -24,7 +24,7 @@ public class LessonResult {
     private String userId;
 
     @ManyToOne
-    @Column(name = "lesson_id")
+    @JoinColumn(name = "lesson_id")
     private Lesson lesson;
 
     @Column(name = "score")

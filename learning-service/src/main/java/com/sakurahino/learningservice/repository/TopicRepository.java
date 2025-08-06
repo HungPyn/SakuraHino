@@ -21,6 +21,7 @@ public interface TopicRepository extends JpaRepository<Topic, Integer> {
 
     boolean existsByCode(String code);
 
+    @Query("SELECT MAX(t.position) FROM Topic t")
     Integer findMaxPosition();
 
     @Query("SELECT t FROM Topic t " +
