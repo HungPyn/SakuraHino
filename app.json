@@ -4,6 +4,7 @@
     "slug": "Sakuranihongo",
     "version": "1.0.0",
     "orientation": "portrait",
+    "scheme": "sakuranihongo",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -27,9 +28,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-web-browser"
-    ],
+    "plugins": ["expo-web-browser"],
     "extra": {
       "eas": {
         "projectId": "d432b258-639c-4d08-8d64-a115de635e04"

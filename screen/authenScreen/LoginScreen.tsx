@@ -1,6 +1,4 @@
-//web client id : 103578990825-t1jcgd55oplasdnd6jvb7plp054o8hdn.apps.googleusercontent.com
-//android client id : 103578990825-uedhnugmdvo7700fpb9ii333nit3bs28.apps.googleusercontent.com
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -11,7 +9,6 @@ import {
   Linking,
   Platform,
 } from "react-native";
-
 import {
   useNavigation,
   useRoute,
@@ -25,11 +22,13 @@ import {
   GoogleLogoSvg,
 } from "../../components/Svgs";
 import type { RootStackParamList } from "../../types/navigatorType";
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
-import * as Linking from "expo-linking";
 
-WebBrowser.maybeCompleteAuthSession();
+// Import thư viện Google Sign-In mới
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
+
 // Cập nhật kiểu LoginScreenState để thêm trạng thái "FORGOT_PASSWORD"
 export type LoginScreenState =
   | "HIDDEN"
@@ -46,10 +45,14 @@ type LoginScreenNavigationProp = NativeStackScreenProps<
   "Login"
 >["navigation"];
 
+GoogleSignin.configure({
+  webClientId:
+    "103578990825-t1jcgd55oplasdnd6jvb7plp054o8hdn.apps.googleusercontent.com",
+});
+
 export const useLoginScreen = () => {
   const route = useRoute<LoginScreenRouteProp>();
   const navigation = useNavigation<LoginScreenNavigationProp>();
-
   const loggedIn = useBoundStore((x) => x.loggedIn);
 
   const queryState: LoginScreenState = (() => {
@@ -76,24 +79,7 @@ export const useLoginScreen = () => {
 
 // --- Component LoginScreen ---
 export const LoginScreen = () => {
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId:
-      "103578990825-uedhnugmdvo7700fpb9ii333nit3bs28.apps.googleusercontent.com",
-    webClientId:
-      "103578990825-t1jcgd55oplasdnd6jvb7plp054o8hdn.apps.googleusercontent.com",
-  });
-
-  useEffect(() => {
-    if (response?.type === "success") {
-      const { authentication } = response;
-      // Bạn có thể xử lý token ở đây, ví dụ:
-      // logIn(authentication.accessToken);
-      console.log("Authentication successful:", authentication);
-      logInAndSetUserProperties(); // Gọi hàm đăng nhập của bạn sau khi thành công
-    }
-  }, [response]);
   const { loginScreenState, setLoginScreenState } = useLoginScreen();
-
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const loggedIn = useBoundStore((x) => x.loggedIn);
   const logIn = useBoundStore((x) => x.logIn);
@@ -101,13 +87,69 @@ export const LoginScreen = () => {
   const setName = useBoundStore((x) => x.setName);
 
   const [ageTooltipShown, setAgeTooltipShown] = useState(false);
-
   const [age, setAge] = useState("");
   const [name, setNameInput] = useState("");
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
-  // Thêm state mới cho email khi quên mật khẩu
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+
+  // Hàm xử lý khi gửi token đến backend
+  const sendGoogleTokenToBackend = async (idToken: string) => {
+    try {
+      // Thay thế URL này bằng API endpoint của backend của bạn
+      const backendResponse = await fetch(
+        "https://your-backend-api.com/auth/google",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ idToken }), // Gửi idToken trong body
+        }
+      );
+
+      const data = await backendResponse.json();
+
+      if (backendResponse.ok) {
+        console.log("Backend response:", data);
+        logInAndSetUserProperties();
+      } else {
+        console.error("Backend authentication failed:", data.error);
+        alert(`Authentication failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error("Error sending token to backend:", error);
+      alert("Something went wrong with authentication.");
+    }
+  };
+
+  // Hàm xử lý đăng nhập Google
+  const handleGoogleSignIn = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      console.log("Google user info:", userInfo);
+
+      // Gửi idToken đến backend để xác thực
+      if (userInfo.idToken) {
+        sendGoogleTokenToBackend(userInfo.idToken);
+      } else {
+        console.error("No idToken received.");
+        alert("Google login failed. Please try again.");
+      }
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log("User cancelled the login flow");
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log("Operation (e.g. sign in) is already in progress");
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        console.log("Play services not available or outdated");
+      } else {
+        console.error("Google Sign-In error:", error);
+        alert("Google login failed. Please try again.");
+      }
+    }
+  };
 
   const logInAndSetUserProperties = () => {
     const finalName = name.trim() || Math.random().toString().slice(2);
@@ -118,20 +160,15 @@ export const LoginScreen = () => {
     navigation.dispatch(StackActions.replace("LearningPathScreen"));
   };
 
-  // Hàm xử lý khi gửi yêu cầu quên mật khẩu
   const handleForgotPasswordSubmit = () => {
-    // Đây là nơi bạn sẽ gọi API hoặc thực hiện logic gửi email đặt lại mật khẩu
     console.log("Gửi yêu cầu đặt lại mật khẩu cho email:", forgotPasswordEmail);
-    // Sau khi xử lý, bạn có thể thông báo thành công và chuyển về màn hình đăng nhập
     alert("Yêu cầu đặt lại mật khẩu đã được gửi!");
-    setLoginScreenState("LOGIN"); // Chuyển về màn hình đăng nhập
-    setForgotPasswordEmail(""); // Xóa email đã nhập
+    setLoginScreenState("LOGIN");
+    setForgotPasswordEmail("");
   };
 
-  // Hàm để chuyển trạng thái về màn hình đăng nhập
   const navigateToLogin = () => {
     setLoginScreenState("LOGIN");
-    // Xóa các trường nhập liệu cũ khi chuyển giữa các form
     setEmailOrUsername("");
     setPassword("");
     setAge("");
@@ -139,10 +176,8 @@ export const LoginScreen = () => {
     setForgotPasswordEmail("");
   };
 
-  // Hàm để chuyển trạng thái về màn hình đăng ký
   const navigateToSignup = () => {
     setLoginScreenState("SIGNUP");
-    // Xóa các trường nhập liệu cũ khi chuyển giữa các form
     setEmailOrUsername("");
     setPassword("");
     setAge("");
@@ -176,7 +211,6 @@ export const LoginScreen = () => {
               />
               <Text style={styles.srOnly}>Close</Text>
             </TouchableOpacity>
-            {/* Ẩn nút chuyển đổi nếu đang ở màn hình quên mật khẩu */}
             {loginScreenState !== "FORGOT_PASSWORD" && (
               <TouchableOpacity
                 style={styles.toggleAuthButton}
@@ -196,16 +230,13 @@ export const LoginScreen = () => {
           <View style={styles.contentArea}>
             <View style={styles.formContainer}>
               <Text style={styles.title}>
-                {
-                  loginScreenState === "LOGIN"
-                    ? "Log in"
-                    : loginScreenState === "SIGNUP"
-                    ? "Create your profile"
-                    : "Forgot password?" // Tiêu đề cho màn hình quên mật khẩu
-                }
+                {loginScreenState === "LOGIN"
+                  ? "Log in"
+                  : loginScreenState === "SIGNUP"
+                  ? "Create your profile"
+                  : "Forgot password?"}
               </Text>
 
-              {/* Logic hiển thị form dựa trên loginScreenState */}
               {loginScreenState === "LOGIN" && (
                 <>
                   <View style={styles.inputGroup}>
@@ -225,10 +256,9 @@ export const LoginScreen = () => {
                         value={password}
                         onChangeText={setPassword}
                       />
-                      {/* Thay đổi action của nút "Forgot?" */}
                       <TouchableOpacity
                         style={styles.forgotPasswordButton}
-                        onPress={() => setLoginScreenState("FORGOT_PASSWORD")} // Chuyển sang trạng thái quên mật khẩu
+                        onPress={() => setLoginScreenState("FORGOT_PASSWORD")}
                       >
                         <Text style={styles.forgotPasswordText}>Forgot?</Text>
                       </TouchableOpacity>
@@ -262,8 +292,7 @@ export const LoginScreen = () => {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.socialButton}
-                      // Thêm điều kiện `!request` để đảm bảo yêu cầu đã sẵn sàng
-                      onPress={() => request && promptAsync()}
+                      onPress={handleGoogleSignIn}
                     >
                       <GoogleLogoSvg
                         width={20}
@@ -358,7 +387,7 @@ export const LoginScreen = () => {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.socialButton}
-                      onPress={logInAndSetUserProperties}
+                      onPress={handleGoogleSignIn}
                     >
                       <GoogleLogoSvg
                         width={20}
@@ -394,7 +423,7 @@ export const LoginScreen = () => {
                     <Text style={styles.primaryButtonText}>Reset Password</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.secondaryButton} // Thêm style mới cho nút quay lại
+                    style={styles.secondaryButton}
                     onPress={navigateToLogin}
                   >
                     <Text style={styles.secondaryButtonText}>
@@ -404,7 +433,6 @@ export const LoginScreen = () => {
                 </>
               )}
 
-              {/* Footer text: Terms and Privacy (Hiển thị cho cả Login và Signup) */}
               {(loginScreenState === "LOGIN" ||
                 loginScreenState === "SIGNUP") && (
                 <>
@@ -458,7 +486,6 @@ export const LoginScreen = () => {
                 </>
               )}
 
-              {/* Nút chuyển đổi đăng nhập/đăng ký ở cuối màn hình (Ẩn khi ở Forgot Password) */}
               {loginScreenState !== "FORGOT_PASSWORD" && (
                 <Text style={styles.mobileToggleAuthText}>
                   <Text style={styles.mobileToggleAuthQuestion}>
@@ -709,7 +736,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: "#60A5FA",
   },
-  // Style mới cho màn hình quên mật khẩu
   infoText: {
     textAlign: "center",
     fontSize: 14,
@@ -719,10 +745,10 @@ const styles = StyleSheet.create({
   secondaryButton: {
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: "#60A5FA", // Màu xanh dương nhạt hơn
+    borderColor: "#60A5FA",
     paddingVertical: 12,
     alignItems: "center",
-    marginTop: 10, // Khoảng cách với nút primary
+    marginTop: 10,
   },
   secondaryButtonText: {
     fontWeight: "bold",

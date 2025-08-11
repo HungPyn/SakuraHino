@@ -27,6 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
+          <string>sakuranihongo</string>
           <string>com.anonymous.Sakuranihongo</string>
         </array>
       </dict>
