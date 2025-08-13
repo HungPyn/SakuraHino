@@ -22,6 +22,10 @@ spring:
   jackson:
     serialization:
       FAIL_ON_EMPTY_BEANS: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
   rabbitmq:
     host: localhost

@@ -4,7 +4,9 @@ server:
 spring:
   application:
     name: api-gateway
-
+  http: # <-- Thêm vào đây
+    codec:
+      max-in-memory-size: 10MB
   cloud:
     gateway:
       discovery:
@@ -25,6 +27,13 @@ spring:
             - Path=/api/users/**
           filters:
             - RewritePath=/api/users/(?<remaining>.*),/users/${remaining}
+
+        - id: learning-service
+          uri: lb://learning-service
+          predicates:
+            - Path=/api/learning/**
+          filters:
+            - RewritePath=/api/learning/(?<remaining>.*),/learning/${remaining}
 
 jwt:
   secret: ${JWT_SECRET}

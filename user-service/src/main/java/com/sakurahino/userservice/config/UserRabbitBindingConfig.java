@@ -25,4 +25,17 @@ public class UserRabbitBindingConfig {
                 .to(authExchange)
                 .with(RabbitKey.ROUTING_REGISTER_SUCCESS);
     }
+
+    @Bean
+    public Queue userLoggedInQueue() {
+        return new Queue(RabbitKey.QUEUE_USER_LOGGED_IN);
+    }
+
+    @Bean
+    public Binding userLoggedInBinding(Queue userLoggedInQueue, TopicExchange authExchange) {
+        return BindingBuilder
+                .bind(userLoggedInQueue)
+                .to(authExchange)
+                .with(RabbitKey.ROUTING_USER_LOGGED_IN);
+    }
 }

@@ -1,6 +1,7 @@
 package com.sakurahino.authservice.entity;
 
 import com.sakurahino.clients.enums.Role;
+import com.sakurahino.clients.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,4 +40,7 @@ public class User {
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Column(name = "status")
+    private UserStatus status;
 }

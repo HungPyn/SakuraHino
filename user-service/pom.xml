@@ -9,6 +9,7 @@
         <groupId>com.sakurahino</groupId>
         <artifactId>microservice-sakurahino</artifactId>
         <version>1.0.0</version>
+        <relativePath/>
     </parent>
 
     <artifactId>user-service</artifactId>
@@ -21,6 +22,24 @@
     </properties>
 
     <dependencies>
+
+        <!-- MapStruct -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>1.5.5.Final</version>
+        </dependency>
+        <!-- Dự án dùng chung -->
+        <dependency>
+            <groupId>com.sakurahino</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+<!--        Redis-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
 
         <!-- Trong pom.xml của user-service -->
         <dependency>
@@ -41,7 +60,7 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- Dùng cái này -->
+        <!-- validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>

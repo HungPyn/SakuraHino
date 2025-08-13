@@ -2,6 +2,7 @@ package com.sakurahino.apigateway.config;
 
 import com.sakurahino.apigateway.util.JwtUtil;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
@@ -35,6 +36,16 @@ public class AuthenticationFilter implements WebFilter {
     @Override
     public @NonNull Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
+        ServerHttpRequest request = exchange.getRequest(); // Lấy request ở đây
+
+        // --- ĐÂY LÀ PHẦN BẠN CẦN THÊM VÀO HOẶC ĐẢM BẢO NÓ CÓ TRONG CODE CỦA BẠN ---
+        // Luôn cho phép các yêu cầu OPTIONS đi qua mà không cần xác thực.
+        // Đây phải là điều kiện đầu tiên được kiểm tra trong filter.
+        if (request.getMethod() == HttpMethod.OPTIONS) {
+            System.out.println("Allowing OPTIONS request for path: " + path);
+            return chain.filter(exchange); // Cho phép yêu cầu đi tiếp đến các filter khác (bao gồm CORS filter)
+        }
+        // ----------------------
 
         // Bỏ qua xác thực nếu là public API
         if (isPublicApi(path)) {
@@ -55,7 +66,7 @@ public class AuthenticationFilter implements WebFilter {
         }
 
         // Trích xuất thông tin người dùng
-        Long userId = jwtUtil.getUserId(token);
+        String userId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token);
         System.out.println("Filtering path: " + path);
         if (userId == null || role == null) {
@@ -68,7 +79,7 @@ public class AuthenticationFilter implements WebFilter {
         // Thêm thông tin vào header
         ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                 .header("X-User-Id", userId.toString())
-                .header("X-User-Role", role)
+                .header("X-Role", role)
                 .build();
 
         return chain.filter(exchange.mutate().request(mutatedRequest).build());

@@ -1,0 +1,11 @@
+# Mặc định: tự phát hiện kiểu file và xử lý line endings
+* text=auto
+
+# Java, XML, YAML, Markdown: luôn dùng LF
+*.java text eol=lf
+*.xml  text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.md   text eol=lf
+*.sh   text eol=lf
+*.properties text eol=lf
