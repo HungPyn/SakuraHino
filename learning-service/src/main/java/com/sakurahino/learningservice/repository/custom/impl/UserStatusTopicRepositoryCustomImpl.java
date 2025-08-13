@@ -82,21 +82,19 @@ public class UserStatusTopicRepositoryCustomImpl implements UserStatusTopicRepos
             t.code,
             t.name,
             t.position,
-            t.status,
-            CASE
-                WHEN uts.progressStatus IS NOT NULL THEN uts.progressStatus
-                ELSE com.sakurahino.learningservice.enums.ProgressStatus.LOCKED
-            END
+            COALESCE(uts.progressStatus, com.sakurahino.learningservice.enums.ProgressStatus.LOCKED)
         )
         FROM Topic t
         LEFT JOIN UserTopicStatus uts
-          ON t.id = uts.id AND uts.userId = :userId
+          ON t.id = uts.topic.id AND uts.userId = :userId
         WHERE t.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
-        ORDER BY t.position
+        ORDER BY t.position ASC
     """;
         return em.createQuery(jsql, TopicWithStatusDTO.class)
                 .setParameter("userId", userId)
                 .getResultList();
     }
+
+
 
 }

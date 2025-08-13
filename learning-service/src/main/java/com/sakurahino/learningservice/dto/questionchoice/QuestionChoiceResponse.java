@@ -1,24 +1,23 @@
-package com.sakurahino.learningservice.dto;
+package com.sakurahino.learningservice.dto.questionchoice;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ChoiceExcelRequest {
+public class QuestionChoiceResponse {
+    private Integer id;
     private Integer lessonQuestionId;
     private String textForeign;
     private String textRomaji;
 
     private String imageUrl;
 
-    private String textAudioChoice;
+    private String audioUrlForeign;
 
     private Boolean isCorrect = false;
 

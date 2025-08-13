@@ -1,8 +1,8 @@
 package com.sakurahino.learningservice.controller;
 
 import com.sakurahino.common.retresponse.SuccessResponse;
-import com.sakurahino.learningservice.dto.LessonQuestionRequest;
-import com.sakurahino.learningservice.dto.LessonQuestionResponse;
+import com.sakurahino.learningservice.dto.question.LessonQuestionRequest;
+import com.sakurahino.learningservice.dto.question.LessonQuestionResponse;
 import com.sakurahino.learningservice.service.QuestionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,29 +14,27 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/question")
+@RequestMapping("learning/question")
 public class QuestionController {
 
     private final QuestionService questionService;
 
-    @GetMapping("/user/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public SuccessResponse getQuesstionsByLessonId(
-            @PathVariable("id") Integer lessonId) {
-
-        List<LessonQuestionResponse> response = questionService.getQuestionsByLessonId(lessonId);
-        return new SuccessResponse(response);
-    }
+//    @GetMapping("/user/{id}")
+//    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+//    public SuccessResponse getQuesstionsByLessonId(
+//            @PathVariable("id") Integer lessonId) {
+//
+//        List<LessonQuestionResponse> response = questionService.getQuestionsForUser(lessonId);
+//        return new SuccessResponse(response);
+//    }
 
     @GetMapping("/user/get-question/{id}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")

@@ -2,7 +2,7 @@ package com.sakurahino.learningservice.service.impl;
 
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.ex.ResourceException;
-import com.sakurahino.learningservice.dto.LessonQuestionResponse;
+import com.sakurahino.learningservice.dto.question.LessonQuestionResponse;
 import com.sakurahino.learningservice.dto.UserLessonCompleteRequest;
 import com.sakurahino.learningservice.entity.UserTopicStatus;
 import com.sakurahino.learningservice.repository.LessonRepository;

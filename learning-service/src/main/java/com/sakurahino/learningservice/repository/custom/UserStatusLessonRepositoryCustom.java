@@ -13,4 +13,7 @@ public interface UserStatusLessonRepositoryCustom {
 
     //user
     List<LessonWithStatusDTO> findAllPublishedLessonsWithStatusByUser(@Param("userId") String userId);
+
+    // phần này để check lesson đã pass ở topic chưa - > dùng ở ôn tập
+    boolean areAllLessonsPassed(@Param("userId") String userId,@Param("topicCode") String topicCode);
 }

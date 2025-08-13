@@ -41,6 +41,18 @@ public class User {
     @Column(name = "isNewUser")
     private  Boolean isNewUser = false;
 
+    @Column(name = "long_steak")
+    private Integer longStreak = 0;
+
+    @Column(name = "last_date_login")
+    private Instant lastDateLogin;
+
+    @Column(name = "exp_score")
+    private Long expScore = 0L;
+
+    @Column(name = "freeze")
+    private Boolean freeze =false;
+
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private Role role;

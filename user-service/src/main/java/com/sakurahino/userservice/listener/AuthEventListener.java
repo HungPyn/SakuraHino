@@ -1,8 +1,8 @@
 package com.sakurahino.userservice.listener;
 
 import com.sakurahino.clients.commons.RabbitKey;
-import com.sakurahino.clients.rabitmqModel.RegisterSuccessDTO;
-import com.sakurahino.clients.rabitmqModel.UserLoggedInDTO;
+import com.sakurahino.clients.rabitmqModel.user.RegisterSuccessDTO;
+import com.sakurahino.clients.rabitmqModel.user.UserLoggedInDTO;
 import com.sakurahino.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

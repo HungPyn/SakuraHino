@@ -1,5 +1,6 @@
 package com.sakurahino.learningservice.entity;
 
+import com.sakurahino.learningservice.enums.QuestionType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,7 +48,7 @@ public class LessonQuestion {
     @NotNull
     @Lob
     @Column(name = "question_type", nullable = false)
-    private String questionType;
+    private QuestionType questionType;
 
     @NotNull
     @Lob

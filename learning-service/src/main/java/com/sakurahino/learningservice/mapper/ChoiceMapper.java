@@ -1,7 +1,7 @@
 package com.sakurahino.learningservice.mapper;
 
-import com.sakurahino.learningservice.dto.QuestionChoiceRequest;
-import com.sakurahino.learningservice.dto.QuestionChoiceResponse;
+import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceRequest;
+import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceResponse;
 import com.sakurahino.learningservice.entity.QuestionChoice;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

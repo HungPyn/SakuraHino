@@ -50,9 +50,9 @@ public class TopicAdminController {
         return new SuccessResponse(updated);
     }
 
-    @PatchMapping("{/id}")
+    @PatchMapping("/{id}")
     public SuccessResponse delete(@PathVariable Integer id) {
         topicService.delete(id);
-        return new SuccessResponse("Xoas thành công");
+        return new SuccessResponse();
     }
 }

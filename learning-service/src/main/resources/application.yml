@@ -3,7 +3,6 @@ server:
 spring:
   application:
     name: learning-service
-
   servlet: # Thêm phần này vào dưới 'spring:'
     multipart:
       max-file-size: 10MB   # Ví dụ: cho phép mỗi file lên đến 10 MB
