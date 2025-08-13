@@ -4,6 +4,7 @@ import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.learningservice.dto.lesson.LessonWithStatusDTO;
 import com.sakurahino.learningservice.entity.Lesson;
+import com.sakurahino.learningservice.entity.Topic;
 import com.sakurahino.learningservice.entity.UserLessonStatus;
 import com.sakurahino.learningservice.enums.LearningStatus;
 import com.sakurahino.learningservice.enums.ProgressStatus;
@@ -109,6 +110,23 @@ public class UserLessonStatusServiceImpl implements UserLessonStatusService {
                         userId, currentLesson.getId(), currentLesson.getTopic().getId());
             }
         }
+    }
+
+    // mở khóa lesson đầu tiên khi vì topic đã unlocked
+    @Override
+    public void unlockFirstLessonOfTopic(String userId, Topic topic) {
+        Lesson firstLesson = lessonRepository.findFirstByTopicOrderByPositionAsc(topic);
+        if (firstLesson == null) {
+            return;
+        }
+        userStatusLessonRepository.findByUserIdAndLessonId(userId, firstLesson.getId())
+                .orElseGet(() -> {
+                    UserLessonStatus lessonStatus = new UserLessonStatus();
+                    lessonStatus.setUserId(userId);
+                    lessonStatus.setLesson(firstLesson);
+                    lessonStatus.setProgressStatus(ProgressStatus.UNLOCKED);
+                    return userStatusLessonRepository.save(lessonStatus);
+                });
     }
 
 }

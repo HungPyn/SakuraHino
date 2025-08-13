@@ -7,9 +7,9 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 @Configuration
 public class LearningRabbitBindingConfig {
+
     @Bean
     public TopicExchange learningExchange() {
         return new TopicExchange(RabbitKey.EXCHANGE_LEARNING);
@@ -21,10 +21,12 @@ public class LearningRabbitBindingConfig {
     }
 
     @Bean
-    public Binding updateLongStreakAndExpScoreSuccessBinding(Queue registerSuccessQueue, TopicExchange authExchange) {
+    public Binding updateLongStreakAndExpScoreSuccessBinding(
+            Queue updateSuccessQueue,
+            TopicExchange learningExchange) {
         return BindingBuilder
-                .bind(registerSuccessQueue)
-                .to(authExchange)
+                .bind(updateSuccessQueue)
+                .to(learningExchange)
                 .with(RabbitKey.ROUTING_USER_UPDATE_STREAK_AND_EXP);
     }
 }

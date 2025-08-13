@@ -100,6 +100,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
     private LessonWithStatusDTO buildPracticeLesson(String userId, TopicWithStatusDTO topicWithStatusDTO) {
         // Kiểm tra tất cả lesson thật đã pass chưa
         boolean allLessonsPassed = userStatusLessonRepository.areAllLessonsPassed(userId, topicWithStatusDTO.getTopicCode());
+        boolean checkPractice = practiceResultRepository.existsPassedPractice(userId,topicWithStatusDTO.getTopicCode(),ResultStatus.PASSED);
 
         int lastPosition = topicWithStatusDTO.getListLesson().stream()
                 .mapToInt(LessonWithStatusDTO::getPosition)
@@ -112,8 +113,10 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
         dto.setLessonName("Ôn tập");
         dto.setTopicCode(topicWithStatusDTO.getTopicCode());
         dto.setPosition(lastPosition + 1);
-
-        if (allLessonsPassed) {
+        if (checkPractice){
+            dto.setStatus(ProgressStatus.PASSED);
+        }
+        else if (allLessonsPassed) {
             dto.setStatus(ProgressStatus.UNLOCKED);
         } else {
             dto.setStatus(ProgressStatus.LOCKED);
@@ -142,7 +145,6 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
         // Nếu topic đã pass thì mở khóa topic tiếp theo (nếu có và đã PUBLISHED)
         if (newStatus == ProgressStatus.PASSED) {
             List<Topic> nextTopics = topicRepository.findNextPublishedTopic(
-                    currentTopic.getId(),
                     LearningStatus.PUBLISHED,
                     currentTopic.getPosition()
 
@@ -161,6 +163,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
                             nextTopicStatus.setCompletedAt(Instant.now());
                             return userTopicStatusRepository.save(nextTopicStatus);
                         });
+                userLessonStatusService.unlockFirstLessonOfTopic(userId, nextTopic);
             } else {
                 log.info("User {} đã hoàn thành topic cuối {} -> Không còn topic nào để unlock",
                         userId, currentTopic.getId());

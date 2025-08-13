@@ -37,7 +37,7 @@ public class PracticeResultServiceImpl implements PracticeResultService {
     private final TopicRepository topicRepository;
     private final AuthHelper authHelper;
     private final RabbitMQMessageProducer rabbitMQProducer;
-    private final ResultMapper  resultMapper;
+    private final ResultMapper resultMapper;
     private final UserTopicStatusService userTopicStatusService;
     private final LessonResultServiceImpl lessonResultService;
 
@@ -55,18 +55,18 @@ public class PracticeResultServiceImpl implements PracticeResultService {
                 .orElse(0);
 
         PracticeResult practiceResult = buildPracticeResult(dto, topic);
+
+        // ===== Tính XP =====
+        int currentCorrect = practiceResult.getCorrectCount();
+        int xpAmount = Math.max(0, (currentCorrect - bestCorrectBefore) * XP_PER_CORRECT);
+
+        // ===== Tính streak =====
+        int streakIncrement = lessonResultService.isFirstLessonToday(userId, practiceResult.getCompletedAt()) ? 1 : 0;
         practiceResultRepository.save(practiceResult);
 
         // Nếu PASS thì update status và mở khóa topic tiếp theo
         if (practiceResult.getStatus() == ResultStatus.PASSED) {
-
-
-            // ===== Tính XP =====
-            int currentCorrect = practiceResult.getCorrectCount();
-            int xpAmount = Math.max(0, (currentCorrect - bestCorrectBefore) * XP_PER_CORRECT);
-
-            // ===== Tính streak =====
-            int streakIncrement = lessonResultService.isFirstLessonToday(userId) ? 1 : 0;
+            userTopicStatusService.updateTopicStatusAndUnlockNext(userId, topic, ProgressStatus.PASSED);
 
             if (xpAmount > 0 || streakIncrement > 0) {
                 StreakAndExpUpdateMessageDTO message = new StreakAndExpUpdateMessageDTO(
@@ -83,7 +83,7 @@ public class PracticeResultServiceImpl implements PracticeResultService {
                 );
             }
 
-            userTopicStatusService.updateTopicStatusAndUnlockNext(userId, topic, ProgressStatus.PASSED);
+
         }
 
         return resultMapper.toPracticeResultResponseDTO(practiceResult);

@@ -59,4 +59,4 @@ upload-service:
 logging:
   level:
     root: INFO
-    com.sakurahino.topicservice: DEBUG
+    com.sakurahino.learningservice: DEBUG

@@ -1,8 +1,10 @@
 package com.sakurahino.learningservice.repository;
 
 import com.sakurahino.learningservice.entity.Lesson;
+import com.sakurahino.learningservice.entity.Topic;
 import com.sakurahino.learningservice.enums.LearningStatus;
 import com.sakurahino.learningservice.enums.ResultStatus;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -45,5 +47,5 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
     );
 
 
-
+    Lesson findFirstByTopicOrderByPositionAsc(Topic topic);
 }

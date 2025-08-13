@@ -26,12 +26,10 @@ public interface TopicRepository extends JpaRepository<Topic, Integer> {
     Topic findByCode(String code);
 
     @Query("SELECT t FROM Topic t " +
-            "WHERE t.id = :topicId " +
-            "AND t.status = :status " +
+            "WHERE t.status = :status " +
             "AND t.position > :currentPosition " +
             "ORDER BY t.position ASC")
     List<Topic> findNextPublishedTopic(
-            @Param("topicId") Integer topicId,
             @Param("status") LearningStatus status,
             @Param("currentPosition") Integer currentPosition
     );
