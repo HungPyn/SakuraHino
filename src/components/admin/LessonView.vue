@@ -485,8 +485,8 @@ const saveLesson = async () => {
     }
   } else {
     const result = await Swal.fire({
-      title: `Xác nhận chỉnh sửa`,
-      text: `Bạn có chắc muốn sửa bài học này không?`,
+      title: `Xác nhận thêm bài học`,
+      text: `Bạn có chắc muốn thêm bài học này không?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Lưu",
@@ -494,6 +494,7 @@ const saveLesson = async () => {
     });
 
     if (result.isConfirmed) {
+      delete lessonForm.value.id;
       try {
         const response = await lessonService.addLesson(lessonForm.value);
         if (response.data) {
