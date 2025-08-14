@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -26,6 +26,7 @@ import {
 import { useBoundStore } from "../../../hooks/useBoundStore";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../../types/navigatorType";
+import questionService from "../../../services/questionService";
 
 // Định nghĩa kiểu cho navigation và route
 type LessonScreenNavigationProp = NativeStackScreenProps<
@@ -77,6 +78,39 @@ type QuestionResult = {
   correctResponse: string;
 };
 
+export enum QuestionType {
+  MULTIPLE_CHOICE_VOCAB_IMAGE = "MULTIPLE_CHOICE_VOCAB_IMAGE",
+  MULTIPLE_CHOICE_TEXT_ONLY = "MULTIPLE_CHOICE_TEXT_ONLY",
+  AUDIO_CHOICE = "AUDIO_CHOICE",
+  WORD_ORDER = "WORD_ORDER",
+  PRONUNCIATION = "PRONUNCIATION",
+  WRITING = "WRITING",
+}
+
+export interface Choice {
+  id: number;
+  lessonQuestionId: number | null;
+  textForeign: string;
+  textRomaji: string | null;
+  imageUrl: string | null;
+  audioUrlForeign: string | null;
+  isCorrect: boolean;
+  textBlock: string | null;
+  meaning: string | null;
+}
+
+export interface Question {
+  id: number;
+  lessonId: number;
+  questionType: QuestionType;
+  promptTextTemplate: string;
+  targetWordNative: string;
+  targetLanguageCode: string;
+  optionsLanguageCode: string;
+  audioUrlQuestions: string | null;
+  choices: Choice[];
+}
+
 // =========================================================================
 //                                MAIN COMPONENT
 // =========================================================================
@@ -101,6 +135,22 @@ const Lesson = () => {
 
   const problem = lessonProblems[lessonProblem] ?? lessonProblem1;
   const totalCorrectAnswersNeeded = 2;
+  const { lessonCode } = route.params;
+  //lay question
+  const [topics, setTopics] = useState<Question[]>([]);
+  const getQuestions = async () => {
+    try {
+      const questions = await questionService.getQuestion(lessonCode);
+      setTopics(questions);
+      console.log("Câu hỏi đã lấy:", JSON.stringify(questions, null, 2));
+    } catch (error) {
+      console.error("Lỗi khi gọi API lấy câu hỏi:", error);
+    }
+  };
+  useEffect(() => {
+    console.log("Giá trị lessonCode đã nhận được là:", lessonCode);
+    getQuestions();
+  }, [lessonCode]); // Sẽ chạy một lần khi lessonCode có giá trị
 
   const hearts =
     "fast-forward" in route.params &&

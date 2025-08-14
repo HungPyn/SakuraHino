@@ -1,6 +1,6 @@
 // src/types/navigatorType.ts
 
-import { NavigatorScreenParams } from "@react-navigation/native";
+import { NavigatorScreenParams, RouteProp } from "@react-navigation/native";
 
 export type PracticeType = "listening" | "speaking" | "reading" | "writing";
 
@@ -26,16 +26,13 @@ export type RootStackParamList = {
   LearningPathScreen: undefined;
   SettingsAccount: undefined;
   ProfileScreen: undefined;
-  Lesson: {
-    unitNumber?: number;
-    "fast-forward"?: number;
-    practice?: boolean;
-  };
+  Lesson: { lessonCode: string };
   Guidebook: { code: string; unitNumber: number };
   LearningPath: undefined;
   Profile: undefined;
   Result: { type: string; xp: number; commitTime: string };
 };
+export type LessonScreenRouteProp = RouteProp<RootStackParamList, "Lesson">;
 
 declare global {
   namespace ReactNavigation {

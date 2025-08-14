@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+
 import {
   View,
   TouchableOpacity,
@@ -7,6 +8,7 @@ import {
   ScrollView,
   Pressable,
   Animated,
+  Image,
   Modal,
 } from "react-native";
 import {
@@ -32,14 +34,14 @@ import {
 } from "../../../components/Svgs";
 import { useNavigation } from "@react-navigation/native";
 import { useBoundStore } from "../../../hooks/useBoundStore";
-import type { Tile, TileType, Unit } from "../../../units/units";
-import { units } from "../../../units/units";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { BottomBar } from "../../../components/custombar/BottomBar";
 import { Tab } from "../../../components/custombar/useBottomBarItems";
 import TopBar from "../../../components/TopBar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { RootStackParamList } from "../../../types/navigatorType";
+import topicService from "../../../services/topicService";
+
 // --- Constants ---
 const COLORS = {
   white: "#FFFFFF",
@@ -57,27 +59,55 @@ const COLORS = {
   textDark: "#000000",
 };
 
+interface Lesson {
+  lessonCode: string;
+  lessonName: string;
+  topicCode: string;
+  position: number;
+  status: "LOCKED" | "UNLOCKED" | "PASSED";
+}
+
+export type ProgressStatus = "LOCKED" | "UNLOCKED" | "PASSED";
+
+// Định nghĩa giao diện `Topic`
+interface Topic {
+  topicCode: string;
+  topicName: string;
+  position: number;
+  progressStatus: "LOCKED" | "UNLOCKED" | "PASSED";
+  urlImage: string;
+  listLesson: Lesson[];
+  backgroundColor?: string;
+  borderColor?: string;
+  textColor?: string;
+}
+
+// Định nghĩa kiểu dữ liệu cho icon
+type TileType =
+  | "star"
+  | "book"
+  | "dumbbell"
+  | "treasure"
+  | "trophy"
+  | "fast-forward";
+
+// Định nghĩa các bảng màu
+const COLOR_PALETTES = [
+  { backgroundColor: "#58CC02", borderColor: "#46A302", textColor: "#FFFFFF" },
+  { backgroundColor: "#1CB0F6", borderColor: "#1899D6", textColor: "#FFFFFF" },
+  { backgroundColor: "#FFC800", borderColor: "#FFB800", textColor: "#FFFFFF" },
+  { backgroundColor: "#FF4B4B", borderColor: "#E54242", textColor: "#FFFFFF" },
+  { backgroundColor: "#7D53B2", borderColor: "#6C4A9E", textColor: "#FFFFFF" },
+];
+
+// Định nghĩa chiều cao của một chủ đề ở đây để toàn bộ component có thể truy cập
+const TOPIC_HEIGHT = 400;
+
 // --- Navigation ---
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // --- Helper Functions ---
 type TileStatus = "LOCKED" | "ACTIVE" | "COMPLETE";
-
-const tileStatus = (tile: Tile, lessonsCompleted: number): TileStatus => {
-  const allTiles = units.flatMap((unit) => unit.tiles);
-  const tileIndex = allTiles.findIndex((t) => t === tile);
-
-  if (tileIndex < 0) {
-    return "LOCKED";
-  }
-  if (tileIndex < lessonsCompleted) {
-    return "COMPLETE";
-  } else if (tileIndex === lessonsCompleted) {
-    return "ACTIVE";
-  } else {
-    return "LOCKED";
-  }
-};
 
 const getTileLeftOffset = (index: number, unitNumber: number): number => {
   const tileLeftOffsets = [0, -45, -70, -45, 0, 45, 70, 45];
@@ -87,7 +117,7 @@ const getTileLeftOffset = (index: number, unitNumber: number): number => {
       : [...tileLeftOffsets.slice(4), ...tileLeftOffsets.slice(0, 4)];
   return offsets[index % offsets.length] ?? 0;
 };
-// Ánh xạ tới component cần sử dụng
+
 const SvgTileIconComponentMap: { [key: string]: React.ComponentType<any> } = {
   Checkmark: CheckmarkSvg,
   Star: StarSvg,
@@ -154,23 +184,7 @@ const TileIcon = ({
       : COLORS.gray400;
 
   if (!IconComponent) {
-    console.warn(
-      `Icon component for "${iconName}" not found. Falling back to PlaceholderSvg.`
-    );
-    return (
-      <View
-        style={{
-          width: 40,
-          height: 40,
-          backgroundColor: iconColor,
-          borderRadius: 8,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Text style={{ color: COLORS.white, fontSize: 10 }}>{iconName}</Text>
-      </View>
-    );
+    return null;
   }
   return <IconComponent width={80} height={80} fill={iconColor} />;
 };
@@ -221,7 +235,8 @@ const TileTooltip = ({
   closeTooltip,
   status,
   description,
-  unit,
+  backgroundColor,
+  textColor,
   onStart,
   onPractice,
 }: {
@@ -229,34 +244,34 @@ const TileTooltip = ({
   closeTooltip: () => void;
   status: TileStatus;
   description: string;
-  unit: Unit;
+  backgroundColor: string;
+  borderColor: string;
+  textColor: string;
   onStart: () => void;
   onPractice: () => void;
 }) => {
   if (!isVisible) return null;
 
-  const activeBackgroundColor = unit.backgroundColor.replace("bg-", "#");
-  const activeTextColor = unit.textColor.replace("text-", "#");
-
   const statusConfig = {
     ACTIVE: {
-      bg: activeBackgroundColor,
+      bg: backgroundColor,
       text: COLORS.textLight,
-      buttonText: activeTextColor,
+      buttonText: "Bắt đầu +10 XP",
     },
     LOCKED: {
       bg: COLORS.gray100,
       text: COLORS.gray400,
-      buttonText: COLORS.gray400,
+      buttonText: "Khóa",
     },
     COMPLETE: {
       bg: COLORS.yellow400,
       text: COLORS.yellow600,
-      buttonText: COLORS.yellow400,
+      buttonText: "Luyện tập +5 XP",
     },
   };
 
   const config = statusConfig[status];
+
   return (
     <Modal
       visible={isVisible}
@@ -269,224 +284,251 @@ const TileTooltip = ({
           <Text style={[styles.tileTooltipText, { color: config.text }]}>
             {description}
           </Text>
-          {status === "ACTIVE" ? (
-            <TouchableOpacity
+          {/* Sửa logic hiển thị nút bấm */}
+          <TouchableOpacity
+            style={[
+              styles.tileTooltipButton,
+              {
+                backgroundColor:
+                  status === "ACTIVE" || status === "COMPLETE"
+                    ? COLORS.white
+                    : COLORS.gray200,
+                borderColor:
+                  status === "ACTIVE" || status === "COMPLETE"
+                    ? COLORS.gray200
+                    : "transparent",
+              },
+            ]}
+            onPress={
+              status === "ACTIVE"
+                ? onStart
+                : status === "COMPLETE"
+                ? onPractice
+                : undefined
+            }
+            disabled={status === "LOCKED"}
+          >
+            <Text
               style={[
-                styles.tileTooltipButton,
-                { backgroundColor: COLORS.white },
-              ]}
-              onPress={onStart}
-            >
-              <Text
-                style={[
-                  styles.tileTooltipButtonText,
-                  { color: config.buttonText },
-                ]}
-              >
-                Start +10 XP
-              </Text>
-            </TouchableOpacity>
-          ) : status === "LOCKED" ? (
-            <View
-              style={[
-                styles.tileTooltipButton,
-                { backgroundColor: COLORS.gray200 },
+                styles.tileTooltipButtonText,
+                {
+                  color:
+                    status === "ACTIVE" || status === "COMPLETE"
+                      ? config.bg
+                      : config.buttonText,
+                },
               ]}
             >
-              <Text
-                style={[
-                  styles.tileTooltipButtonText,
-                  { color: config.buttonText },
-                ]}
-              >
-                Locked
-              </Text>
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={[
-                styles.tileTooltipButton,
-                { backgroundColor: COLORS.white },
-              ]}
-              onPress={onPractice}
-            >
-              <Text
-                style={[
-                  styles.tileTooltipButtonText,
-                  { color: config.buttonText },
-                ]}
-              >
-                Practice +5 XP
-              </Text>
-            </TouchableOpacity>
-          )}
+              {config.buttonText}
+            </Text>
+          </TouchableOpacity>
         </Pressable>
       </Pressable>
     </Modal>
   );
 };
 
-const UnitHeader = ({
-  unit,
-  languageCode,
-}: {
-  unit: Unit;
-  languageCode: string;
-}) => {
-  const navigation = useNavigation<NavigationProp>();
-  return (
-    <View
-      style={[
-        styles.unitHeader,
-        { backgroundColor: unit.backgroundColor.replace("bg-", "#") },
-      ]}
-    >
-      <View>
-        <Text style={styles.unitHeaderTitle}>Unit {unit.unitNumber}</Text>
-        <Text style={styles.unitHeaderDescription}>{unit.description}</Text>
-      </View>
-      <TouchableOpacity
-        style={[
-          styles.guidebookButton,
-          { borderColor: unit.borderColor.replace("border-", "#") },
-        ]}
-        onPress={() =>
-          navigation.navigate("Guidebook", {
-            code: languageCode,
-            unitNumber: unit.unitNumber,
-          })
-        }
-      >
-        <GuidebookSvg width={24} height={24} fill={"#FFFFFF"} />
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-const UnitSection = ({ unit }: { unit: Unit }) => {
-  const navigation = useNavigation<NavigationProp>();
-
-  const [selectedTileIndex, setSelectedTileIndex] = useState<null | number>(
+const UnitSection = ({ topic }: { topic: Topic }) => {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [selectedLessonIndex, setSelectedLessonIndex] = useState<null | number>(
     null
   );
-  const lessonsCompleted = useBoundStore((state) => state.lessonsCompleted);
-
   const language = useBoundStore((state) => state.language);
-  const handleTilePress = (tile: any, index: number, status: any) => {
-    if (tile.type === "fast-forward" && status === "LOCKED") {
-      navigation.navigate("Lesson", {
-        "fast-forward": unit.unitNumber,
-      });
-    } else {
-      setSelectedTileIndex(index);
+
+  const getTileStatus = (status: ProgressStatus): TileStatus => {
+    switch (status) {
+      case "UNLOCKED":
+        return "ACTIVE";
+      case "PASSED":
+        return "COMPLETE";
+      case "LOCKED":
+      default:
+        return "LOCKED";
     }
   };
 
-  const selectedTile =
-    selectedTileIndex !== null ? unit.tiles[selectedTileIndex] : null;
-  const selectedTileStatus = selectedTile
-    ? tileStatus(selectedTile, lessonsCompleted)
-    : "LOCKED";
+  const handleLessonPress = (
+    lesson: Lesson,
+    index: number,
+    status: ProgressStatus
+  ) => {
+    // Luôn hiển thị pop-up khi bấm vào bất kỳ bài học nào.
+    setSelectedLessonIndex(index);
+  };
+  const getStatusText = (status: "LOCKED" | "UNLOCKED" | "PASSED"): string => {
+    switch (status) {
+      case "LOCKED":
+        return "Chưa mở khóa";
+      case "UNLOCKED":
+        return "Mở";
+      case "PASSED":
+        return "Đã hoàn thành";
+      default:
+        return "";
+    }
+  };
+
+  const selectedLesson =
+    selectedLessonIndex !== null ? topic.listLesson[selectedLessonIndex] : null;
 
   return (
     <View style={styles.unitSection}>
-      <UnitHeader unit={unit} languageCode={language.code} />
-      <View style={styles.tilesContainer}>
-        {unit.tiles.map((tile, i: number) => {
-          const status = tileStatus(tile, lessonsCompleted);
-          const colors =
-            status === "ACTIVE"
-              ? {
-                  bg: unit.backgroundColor.replace("bg-", "#"),
-                  border: unit.borderColor.replace("border-", "#"),
-                }
-              : status === "COMPLETE"
-              ? { bg: COLORS.green500, border: COLORS.green500 }
-              : { bg: COLORS.gray200, border: COLORS.gray400 };
-
-          return (
-            <View
-              key={i}
-              style={[
-                styles.tileWrapper,
-                {
-                  transform: [
-                    { translateX: getTileLeftOffset(i, unit.unitNumber) },
-                  ],
-                },
-              ]}
-            >
-              {status === "ACTIVE" && (
-                <HoverLabel
-                  text="Start"
-                  textColor={unit.textColor.replace("text-", "#")}
-                />
-              )}
-              <TouchableOpacity
-                style={[
-                  styles.tileButton,
-                  { backgroundColor: colors.bg, borderColor: colors.border },
-                ]}
-                onPress={() => handleTilePress(tile, i, status)}
-                activeOpacity={0.8}
-              >
-                <TileIcon tileType={tile.type} status={status} />
-              </TouchableOpacity>
-            </View>
-          );
-        })}
+      <View
+        style={[
+          styles.unitHeader,
+          {
+            backgroundColor: topic.backgroundColor || "#58cc02",
+          },
+        ]}
+      >
+        <View>
+          <Text style={styles.unitHeaderTitle}>{topic.topicName}</Text>
+          <Text style={styles.unitHeaderDescription}>
+            {getStatusText(topic.progressStatus)}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={[
+            styles.guidebookButton,
+            {
+              borderColor: topic.borderColor || "#46a302",
+              backgroundColor: topic.backgroundColor || "#58cc02", // Thêm màu nền cho nút
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+            },
+          ]}
+        >
+          {topic.urlImage ? (
+            // Nếu có urlImage, hiển thị hình ảnh
+            <Image
+              source={{ uri: topic.urlImage }}
+              style={styles.guidebookImage}
+            />
+          ) : (
+            // Nếu không có, hiển thị Svg mặc định
+            <GuidebookSvg width={24} height={24} fill={"#FFFFFF"} />
+          )}
+        </TouchableOpacity>
       </View>
-      {selectedTile && (
+
+      <View style={styles.tilesContainer}>
+        {topic.listLesson &&
+          topic.listLesson.map((lesson, i: number) => {
+            const status = lesson.status;
+            const tileStatusForIcon = getTileStatus(status);
+            const tileTypeForIcon: TileType = i % 2 === 0 ? "book" : "star";
+            const colors =
+              status === "UNLOCKED"
+                ? {
+                    bg: topic.backgroundColor || "#58cc02",
+                    border: topic.borderColor || "#46a302",
+                  }
+                : status === "PASSED"
+                ? { bg: COLORS.green500, border: COLORS.green500 }
+                : { bg: COLORS.gray200, border: COLORS.gray400 };
+            return (
+              <View
+                key={i}
+                style={[
+                  styles.tileWrapper,
+                  {
+                    transform: [
+                      { translateX: getTileLeftOffset(i, topic.position) },
+                    ],
+                  },
+                ]}
+              >
+                {status === "UNLOCKED" && (
+                  <HoverLabel text="Start" textColor={colors.border} />
+                )}
+                <TouchableOpacity
+                  style={[
+                    styles.tileButton,
+                    { backgroundColor: colors.bg, borderColor: colors.border },
+                  ]}
+                  onPress={() => handleLessonPress(lesson, i, status)}
+                  activeOpacity={0.8}
+                >
+                  <TileIcon
+                    tileType={tileTypeForIcon}
+                    status={tileStatusForIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+      </View>
+
+      {selectedLesson && (
         <TileTooltip
-          isVisible={selectedTileIndex !== null}
-          closeTooltip={() => setSelectedTileIndex(null)}
-          status={selectedTileStatus}
-          description={
-            (selectedTile as { description?: string }).description ||
-            `Unit ${unit.unitNumber} Review`
-          }
-          unit={unit}
+          isVisible={selectedLessonIndex !== null}
+          closeTooltip={() => setSelectedLessonIndex(null)}
+          status={getTileStatus(selectedLesson.status)}
+          description={selectedLesson.lessonName}
+          backgroundColor={topic.backgroundColor || "#58cc02"}
+          borderColor={topic.borderColor || "#46a302"}
+          textColor={topic.textColor || "#FFFFFF"}
           onStart={() => {
-            setSelectedTileIndex(null);
+            setSelectedLessonIndex(null);
             navigation.navigate("Lesson", {
-              unitNumber: unit.unitNumber,
+              lessonCode: selectedLesson.lessonCode,
             });
           }}
-          onPractice={() => {
-            setSelectedTileIndex(null);
-            navigation.navigate("Lesson", { practice: true });
-          }}
+          onPractice={() => {}}
         />
       )}
     </View>
   );
 };
 
+// Component chính
 const LearningPathScreen = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollY, setScrollY] = useState(0);
   const [selectedTab, setSelectedTab] = useState<Tab>("Learn");
+  const [topics, setTopics] = useState<Topic[]>([]);
 
-  const getTopBarColor = (y: number): string => {
-    if (y < 680)
-      return units[0]?.backgroundColor.replace("bg-", "#") ?? COLORS.green500;
-    if (y < 1830)
-      return units[1]?.backgroundColor.replace("bg-", "#") ?? COLORS.blue500;
-    return units[2]?.backgroundColor.replace("bg-", "#") ?? COLORS.yellow500;
+  useEffect(() => {
+    const fetchTopics = async () => {
+      try {
+        const data: Topic[] = await topicService.getTopics();
+        if (data) {
+          const coloredTopics = data.map((topic, index) => {
+            const colorIndex = index % COLOR_PALETTES.length;
+            const fixedColor = COLOR_PALETTES[colorIndex];
+            // console.log("topic lấy ra là:", JSON.stringify(topic, null, 2));
+            return {
+              ...topic,
+              ...fixedColor,
+            };
+          });
+          setTopics(coloredTopics);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách topics:", error);
+      }
+    };
+    fetchTopics();
+  }, []);
+
+  const getTopBarColors = (y: number): { bg: string; border: string } => {
+    const currentTopicIndex = Math.floor(y / TOPIC_HEIGHT);
+    const currentTopic = topics[currentTopicIndex] || topics[0];
+    const backgroundColor = currentTopic?.backgroundColor || "#58CC02";
+    const borderColor = currentTopic?.borderColor || "#46A302";
+    return { bg: backgroundColor, border: borderColor };
   };
+
+  const topBarColors = getTopBarColors(scrollY);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
         <TopBar
-          backgroundColor={getTopBarColor(scrollY)}
-          borderColor={
-            scrollY < 680
-              ? units[0]?.borderColor.replace("border-", "#") ?? "#46a302"
-              : scrollY < 1830
-              ? units[1]?.borderColor.replace("border-", "#") ?? "#3673c2"
-              : units[2]?.borderColor.replace("border-", "#") ?? "#ca8a04"
-          }
+          backgroundColor={topBarColors.bg}
+          borderColor={topBarColors.border}
         />
       </View>
 
@@ -497,11 +539,10 @@ const LearningPathScreen = () => {
         contentContainerStyle={styles.scrollViewContent}
         style={styles.mainScroll}
       >
-        {units.map((unit) => (
-          <UnitSection unit={unit} key={unit.unitNumber} />
+        {topics.map((topic) => (
+          <UnitSection key={topic.topicCode} topic={topic} />
         ))}
       </ScrollView>
-
       <TouchableOpacity style={styles.practiceButton} onPress={() => {}}>
         <PracticeExerciseSvg />
       </TouchableOpacity>
@@ -549,13 +590,18 @@ const styles = StyleSheet.create({
   },
   unitHeaderDescription: { fontSize: 16, color: COLORS.textLight },
   guidebookButton: {
-    flexDirection: "row",
     alignItems: "center",
-    padding: 8,
-    borderRadius: 12,
+    justifyContent: "center",
     borderWidth: 2,
     borderBottomWidth: 4,
   },
+  guidebookImage: {
+    width: 48, // Chiều rộng của hình ảnh bằng với nút bấm
+    height: 48, // Chiều cao của hình ảnh bằng với nút bấm
+    borderRadius: 24, // Bo tròn bằng một nửa kích thước để có hình tròn hoàn hảo
+    resizeMode: "cover",
+  },
+
   guidebookText: { color: COLORS.textLight, fontWeight: "bold", marginLeft: 8 },
   tilesContainer: { marginTop: 40, width: "100%", alignItems: "center" },
   tileWrapper: { height: 100, alignItems: "center", justifyContent: "center" },
