@@ -8,9 +8,11 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Audio } from "expo-av";
 import {
   BigCloseSvg,
   BoySvg,
@@ -27,6 +29,12 @@ import { useBoundStore } from "../../../hooks/useBoundStore";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../../types/navigatorType";
 import questionService from "../../../services/questionService";
+import Pronunciation from "../learningComponents/Pronunciation";
+import Writing from "../learningComponents/Writing";
+import WordOrder from "../learningComponents/WordOrder";
+import AudioChoice from "../learningComponents/AudioChoice";
+import SelectText from "../learningComponents/SelectText";
+import SelectImage from "../learningComponents/SelectImage";
 
 // Định nghĩa kiểu cho navigation và route
 type LessonScreenNavigationProp = NativeStackScreenProps<
@@ -111,6 +119,22 @@ export interface Question {
   choices: Choice[];
 }
 
+export const playCorrectSound = async (filePath: any) => {
+  try {
+    const { sound } = await Audio.Sound.createAsync(filePath);
+    await sound.playAsync();
+
+    // Giải phóng bộ nhớ khi phát xong
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.isLoaded && status.didJustFinish) {
+        sound.unloadAsync();
+      }
+    });
+  } catch (error) {
+    console.log("Lỗi phát âm thanh:", error);
+  }
+};
+
 // =========================================================================
 //                                MAIN COMPONENT
 // =========================================================================
@@ -121,11 +145,13 @@ const Lesson = () => {
 
   const [lessonProblem, setLessonProblem] = useState(0);
   const [correctAnswerCount, setCorrectAnswerCount] = useState(0);
-  const [incorrectAnswerCount, setIncorrectAnswerCount] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<null | number>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<Choice | null>(null);
   const [correctAnswerShown, setCorrectAnswerShown] = useState(false);
   const [quitMessageShown, setQuitMessageShown] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
+  const [isAnswerChecked, setIsAnswerChecked] = useState(false); // Thêm state này
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState(false); // Thêm state này
+  const [disableChild, setDisableChild] = useState(false);
 
   const startTime = useRef(Date.now());
   const endTime = useRef(startTime.current + 1000 * 60 * 3 + 1000 * 33);
@@ -133,15 +159,29 @@ const Lesson = () => {
   const [reviewLessonShown, setReviewLessonShown] = useState(false);
   const [isStartingLesson, setIsStartingLesson] = useState(true);
 
-  const problem = lessonProblems[lessonProblem] ?? lessonProblem1;
   const totalCorrectAnswersNeeded = 2;
   const { lessonCode } = route.params;
+
+  const onSkip = () => {
+    setSelectedAnswer(null);
+    setCorrectAnswerShown(true);
+    setIsAnswerChecked(false);
+    setSelectedAnswers([]);
+    endTime.current = Date.now();
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+    }
+  };
+
   //lay question
-  const [topics, setTopics] = useState<Question[]>([]);
+  // 1. Khai báo tất cả các state cần thiết
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [incorrectAnswerCount, setIncorrectAnswerCount] = useState(0);
   const getQuestions = async () => {
     try {
       const questions = await questionService.getQuestion(lessonCode);
-      setTopics(questions);
+      setQuestions(questions);
       console.log("Câu hỏi đã lấy:", JSON.stringify(questions, null, 2));
     } catch (error) {
       console.error("Lỗi khi gọi API lấy câu hỏi:", error);
@@ -152,155 +192,350 @@ const Lesson = () => {
     getQuestions();
   }, [lessonCode]); // Sẽ chạy một lần khi lessonCode có giá trị
 
+  // Debug useEffect
+  useEffect(() => {
+    if (questions.length > 0) {
+      console.log("Questions:", JSON.stringify(questions, null, 2));
+      console.log("Current Question Index:", currentQuestionIndex);
+      console.log("Current Question:", currentQuestion);
+      console.log("Current Question Type:", currentQuestion?.questionType);
+      console.log("Valid Question Types:", Object.values(QuestionType));
+      if (
+        !currentQuestion ||
+        !Object.values(QuestionType).includes(currentQuestion.questionType)
+      ) {
+        console.warn(
+          "Invalid or undefined questionType:",
+          currentQuestion?.questionType
+        );
+      }
+    }
+  }, [questions, currentQuestionIndex]);
+
+  const currentQuestion = questions[currentQuestionIndex];
+  if (!currentQuestion) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+        <Text>Đang tải bài học...</Text>
+      </View>
+    );
+  }
   const hearts =
     "fast-forward" in route.params &&
     !isNaN(Number(route.params["fast-forward"]))
       ? 3 - incorrectAnswerCount
       : null;
 
-  const { correctAnswer } = problem;
-  const isAnswerCorrect = Array.isArray(correctAnswer)
-    ? numbersEqual(selectedAnswers, correctAnswer)
-    : selectedAnswer === correctAnswer;
+  // Tìm đáp án đúng từ dữ liệu API mới
+  const correctAnswer = currentQuestion.choices.find(
+    (choice) => choice.isCorrect
+  );
+  // So sánh đáp án được chọn với đáp án đúng
+  // const isAnswerCorrect =
+  //   selectedAnswer && correctAnswer && selectedAnswer.id === correctAnswer.id;
 
+  // Hàm kiểm tra đáp án đã được cập nhật
   const onCheckAnswer = () => {
-    setCorrectAnswerShown(true);
-    if (isAnswerCorrect) {
-      setCorrectAnswerCount((x) => x + 1);
-    } else {
-      setIncorrectAnswerCount((x) => x + 1);
+    if (
+      currentQuestion.questionType === QuestionType.MULTIPLE_CHOICE_TEXT_ONLY ||
+      currentQuestion.questionType ===
+        QuestionType.MULTIPLE_CHOICE_VOCAB_IMAGE ||
+      currentQuestion.questionType === QuestionType.AUDIO_CHOICE
+    ) {
+      if (selectedAnswer?.isCorrect == true) {
+        playCorrectSound(require("../sound/soundCorect.mp3"));
+        setIsCorrectAnswer(true);
+        setIsAnswerChecked(true);
+        setSelectedAnswer(null);
+        setCorrectAnswerCount((x) => x + 1);
+      } else {
+        setIsCorrectAnswer(false);
+        setIsAnswerChecked(true);
+        setSelectedAnswer(null);
+        setIncorrectAnswerCount((x) => x + 1);
+
+        // setCorrectAnswerShown(false);
+      }
+      setSelectedAnswers([]);
+      setSelectedAnswers([]);
     }
-    setQuestionResults((questionResults) => [
-      ...questionResults,
-      {
-        question: problem.question,
-        yourResponse:
-          problem.type === "SELECT_1_OF_3"
-            ? problem.answers[selectedAnswer ?? 0]?.name ?? ""
-            : selectedAnswers.map((i) => problem.answerTiles[i]).join(" "),
-        correctResponse:
-          problem.type === "SELECT_1_OF_3"
-            ? problem.answers[problem.correctAnswer].name
-            : problem.correctAnswer
-                .map((i) => problem.answerTiles[i])
-                .join(" "),
-      },
-    ]);
-  };
 
-  const onFinish = () => {
-    setSelectedAnswer(null);
-    setSelectedAnswers([]);
-    setCorrectAnswerShown(false);
-    setLessonProblem((x) => (x + 1) % lessonProblems.length);
-    endTime.current = Date.now();
-  };
+    // if (isAnswerCorrect) {
+    //   setCorrectAnswerCount((x) => x + 1);
+    // } else {
+    //   setIncorrectAnswerCount((x) => x + 1);
+    // }
 
-  const onSkip = () => {
-    setSelectedAnswer(null);
-    setCorrectAnswerShown(true);
+    // Cập nhật kết quả câu hỏi dựa trên cấu trúc dữ liệu mới
+    //   setQuestionResults((questionResults) => [
+    //     ...questionResults,
+    //     {
+    //       question: currentQuestion.promptTextTemplate,
+    //       yourResponse:
+    //         currentQuestion.questionType === "WORD_ORDER"
+    //           ? selectedAnswers.map((answer) => answer.textForeign).join(" ")
+    //           : selectedAnswer?.meaning, // Hoặc một trường khác phù hợp
+    //       correctResponse:
+    //         currentQuestion.questionType === "WORD_ORDER"
+    //           ? // Logic cho câu hỏi sắp xếp từ cần được tùy chỉnh
+    //             correctAnswer
+    //           : correctAnswer?.meaning, // Hoặc một trường khác phù hợp
+    //     },
+    //   ]);
   };
 
   const unitNumber = Number(route.params["fast-forward"]);
 
-  if (hearts !== null && hearts < 0 && !correctAnswerShown) {
-    return (
-      <LessonFastForwardEndFail
-        unitNumber={unitNumber}
-        reviewLessonShown={reviewLessonShown}
-        setReviewLessonShown={setReviewLessonShown}
-        questionResults={questionResults}
-        navigation={navigation}
-      />
-    );
-  }
+  // if (hearts !== null && hearts < 0 && !correctAnswerShown) {
+  //   return (
+  //     <LessonFastForwardEndFail
+  //       unitNumber={unitNumber}
+  //       reviewLessonShown={reviewLessonShown}
+  //       setReviewLessonShown={setReviewLessonShown}
+  //       questionResults={questionResults}
+  //       navigation={navigation}
+  //     />
+  //   );
+  // }
 
-  if (
-    hearts !== null &&
-    hearts >= 0 &&
-    !correctAnswerShown &&
-    correctAnswerCount >= totalCorrectAnswersNeeded
-  ) {
-    return (
-      <LessonFastForwardEndPass
-        unitNumber={unitNumber}
-        reviewLessonShown={reviewLessonShown}
-        setReviewLessonShown={setReviewLessonShown}
-        questionResults={questionResults}
-        navigation={navigation}
-      />
-    );
-  }
+  // if (
+  //   hearts !== null &&
+  //   hearts >= 0 &&
+  //   !correctAnswerShown &&
+  //   correctAnswerCount >= totalCorrectAnswersNeeded
+  // ) {
+  //   return (
+  //     <LessonFastForwardEndPass
+  //       unitNumber={unitNumber}
+  //       reviewLessonShown={reviewLessonShown}
+  //       setReviewLessonShown={setReviewLessonShown}
+  //       questionResults={questionResults}
+  //       navigation={navigation}
+  //     />
+  //   );
+  // }
 
-  if (hearts !== null && isStartingLesson) {
-    return (
-      <LessonFastForwardStart
-        unitNumber={unitNumber}
-        setIsStartingLesson={setIsStartingLesson}
-        navigation={navigation}
-      />
-    );
-  }
+  // if (hearts !== null && isStartingLesson) {
+  //   return (
+  //     <LessonFastForwardStart
+  //       unitNumber={unitNumber}
+  //       setIsStartingLesson={setIsStartingLesson}
+  //       navigation={navigation}
+  //     />
+  //   );
+  // }
 
-  if (correctAnswerCount >= totalCorrectAnswersNeeded && !correctAnswerShown) {
-    return (
-      <LessonComplete
-        correctAnswerCount={correctAnswerCount}
-        incorrectAnswerCount={incorrectAnswerCount}
-        startTime={startTime}
-        endTime={endTime}
-        reviewLessonShown={reviewLessonShown}
-        setReviewLessonShown={setReviewLessonShown}
-        questionResults={questionResults}
-        navigation={navigation}
-      />
-    );
-  }
+  // if (correctAnswerCount >= totalCorrectAnswersNeeded && !correctAnswerShown) {
+  //   return (
+  //     <LessonComplete
+  //       correctAnswerCount={correctAnswerCount}
+  //       incorrectAnswerCount={incorrectAnswerCount}
+  //       startTime={startTime}
+  //       endTime={endTime}
+  //       reviewLessonShown={reviewLessonShown}
+  //       setReviewLessonShown={setReviewLessonShown}
+  //       questionResults={questionResults}
+  //       navigation={navigation}
+  //     />
+  //   );
+  // }
 
-  switch (problem.type) {
-    case "SELECT_1_OF_3": {
+  switch (currentQuestion.questionType) {
+    case QuestionType.MULTIPLE_CHOICE_VOCAB_IMAGE: {
       return (
-        <ProblemSelect1Of3
-          problem={problem}
-          correctAnswerCount={correctAnswerCount}
-          totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
-          selectedAnswer={selectedAnswer}
-          setSelectedAnswer={setSelectedAnswer}
-          quitMessageShown={quitMessageShown}
-          correctAnswerShown={correctAnswerShown}
-          setQuitMessageShown={setQuitMessageShown}
-          isAnswerCorrect={isAnswerCorrect}
-          onCheckAnswer={onCheckAnswer}
-          onFinish={onFinish}
-          onSkip={onSkip}
-          hearts={hearts}
-          navigation={navigation}
-        />
+        <View style={{ flex: 1 }}>
+          <View style={styles.progressBarWrapper}>
+            <ProgressBar
+              correctAnswerCount={correctAnswerCount}
+              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              setQuitMessageShown={setQuitMessageShown}
+              hearts={hearts}
+              navigation={navigation}
+            />
+          </View>
+          <View
+            style={{ flex: 1 }}
+            pointerEvents={isAnswerChecked ? "none" : "auto"}
+          >
+            <SelectImage
+              question={currentQuestion}
+              onCheckAnswer={onCheckAnswer}
+              onNextQuestion={onSkip}
+              hearts={hearts}
+              onSelectAnswer={setSelectedAnswer}
+            />
+          </View>
+
+          <View>
+            {isAnswerChecked && (
+              <CheckAnswer
+                correctAnswer={selectedAnswer?.textForeign || ""}
+                correctAnswerShown={isAnswerChecked}
+                isAnswerCorrect={isCorrectAnswer}
+                onFinish={onSkip}
+                onCheckAnswer={onCheckAnswer}
+                onSkip={onSkip}
+              />
+            )}
+          </View>
+        </View>
       );
     }
 
-    case "WRITE_IN_ENGLISH": {
+    case QuestionType.MULTIPLE_CHOICE_TEXT_ONLY: {
       return (
-        <ProblemWriteInEnglish
-          problem={problem}
-          correctAnswerCount={correctAnswerCount}
-          totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
-          selectedAnswers={selectedAnswers}
-          setSelectedAnswers={setSelectedAnswers}
-          quitMessageShown={quitMessageShown}
-          correctAnswerShown={correctAnswerShown}
-          setQuitMessageShown={setQuitMessageShown}
-          isAnswerCorrect={isAnswerCorrect}
-          onCheckAnswer={onCheckAnswer}
-          onFinish={onFinish}
-          onSkip={onSkip}
-          hearts={hearts}
-          navigation={navigation}
-        />
+        <View style={{ flex: 1, backgroundColor: "#fff" }}>
+          <View style={styles.progressBarWrapper}>
+            <ProgressBar
+              correctAnswerCount={correctAnswerCount}
+              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              setQuitMessageShown={setQuitMessageShown}
+              hearts={hearts}
+              navigation={navigation}
+            />
+          </View>
+          <View
+            style={{ flex: 1 }}
+            pointerEvents={isAnswerChecked ? "none" : "auto"}
+          >
+            <SelectText
+              question={currentQuestion}
+              onCheckAnswer={onCheckAnswer}
+              onNextQuestion={onSkip}
+              onSelectAnswer={setSelectedAnswer}
+              hearts={hearts}
+              // Thêm các props khác nếu cần
+            />
+          </View>
+          <View>
+            {isAnswerChecked && (
+              <CheckAnswer
+                correctAnswer={selectedAnswer?.textForeign || ""}
+                correctAnswerShown={isAnswerChecked}
+                isAnswerCorrect={isCorrectAnswer}
+                onFinish={onSkip}
+                onCheckAnswer={onCheckAnswer}
+                onSkip={onSkip}
+              />
+            )}
+          </View>
+        </View>
       );
     }
+
+    case QuestionType.AUDIO_CHOICE: {
+      return (
+        <View style={{ flex: 1 }}>
+          <View style={styles.progressBarWrapper}>
+            <ProgressBar
+              correctAnswerCount={correctAnswerCount}
+              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              setQuitMessageShown={setQuitMessageShown}
+              hearts={hearts}
+              navigation={navigation}
+            />
+          </View>
+          <View
+            style={{ flex: 1 }}
+            pointerEvents={isAnswerChecked ? "none" : "auto"}
+          >
+            <AudioChoice
+              question={currentQuestion}
+              onCheckAnswer={onCheckAnswer}
+              onNextQuestion={onSkip}
+              onSelectAnswer={setSelectedAnswer}
+              hearts={hearts}
+              // Thêm các props khác nếu cần
+            />
+          </View>
+          <View>
+            {isAnswerChecked && (
+              <CheckAnswer
+                correctAnswer={selectedAnswer?.textForeign || ""}
+                correctAnswerShown={isAnswerChecked}
+                isAnswerCorrect={isCorrectAnswer}
+                onFinish={onSkip}
+                onCheckAnswer={onCheckAnswer}
+                onSkip={onSkip}
+              />
+            )}
+          </View>
+        </View>
+      );
+    }
+
+    case QuestionType.WORD_ORDER: {
+      return (
+        <View style={{ flex: 1 }}>
+          <View style={styles.progressBarWrapper}>
+            <ProgressBar
+              correctAnswerCount={correctAnswerCount}
+              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              setQuitMessageShown={setQuitMessageShown}
+              hearts={hearts}
+              navigation={navigation}
+            />
+          </View>
+          <WordOrder
+            question={currentQuestion}
+            onCheckAnswer={onCheckAnswer}
+            onNextQuestion={onSkip}
+            hearts={hearts}
+            // Thêm các props khác nếu cần
+          />
+        </View>
+      );
+    }
+
+    case QuestionType.PRONUNCIATION: {
+      return (
+        <View style={{ flex: 1 }}>
+          <View style={styles.progressBarWrapper}>
+            <ProgressBar
+              correctAnswerCount={correctAnswerCount}
+              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              setQuitMessageShown={setQuitMessageShown}
+              hearts={hearts}
+              navigation={navigation}
+            />
+          </View>
+          <Pronunciation
+            question={currentQuestion}
+            onCheckAnswer={onCheckAnswer}
+            onNextQuestion={onSkip}
+            hearts={hearts}
+            // Thêm các props khác nếu cần
+          />
+        </View>
+      );
+    }
+
+    case QuestionType.WRITING: {
+      return (
+        <View style={{ flex: 1 }}>
+          <View style={styles.progressBarWrapper}>
+            <ProgressBar
+              correctAnswerCount={correctAnswerCount}
+              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              setQuitMessageShown={setQuitMessageShown}
+              hearts={hearts}
+              navigation={navigation}
+            />
+          </View>
+          <Writing
+            question={currentQuestion}
+            onCheckAnswer={onCheckAnswer}
+            onNextQuestion={onSkip}
+            hearts={hearts}
+            // Thêm các props khác nếu cần
+          />
+        </View>
+      );
+    }
+
     default:
-      return null;
+      return <Text>Loại câu hỏi không được hỗ trợ!</Text>;
   }
 };
 
@@ -340,8 +575,13 @@ const ProgressBar = ({
         </TouchableOpacity>
       )}
       <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]}>
-          <View style={styles.progressBarInnerFill} />
+        <View style={styles.progressBarBackground}>
+          <View
+            style={[
+              styles.progressBarFill,
+              { width: `${Math.min(progress, 1) * 100}%` }, // đảm bảo max = 100%
+            ]}
+          />
         </View>
       </View>
       {hearts !== null &&
@@ -410,44 +650,22 @@ const QuitMessage = ({
 };
 
 const CheckAnswer = ({
-  isAnswerSelected,
   isAnswerCorrect,
   correctAnswerShown,
   correctAnswer,
-  onCheckAnswer,
+  onCheckAnswer, // Thêm prop này vào đây
   onFinish,
   onSkip,
 }: {
-  isAnswerSelected: boolean;
   isAnswerCorrect: boolean;
   correctAnswerShown: boolean;
   correctAnswer: string;
-  onCheckAnswer: () => void;
+  onCheckAnswer: () => void; // Khai báo type
   onFinish: () => void;
   onSkip: () => void;
 }) => {
   return (
     <>
-      <View style={styles.checkAnswerSection}>
-        <View style={styles.checkAnswerContainer}>
-          <TouchableOpacity style={styles.skipButton} onPress={onSkip}>
-            <Text style={styles.skipButtonText}>Skip</Text>
-          </TouchableOpacity>
-          {!isAnswerSelected ? (
-            <TouchableOpacity style={styles.checkButtonDisabled} disabled>
-              <Text style={styles.checkButtonText}>Check</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={onCheckAnswer}
-              style={styles.checkButtonEnabled}
-            >
-              <Text style={styles.checkButtonText}>Check</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
       <View
         style={[
           styles.correctAnswerContainer,
@@ -567,7 +785,6 @@ const ProblemSelect1Of3 = ({
         correctAnswer={answers[correctAnswer].name}
         correctAnswerShown={correctAnswerShown}
         isAnswerCorrect={isAnswerCorrect}
-        isAnswerSelected={selectedAnswer !== null}
         onCheckAnswer={onCheckAnswer}
         onFinish={onFinish}
         onSkip={onSkip}
@@ -692,7 +909,6 @@ const ProblemWriteInEnglish = ({
         correctAnswer={correctAnswer.map((i) => answerTiles[i]).join(" ")}
         correctAnswerShown={correctAnswerShown}
         isAnswerCorrect={isAnswerCorrect}
-        isAnswerSelected={selectedAnswers.length > 0}
         onCheckAnswer={onCheckAnswer}
         onFinish={onFinish}
         onSkip={onSkip}
@@ -727,7 +943,7 @@ const LessonComplete = ({
   navigation: LessonScreenNavigationProp;
 }) => {
   const route = useRoute();
-  const isPractice = "practice" in route.params;
+  // const isPractice = "practice" in route.params;
 
   const increaseXp = useBoundStore((x) => x.increaseXp);
   const addToday = useBoundStore((x) => x.addToday);
@@ -736,15 +952,15 @@ const LessonComplete = ({
     (x) => x.increaseLessonsCompleted
   );
 
-  const onContinue = () => {
-    increaseXp(correctAnswerCount);
-    addToday();
-    increaseLingots(isPractice ? 0 : 1);
-    if (!isPractice) {
-      increaseLessonsCompleted();
-    }
-    navigation.navigate("LearningPathScreen");
-  };
+  // const onContinue = () => {
+  //   increaseXp(correctAnswerCount);
+  //   addToday();
+  //   increaseLingots(isPractice ? 0 : 1);
+  //   if (!isPractice) {
+  //     increaseLessonsCompleted();
+  //   }
+  //   navigation.navigate("LearningPathScreen");
+  // };
 
   return (
     <SafeAreaView style={styles.lessonCompleteContainer}>
@@ -793,7 +1009,7 @@ const LessonComplete = ({
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.reviewLessonButton}
-            onPress={onContinue}
+            // onPress={onContinue}
           >
             <Text style={styles.reviewLessonButtonText}>Continue</Text>
           </TouchableOpacity>
@@ -1055,6 +1271,11 @@ const styles = StyleSheet.create({
   },
   progressBarWrapper: {
     width: "100%",
+    backgroundColor: "#fff",
+    height: 100, // Tăng chiều cao để chứa paddingTop 50
+    justifyContent: "center",
+    paddingHorizontal: 15,
+    paddingTop: 50,
   },
   questionSection: {
     flexGrow: 1,
@@ -1108,6 +1329,14 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     borderRadius: 9999,
     backgroundColor: "#e5e7eb",
+  },
+
+  progressBarBackground: {
+    width: "100%", // chắc chắn container fill không vượt
+    height: 10,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 5,
+    overflow: "hidden", // cắt overflow
   },
   progressBarFill: {
     height: "100%",
@@ -1218,6 +1447,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 20,
+    paddingBottom: 40,
   },
   correctAnswerShownCorrect: {
     backgroundColor: "#dcfce7",
