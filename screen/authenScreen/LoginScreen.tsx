@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
+  loginWithUsernamePassword,
+  registerWithUsernamePassword,
+} from "../../services/authService";
+import {
   View,
   Text,
   StyleSheet,
@@ -28,6 +32,9 @@ import {
   GoogleSignin,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
+import axios from "axios";
+import { baseAuthApi } from "../../services/baseAPI";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Cập nhật kiểu LoginScreenState để thêm trạng thái "FORGOT_PASSWORD"
 export type LoginScreenState =
@@ -62,7 +69,8 @@ export const useLoginScreen = () => {
     return "HIDDEN";
   })();
 
-  const [loginScreenState, setLoginScreenState] = useState(queryState);
+  const [loginScreenState, setLoginScreenState] =
+    useState<LoginScreenState>(queryState);
 
   useEffect(() => {
     setLoginScreenState(queryState);
@@ -83,11 +91,11 @@ export const LoginScreen = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const loggedIn = useBoundStore((x) => x.loggedIn);
   const logIn = useBoundStore((x) => x.logIn);
-  const setUsername = useBoundStore((x) => x.setUsername);
+  const setUsername1 = useBoundStore((x) => x.setUsername);
   const setName = useBoundStore((x) => x.setName);
 
   const [ageTooltipShown, setAgeTooltipShown] = useState(false);
-  const [age, setAge] = useState("");
+  const [email, setEmail] = useState("");
   const [name, setNameInput] = useState("");
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -96,28 +104,28 @@ export const LoginScreen = () => {
   // Hàm xử lý khi gửi token đến backend
   const sendGoogleTokenToBackend = async (idToken: string) => {
     try {
-      // Thay thế URL này bằng API endpoint của backend của bạn
-      const backendResponse = await fetch(
-        "https://your-backend-api.com/auth/google",
+      const backendResponse = await axios.post(
+        `${baseAuthApi}/api/auth/google`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ idToken }), // Gửi idToken trong body
+          idToken,
         }
       );
 
-      const data = await backendResponse.json();
+      const data = backendResponse.data;
 
-      if (backendResponse.ok) {
+      if (backendResponse.status === 200) {
         console.log("Backend response:", data);
-        logInAndSetUserProperties();
+        setUsername1(name.trim() || Math.random().toString().slice(2));
+        setName(name.trim() || Math.random().toString().slice(2));
+        logIn();
+        AsyncStorage.setItem("token", data.app);
+        console.log("User logged in successfully with Google");
+        navigation.dispatch(StackActions.replace("LearningPathScreen"));
       } else {
         console.error("Backend authentication failed:", data.error);
         alert(`Authentication failed: ${data.error}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending token to backend:", error);
       alert("Something went wrong with authentication.");
     }
@@ -131,8 +139,8 @@ export const LoginScreen = () => {
       console.log("Google user info:", userInfo);
 
       // Gửi idToken đến backend để xác thực
-      if (userInfo.idToken) {
-        sendGoogleTokenToBackend(userInfo.idToken);
+      if (userInfo.data && userInfo.data.idToken) {
+        sendGoogleTokenToBackend(userInfo.data.idToken);
       } else {
         console.error("No idToken received.");
         alert("Google login failed. Please try again.");
@@ -151,13 +159,43 @@ export const LoginScreen = () => {
     }
   };
 
-  const logInAndSetUserProperties = () => {
-    const finalName = name.trim() || Math.random().toString().slice(2);
-    const username = finalName.replace(/ +/g, "-");
-    setUsername(username);
-    setName(finalName);
-    logIn();
-    navigation.dispatch(StackActions.replace("LearningPathScreen"));
+  // Đăng nhập qua API
+  const handleLogin = async () => {
+    if (!emailOrUsername || !password) {
+      alert("Vui lòng nhập đầy đủ thông tin đăng nhập.");
+      return;
+    }
+    const res = await loginWithUsernamePassword(emailOrUsername, password);
+    if (res.success) {
+      setUsername1(emailOrUsername);
+      setName(name.trim() || emailOrUsername);
+      logIn();
+      navigation.dispatch(StackActions.replace("LearningPathScreen"));
+    } else {
+      alert(res.error || "Đăng nhập thất bại.");
+    }
+  };
+
+  // Đăng ký qua API
+  const handleRegister = async () => {
+    if (!emailOrUsername || !password) {
+      alert("Vui lòng nhập đầy đủ thông tin đăng ký.");
+      return;
+    }
+    const res = await registerWithUsernamePassword(
+      emailOrUsername,
+      password,
+      name,
+      email
+    );
+    if (res.success) {
+      setUsername1(emailOrUsername);
+      setName(name.trim() || emailOrUsername);
+      logIn();
+      navigation.dispatch(StackActions.replace("LearningPathScreen"));
+    } else {
+      alert(res.error || "Đăng ký thất bại.");
+    }
   };
 
   const handleForgotPasswordSubmit = () => {
@@ -171,7 +209,7 @@ export const LoginScreen = () => {
     setLoginScreenState("LOGIN");
     setEmailOrUsername("");
     setPassword("");
-    setAge("");
+    setEmail("");
     setNameInput("");
     setForgotPasswordEmail("");
   };
@@ -180,7 +218,7 @@ export const LoginScreen = () => {
     setLoginScreenState("SIGNUP");
     setEmailOrUsername("");
     setPassword("");
-    setAge("");
+    setEmail("");
     setNameInput("");
     setForgotPasswordEmail("");
   };
@@ -267,7 +305,7 @@ export const LoginScreen = () => {
 
                   <TouchableOpacity
                     style={styles.primaryButton}
-                    onPress={logInAndSetUserProperties}
+                    onPress={handleLogin}
                   >
                     <Text style={styles.primaryButtonText}>Log in</Text>
                   </TouchableOpacity>
@@ -281,7 +319,7 @@ export const LoginScreen = () => {
                   <View style={styles.socialButtonsContainer}>
                     <TouchableOpacity
                       style={styles.socialButton}
-                      onPress={logInAndSetUserProperties}
+                      onPress={() => alert("Tính năng Facebook chưa hỗ trợ")}
                     >
                       <FacebookLogoSvg
                         width={20}
@@ -311,49 +349,28 @@ export const LoginScreen = () => {
                     <View style={styles.inputWrapper}>
                       <TextInput
                         style={styles.textInput}
-                        placeholder="Age (optional)"
-                        keyboardType="numeric"
-                        value={age}
-                        onChangeText={setAge}
+                        placeholder="Username (required)"
+                        value={emailOrUsername}
+                        onChangeText={setEmailOrUsername}
                       />
-                      <TouchableOpacity
-                        style={styles.tooltipIconContainer}
-                        onPress={() => setAgeTooltipShown((x) => !x)}
-                      >
-                        <View style={styles.tooltipIcon}>
-                          <Text style={styles.tooltipIconText}>?</Text>
-                        </View>
-                        {ageTooltipShown && (
-                          <View style={styles.ageTooltip}>
-                            <Text style={styles.ageTooltipText}>
-                              Providing your age ensures you get the right
-                              Duolingo experience. For more details, please
-                              visit our{" "}
-                              <Text style={styles.linkText}>
-                                Privacy Policy
-                              </Text>
-                            </Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
                     </View>
                     <TextInput
                       style={styles.textInput}
-                      placeholder="Name (optional)"
+                      placeholder="Name (required)"
                       value={name}
                       onChangeText={setNameInput}
                     />
                     <TextInput
                       style={styles.textInput}
-                      placeholder="Email (optional)"
+                      placeholder="Email (required)"
                       keyboardType="email-address"
                       autoCapitalize="none"
-                      value={emailOrUsername}
-                      onChangeText={setEmailOrUsername}
+                      value={email}
+                      onChangeText={setEmail}
                     />
                     <TextInput
                       style={styles.textInput}
-                      placeholder="Password (optional)"
+                      placeholder="Password (required)"
                       secureTextEntry={true}
                       value={password}
                       onChangeText={setPassword}
@@ -362,7 +379,7 @@ export const LoginScreen = () => {
 
                   <TouchableOpacity
                     style={styles.primaryButton}
-                    onPress={logInAndSetUserProperties}
+                    onPress={handleRegister}
                   >
                     <Text style={styles.primaryButtonText}>Create account</Text>
                   </TouchableOpacity>
@@ -376,7 +393,7 @@ export const LoginScreen = () => {
                   <View style={styles.socialButtonsContainer}>
                     <TouchableOpacity
                       style={styles.socialButton}
-                      onPress={logInAndSetUserProperties}
+                      onPress={() => alert("Tính năng Facebook chưa hỗ trợ")}
                     >
                       <FacebookLogoSvg
                         width={20}
