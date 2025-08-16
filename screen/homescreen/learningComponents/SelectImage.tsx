@@ -102,7 +102,7 @@ const SelectImage: React.FC<SelectImageProps> = ({
   return (
     <View style={styles.container}>
       <Text style={styles.questionText}>
-        {question.promptTextTemplate}
+        {question.promptTextTemplate + "\n"}
         <Text style={styles.highlightText}>{question.targetWordNative}</Text>
       </Text>
 
@@ -121,10 +121,6 @@ const SelectImage: React.FC<SelectImageProps> = ({
           disabled={!selectedChoice}
         >
           <Text style={styles.buttonText}>Kiểm tra</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.skipButton} onPress={onNextQuestion}>
-          <Text style={styles.buttonText}>Bỏ qua</Text>
         </TouchableOpacity>
       </View>
     </View>

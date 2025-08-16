@@ -5,7 +5,7 @@ import axios from "axios";
 const getQuestion = async (lessonCode: string) => {
   // const token = await AsyncStorage.getItem("token");
   const token =
-    "eyJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE3NTUyMjgyMDcsImV4cCI6MTc1NTMxNDYwNywidXNlcklkIjoiNmU3NjkwNGMtZDI3NS00MWExLWEyNzUtZDUwMDM1ZGZhNTBkIiwicm9sZSI6IlVTRVIifQ.wnOm3ZRcGSESJXsQMr_m8khgMV6r6lGvq6vOrf8dXN40E2I7S7JEJgraPcwT12txXxRI8NZdy6-wsr91TkI22Q";
+    "eyJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE3NTUzMTQ4MTcsImV4cCI6MTc1NTQwMTIxNywidXNlcklkIjoiNmU3NjkwNGMtZDI3NS00MWExLWEyNzUtZDUwMDM1ZGZhNTBkIiwicm9sZSI6IlVTRVIifQ.qinJZlhL5wBkgjPXItRX6uO3reXdOKSuPs930uRhAi14zqZB-RnXjpytgQN9ObWiS-AQ6HRucQDbZkWwuy_NfA";
   try {
     const response = await axios.get(
       `${baseApi}/api/learning/user/questions/lesson/${lessonCode}`,

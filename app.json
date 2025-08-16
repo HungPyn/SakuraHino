@@ -23,12 +23,21 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.Sakuranihongo"
+      "package": "com.anonymous.Sakuranihongo",
+      "permissions": ["RECORD_AUDIO"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-web-browser"],
+    "plugins": [
+      "expo-web-browser",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Cho phép ứng dụng truy cập microphone để ghi âm giọng nói."
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "d432b258-639c-4d08-8d64-a115de635e04"

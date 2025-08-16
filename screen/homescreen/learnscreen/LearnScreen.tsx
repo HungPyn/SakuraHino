@@ -134,6 +134,7 @@ export const playCorrectSound = async (filePath: any) => {
     console.log("Lỗi phát âm thanh:", error);
   }
 };
+type SelectStringAnswer = (answer: string[]) => void;
 
 // =========================================================================
 //                                MAIN COMPONENT
@@ -152,13 +153,19 @@ const Lesson = () => {
   const [isAnswerChecked, setIsAnswerChecked] = useState(false); // Thêm state này
   const [isCorrectAnswer, setIsCorrectAnswer] = useState(false); // Thêm state này
   const [disableChild, setDisableChild] = useState(false);
-
+  const [isRetryingIncorrect, setIsRetryingIncorrect] = useState(false);
   const startTime = useRef(Date.now());
   const endTime = useRef(startTime.current + 1000 * 60 * 3 + 1000 * 33);
   const [questionResults, setQuestionResults] = useState<QuestionResult[]>([]);
   const [reviewLessonShown, setReviewLessonShown] = useState(false);
   const [isStartingLesson, setIsStartingLesson] = useState(true);
+  const [selectedWords, setSelectedWords] = useState<string[]>([]);
+  const [score, setScore] = useState(0);
+  const [originalQuestionsLength, setOriginalQuestionsLength] =
+    useState<number>(0); // chỉ 1 số thôi
 
+  //luu cau sai
+  const [questionIncorrect, setQuestionIncorrect] = useState<Question[]>([]);
   const totalCorrectAnswersNeeded = 2;
   const { lessonCode } = route.params;
 
@@ -167,9 +174,36 @@ const Lesson = () => {
     setCorrectAnswerShown(true);
     setIsAnswerChecked(false);
     setSelectedAnswers([]);
-    endTime.current = Date.now();
-    if (currentQuestionIndex < questions.length - 1) {
+
+    if (currentQuestionIndex === questions.length - 1) {
+      if (!isRetryingIncorrect && questionIncorrect.length > 0) {
+        setQuestions([...questions, ...questionIncorrect]);
+        setCurrentQuestionIndex(originalQuestionsLength); // bắt đầu từ câu đầu của các câu sai
+        setIsRetryingIncorrect(true);
+        console.log("lam lai cau sai");
+      } else {
+        endTime.current = Date.now();
+        // kết thúc bài học, show tổng kết
+        console.log("Kết thúc bài học hiển thị màn tổng kết:");
+        console.log("Điểm số là:", score);
+        console.log(
+          "Thời gian làm bài là:",
+          (endTime.current - startTime.current) / 1000,
+          "giây"
+        );
+        console.log("tổng số câu là:", originalQuestionsLength);
+        console.log("số câu đúng là:", correctAnswerCount);
+        console.log("số câu sai là:", incorrectAnswerCount);
+      }
+    } else {
+      // next câu tiếp theo
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+      if (
+        !isRetryingIncorrect &&
+        currentQuestion.questionType === QuestionType.PRONUNCIATION
+      ) {
+        setIncorrectAnswerCount((prevCount) => prevCount + 1);
+      }
     }
   };
 
@@ -182,7 +216,9 @@ const Lesson = () => {
     try {
       const questions = await questionService.getQuestion(lessonCode);
       setQuestions(questions);
-      console.log("Câu hỏi đã lấy:", JSON.stringify(questions, null, 2));
+      setOriginalQuestionsLength(questions.length); // Lưu lại độ dài ban đầu của mảng câu hỏi
+      console.log("Độ dài ban đầu của mảng câu hỏi:", questions.length);
+      // console.log("Câu hỏi đã lấy:", JSON.stringify(questions, null, 2));
     } catch (error) {
       console.error("Lỗi khi gọi API lấy câu hỏi:", error);
     }
@@ -195,7 +231,7 @@ const Lesson = () => {
   // Debug useEffect
   useEffect(() => {
     if (questions.length > 0) {
-      console.log("Questions:", JSON.stringify(questions, null, 2));
+      // console.log("Questions:", JSON.stringify(questions, null, 2));
       console.log("Current Question Index:", currentQuestionIndex);
       console.log("Current Question:", currentQuestion);
       console.log("Current Question Type:", currentQuestion?.questionType);
@@ -215,9 +251,31 @@ const Lesson = () => {
   const currentQuestion = questions[currentQuestionIndex];
   if (!currentQuestion) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 20,
+        }}
+      >
         <ActivityIndicator size="large" />
-        <Text>Đang tải bài học...</Text>
+        <Text style={{ marginTop: 10 }}>Đang tải bài học...</Text>
+
+        {/* Nút Quay lại */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate("LearningPathScreen")}
+          style={{
+            marginTop: 20,
+            padding: 15,
+            backgroundColor: "#ccc",
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{ color: "#000", fontWeight: "bold", fontSize: 16 }}>
+            Quay lại
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -235,6 +293,7 @@ const Lesson = () => {
   // const isAnswerCorrect =
   //   selectedAnswer && correctAnswer && selectedAnswer.id === correctAnswer.id;
 
+  //hàm
   // Hàm kiểm tra đáp án đã được cập nhật
   const onCheckAnswer = () => {
     if (
@@ -248,17 +307,195 @@ const Lesson = () => {
         setIsCorrectAnswer(true);
         setIsAnswerChecked(true);
         setSelectedAnswer(null);
-        setCorrectAnswerCount((x) => x + 1);
+        if (isRetryingIncorrect) {
+          setScore((prev) => prev + 5);
+          setCorrectAnswerCount((x) => x + 1);
+          setIncorrectAnswerCount((x) => x - 1);
+        } else {
+          setScore((prev) => prev + 10);
+          setCorrectAnswerCount((x) => x + 1);
+        }
       } else {
         setIsCorrectAnswer(false);
         setIsAnswerChecked(true);
         setSelectedAnswer(null);
-        setIncorrectAnswerCount((x) => x + 1);
+        setQuestionIncorrect((prev) => [...prev, currentQuestion]);
+        if (!isRetryingIncorrect) {
+          setIncorrectAnswerCount((x) => x + 1);
+        }
 
         // setCorrectAnswerShown(false);
       }
-      setSelectedAnswers([]);
-      setSelectedAnswers([]);
+    }
+    // check cho câu hỏi sắp xếp
+    if (currentQuestion.questionType === QuestionType.WORD_ORDER) {
+      console.log("Word để so sánh là:", currentQuestion.targetWordNative);
+      console.log("Selected Words là:", selectedWords);
+      const selectedSequence: string = selectedWords
+        .join("")
+        .replace(/\s+/g, "");
+
+      const targetSequence: string = currentQuestion.targetWordNative.replace(
+        /\s+/g,
+        ""
+      );
+
+      // So sánh thứ tự các chữ (bỏ khoảng trắng)
+      const isCorrect: boolean = targetSequence === selectedSequence;
+
+      // Log ra để kiểm tra
+      console.log("Target:", targetSequence); // Chuỗi chuẩn từ currentQuestion.targetWordNative
+      console.log("Selected:", selectedSequence); // Chuỗi nối từ selectedWords
+      console.log("Kết quả:", isCorrect ? "Đúng ✅" : "Sai ❌");
+
+      if (isCorrect) {
+        playCorrectSound(require("../sound/soundCorect.mp3"));
+        setIsCorrectAnswer(true);
+        setIsAnswerChecked(true);
+        setSelectedWords([]);
+        if (isRetryingIncorrect) {
+          setScore((prev) => prev + 5);
+          setCorrectAnswerCount((x) => x + 1);
+          setIncorrectAnswerCount((x) => x - 1);
+        } else {
+          setScore((prev) => prev + 10);
+          setCorrectAnswerCount((x) => x + 1);
+        }
+      } else {
+        setIsCorrectAnswer(false);
+        setIsAnswerChecked(true);
+        setSelectedAnswer(null);
+        setQuestionIncorrect((prev) => [...prev, currentQuestion]);
+        if (!isRetryingIncorrect) {
+          setIncorrectAnswerCount((x) => x + 1);
+        }
+      }
+    }
+    if (currentQuestion.questionType === QuestionType.WRITING) {
+      const target = currentQuestion.targetWordNative;
+      const input = selectedWords[0] || ""; // luôn có giá trị mới nhất
+
+      // So sánh chữ giống ≥ 80%
+      const isCorrect = (() => {
+        if (!target || !input) return false;
+
+        const longer = target.length > input.length ? target : input;
+        const shorter = target.length > input.length ? input : target;
+        const longerLength = longer.length;
+
+        const matrix: number[][] = Array.from(
+          { length: shorter.length + 1 },
+          (_, i) => Array(longer.length + 1).fill(0)
+        );
+        for (let i = 0; i <= shorter.length; i++) matrix[i][0] = i;
+        for (let j = 0; j <= longer.length; j++) matrix[0][j] = j;
+
+        for (let i = 1; i <= shorter.length; i++) {
+          for (let j = 1; j <= longer.length; j++) {
+            const cost = longer[j - 1] === shorter[i - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+              matrix[i - 1][j] + 1,
+              matrix[i][j - 1] + 1,
+              matrix[i - 1][j - 1] + cost
+            );
+          }
+        }
+
+        const distance = matrix[shorter.length][longer.length];
+        const similarity = (longerLength - distance) / longerLength;
+        return similarity >= 0.8;
+      })();
+
+      console.log("chữ đáp án để so sánh:", target);
+      console.log("chữ gửi từ màn con lên:", input);
+      console.log("Kết quả so sánh:", isCorrect ? "Đúng ✅" : "Sai ❌");
+
+      if (isCorrect) {
+        playCorrectSound(require("../sound/soundCorect.mp3"));
+        setIsCorrectAnswer(true);
+        setIsAnswerChecked(true);
+        if (isRetryingIncorrect) {
+          setScore((prev) => prev + 5);
+          setCorrectAnswerCount((x) => x + 1);
+          setIncorrectAnswerCount((x) => x - 1);
+        } else {
+          setScore((prev) => prev + 10);
+          setCorrectAnswerCount((x) => x + 1);
+        }
+      } else {
+        setIsCorrectAnswer(false);
+        setIsAnswerChecked(true);
+        setSelectedAnswer(null);
+        setQuestionIncorrect((prev) => [...prev, currentQuestion]);
+        if (!isRetryingIncorrect) {
+          setIncorrectAnswerCount((x) => x + 1);
+        }
+      }
+    }
+    //check câu phát âm
+    if (currentQuestion.questionType === QuestionType.PRONUNCIATION) {
+      console.log("Từ gửi lên từ con:", selectedWords);
+      console.log("Từ để so sánh:", currentQuestion.targetWordNative);
+
+      const target = currentQuestion.targetWordNative;
+      const input = selectedWords[0] || "";
+
+      // So sánh chữ giống ≥ 70%
+      const isCorrect = (() => {
+        if (!target || !input) return false;
+
+        const longer = target.length > input.length ? target : input;
+        const shorter = target.length > input.length ? input : target;
+        const longerLength = longer.length;
+
+        const matrix: number[][] = Array.from(
+          { length: shorter.length + 1 },
+          (_, i) => Array(longer.length + 1).fill(0)
+        );
+        for (let i = 0; i <= shorter.length; i++) matrix[i][0] = i;
+        for (let j = 0; j <= longer.length; j++) matrix[0][j] = j;
+
+        for (let i = 1; i <= shorter.length; i++) {
+          for (let j = 1; j <= longer.length; j++) {
+            const cost = longer[j - 1] === shorter[i - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+              matrix[i - 1][j] + 1,
+              matrix[i][j - 1] + 1,
+              matrix[i - 1][j - 1] + cost
+            );
+          }
+        }
+
+        const distance = matrix[shorter.length][longer.length];
+        const similarity = (longerLength - distance) / longerLength;
+
+        return similarity >= 0.7; // <-- chỉ khác ở đây
+      })();
+
+      console.log("Chữ đáp án để so sánh:", target);
+      console.log("Chữ gửi từ màn con lên:", input);
+      console.log("Kết quả so sánh:", isCorrect ? "Đúng ✅" : "Sai ❌");
+      if (isCorrect) {
+        playCorrectSound(require("../sound/soundCorect.mp3"));
+        setIsCorrectAnswer(true);
+        setIsAnswerChecked(true);
+        if (isRetryingIncorrect) {
+          setScore((prev) => prev + 5);
+          setCorrectAnswerCount((x) => x + 1);
+          setIncorrectAnswerCount((x) => x - 1);
+        } else {
+          setScore((prev) => prev + 10);
+          setCorrectAnswerCount((x) => x + 1);
+        }
+      } else {
+        setIsCorrectAnswer(false);
+        setIsAnswerChecked(true);
+        setSelectedAnswer(null);
+        setQuestionIncorrect((prev) => [...prev, currentQuestion]);
+        if (!isRetryingIncorrect) {
+          setIncorrectAnswerCount((x) => x + 1);
+        }
+      }
     }
 
     // if (isAnswerCorrect) {
@@ -348,10 +585,12 @@ const Lesson = () => {
           <View style={styles.progressBarWrapper}>
             <ProgressBar
               correctAnswerCount={correctAnswerCount}
-              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              originalQuestionsLength={originalQuestionsLength}
+              questionIncorrectLength={questionIncorrect.length}
               setQuitMessageShown={setQuitMessageShown}
               hearts={hearts}
               navigation={navigation}
+              isRetryingIncorrect={isRetryingIncorrect} // Thêm dòng này
             />
           </View>
           <View
@@ -389,10 +628,12 @@ const Lesson = () => {
           <View style={styles.progressBarWrapper}>
             <ProgressBar
               correctAnswerCount={correctAnswerCount}
-              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              originalQuestionsLength={originalQuestionsLength}
+              questionIncorrectLength={questionIncorrect.length}
               setQuitMessageShown={setQuitMessageShown}
               hearts={hearts}
               navigation={navigation}
+              isRetryingIncorrect={isRetryingIncorrect} // Thêm dòng này
             />
           </View>
           <View
@@ -430,10 +671,12 @@ const Lesson = () => {
           <View style={styles.progressBarWrapper}>
             <ProgressBar
               correctAnswerCount={correctAnswerCount}
-              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              originalQuestionsLength={originalQuestionsLength}
+              questionIncorrectLength={questionIncorrect.length}
               setQuitMessageShown={setQuitMessageShown}
               hearts={hearts}
               navigation={navigation}
+              isRetryingIncorrect={isRetryingIncorrect} // Thêm dòng này
             />
           </View>
           <View
@@ -471,19 +714,39 @@ const Lesson = () => {
           <View style={styles.progressBarWrapper}>
             <ProgressBar
               correctAnswerCount={correctAnswerCount}
-              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              originalQuestionsLength={originalQuestionsLength}
+              questionIncorrectLength={questionIncorrect.length}
               setQuitMessageShown={setQuitMessageShown}
               hearts={hearts}
               navigation={navigation}
+              isRetryingIncorrect={isRetryingIncorrect} // Thêm dòng này
             />
           </View>
-          <WordOrder
-            question={currentQuestion}
-            onCheckAnswer={onCheckAnswer}
-            onNextQuestion={onSkip}
-            hearts={hearts}
-            // Thêm các props khác nếu cần
-          />
+          <View
+            style={{ flex: 1 }}
+            pointerEvents={isAnswerChecked ? "none" : "auto"}
+          >
+            <WordOrder
+              question={currentQuestion}
+              onCheckAnswer={onCheckAnswer}
+              onNextQuestion={onSkip}
+              onSelectedWords={setSelectedWords}
+              hearts={hearts}
+              // Thêm các props khác nếu cần
+            />
+          </View>
+          <View>
+            {isAnswerChecked && (
+              <CheckAnswer
+                correctAnswer={selectedAnswer?.textForeign || ""}
+                correctAnswerShown={isAnswerChecked}
+                isAnswerCorrect={isCorrectAnswer}
+                onFinish={onSkip}
+                onCheckAnswer={onCheckAnswer}
+                onSkip={onSkip}
+              />
+            )}
+          </View>
         </View>
       );
     }
@@ -494,19 +757,39 @@ const Lesson = () => {
           <View style={styles.progressBarWrapper}>
             <ProgressBar
               correctAnswerCount={correctAnswerCount}
-              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              originalQuestionsLength={originalQuestionsLength}
+              questionIncorrectLength={questionIncorrect.length}
               setQuitMessageShown={setQuitMessageShown}
               hearts={hearts}
               navigation={navigation}
+              isRetryingIncorrect={isRetryingIncorrect} // Thêm dòng này
             />
           </View>
-          <Pronunciation
-            question={currentQuestion}
-            onCheckAnswer={onCheckAnswer}
-            onNextQuestion={onSkip}
-            hearts={hearts}
-            // Thêm các props khác nếu cần
-          />
+          <View
+            style={{ flex: 1 }}
+            pointerEvents={isAnswerChecked ? "none" : "auto"}
+          >
+            <Pronunciation
+              question={currentQuestion}
+              onCheckAnswer={onCheckAnswer}
+              onNextQuestion={onSkip}
+              onSelectedWords={setSelectedWords}
+              hearts={hearts}
+              // Thêm các props khác nếu cần
+            />
+          </View>
+          <View>
+            {isAnswerChecked && (
+              <CheckAnswer
+                correctAnswer={selectedAnswer?.textForeign || ""}
+                correctAnswerShown={isAnswerChecked}
+                isAnswerCorrect={isCorrectAnswer}
+                onFinish={onSkip}
+                onCheckAnswer={onCheckAnswer}
+                onSkip={onSkip}
+              />
+            )}
+          </View>
         </View>
       );
     }
@@ -517,19 +800,39 @@ const Lesson = () => {
           <View style={styles.progressBarWrapper}>
             <ProgressBar
               correctAnswerCount={correctAnswerCount}
-              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
+              originalQuestionsLength={originalQuestionsLength}
+              questionIncorrectLength={questionIncorrect.length}
               setQuitMessageShown={setQuitMessageShown}
               hearts={hearts}
               navigation={navigation}
+              isRetryingIncorrect={isRetryingIncorrect} // Thêm dòng này
             />
           </View>
-          <Writing
-            question={currentQuestion}
-            onCheckAnswer={onCheckAnswer}
-            onNextQuestion={onSkip}
-            hearts={hearts}
-            // Thêm các props khác nếu cần
-          />
+          <View
+            style={{ flex: 1 }}
+            pointerEvents={isAnswerChecked ? "none" : "auto"}
+          >
+            <Writing
+              question={currentQuestion}
+              onCheckAnswer={onCheckAnswer}
+              onNextQuestion={onSkip}
+              onSelectedWords={setSelectedWords}
+              hearts={hearts}
+              // Thêm các props khác nếu cần
+            />
+          </View>
+          <View>
+            {isAnswerChecked && (
+              <CheckAnswer
+                correctAnswer={selectedAnswer?.textForeign || ""}
+                correctAnswerShown={isAnswerChecked}
+                isAnswerCorrect={isCorrectAnswer}
+                onFinish={onSkip}
+                onCheckAnswer={onCheckAnswer}
+                onSkip={onSkip}
+              />
+            )}
+          </View>
         </View>
       );
     }
@@ -545,41 +848,36 @@ const Lesson = () => {
 
 const ProgressBar = ({
   correctAnswerCount,
-  totalCorrectAnswersNeeded,
+  originalQuestionsLength,
   setQuitMessageShown,
   hearts,
   navigation,
 }: {
   correctAnswerCount: number;
-  totalCorrectAnswersNeeded: number;
+  originalQuestionsLength: number;
+  questionIncorrectLength: number; // Prop này không được sử dụng nữa nhưng có thể giữ lại để không gây lỗi
   setQuitMessageShown: (isShown: boolean) => void;
   hearts: null | number;
   navigation: LessonScreenNavigationProp;
+  isRetryingIncorrect: boolean; // Prop này cũng không cần thiết cho logic mới
 }) => {
-  const progress = correctAnswerCount / totalCorrectAnswersNeeded;
+  // Tính toán tiến độ dựa trên số câu trả lời đúng và tổng số câu ban đầu
+  const progress = correctAnswerCount / originalQuestionsLength;
+
   return (
     <View style={styles.progressBarHeader}>
-      {correctAnswerCount === 0 ? (
-        <TouchableOpacity
-          onPress={() => navigation.navigate("LearningPathScreen")}
-          style={styles.closeButton}
-        >
-          <CloseSvg />
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={() => setQuitMessageShown(true)}
-        >
-          <CloseSvg />
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity
+        onPress={() => navigation.navigate("LearningPathScreen")}
+        style={styles.closeButton}
+      >
+        <CloseSvg />
+      </TouchableOpacity>
       <View style={styles.progressBarContainer}>
         <View style={styles.progressBarBackground}>
           <View
             style={[
               styles.progressBarFill,
-              { width: `${Math.min(progress, 1) * 100}%` }, // đảm bảo max = 100%
+              { width: `${Math.min(progress, 1) * 100}%` },
             ]}
           />
         </View>
@@ -594,7 +892,6 @@ const ProgressBar = ({
     </View>
   );
 };
-
 const QuitMessage = ({
   quitMessageShown,
   setQuitMessageShown,
@@ -711,215 +1008,6 @@ const CheckAnswer = ({
         </View>
       </View>
     </>
-  );
-};
-
-const ProblemSelect1Of3 = ({
-  problem,
-  correctAnswerCount,
-  totalCorrectAnswersNeeded,
-  selectedAnswer,
-  setSelectedAnswer,
-  quitMessageShown,
-  correctAnswerShown,
-  setQuitMessageShown,
-  isAnswerCorrect,
-  onCheckAnswer,
-  onFinish,
-  onSkip,
-  hearts,
-  navigation,
-}: {
-  problem: typeof lessonProblem1;
-  correctAnswerCount: number;
-  totalCorrectAnswersNeeded: number;
-  selectedAnswer: number | null;
-  setSelectedAnswer: React.Dispatch<React.SetStateAction<number | null>>;
-  correctAnswerShown: boolean;
-  quitMessageShown: boolean;
-  setQuitMessageShown: React.Dispatch<React.SetStateAction<boolean>>;
-  isAnswerCorrect: boolean;
-  onCheckAnswer: () => void;
-  onFinish: () => void;
-  onSkip: () => void;
-  hearts: number | null;
-  navigation: LessonScreenNavigationProp;
-}) => {
-  const { question, answers, correctAnswer } = problem;
-
-  return (
-    <SafeAreaView style={styles.problemContainer}>
-      <ScrollView contentContainerStyle={styles.problemScrollView}>
-        <View style={styles.problemContent}>
-          <View style={styles.progressBarWrapper}>
-            <ProgressBar
-              correctAnswerCount={correctAnswerCount}
-              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
-              setQuitMessageShown={setQuitMessageShown}
-              hearts={hearts}
-              navigation={navigation}
-            />
-          </View>
-          <View style={styles.questionSection}>
-            <Text style={styles.questionText}>{question}</Text>
-            <View style={styles.answerGrid}>
-              {answers.map((answer, i) => (
-                <TouchableOpacity
-                  key={i}
-                  style={[
-                    styles.answerTile,
-                    i === selectedAnswer && styles.answerTileSelected,
-                  ]}
-                  onPress={() => setSelectedAnswer(i)}
-                >
-                  {answer.icon}
-                  <Text style={styles.answerText}>{answer.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-
-      <CheckAnswer
-        correctAnswer={answers[correctAnswer].name}
-        correctAnswerShown={correctAnswerShown}
-        isAnswerCorrect={isAnswerCorrect}
-        onCheckAnswer={onCheckAnswer}
-        onFinish={onFinish}
-        onSkip={onSkip}
-      />
-
-      <QuitMessage
-        quitMessageShown={quitMessageShown}
-        setQuitMessageShown={setQuitMessageShown}
-        navigation={navigation}
-      />
-    </SafeAreaView>
-  );
-};
-
-const ProblemWriteInEnglish = ({
-  problem,
-  correctAnswerCount,
-  totalCorrectAnswersNeeded,
-  selectedAnswers,
-  setSelectedAnswers,
-  quitMessageShown,
-  correctAnswerShown,
-  setQuitMessageShown,
-  isAnswerCorrect,
-  onCheckAnswer,
-  onFinish,
-  onSkip,
-  hearts,
-  navigation,
-}: {
-  problem: typeof lessonProblem2;
-  correctAnswerCount: number;
-  totalCorrectAnswersNeeded: number;
-  selectedAnswers: number[];
-  setSelectedAnswers: React.Dispatch<React.SetStateAction<number[]>>;
-  correctAnswerShown: boolean;
-  quitMessageShown: boolean;
-  setQuitMessageShown: React.Dispatch<React.SetStateAction<boolean>>;
-  isAnswerCorrect: boolean;
-  onCheckAnswer: () => void;
-  onFinish: () => void;
-  onSkip: () => void;
-  hearts: number | null;
-  navigation: LessonScreenNavigationProp;
-}) => {
-  const { question, correctAnswer, answerTiles } = problem;
-
-  return (
-    <SafeAreaView style={styles.problemContainer}>
-      <ScrollView contentContainerStyle={styles.problemScrollView}>
-        <View style={styles.problemContent}>
-          <View style={styles.progressBarWrapper}>
-            <ProgressBar
-              correctAnswerCount={correctAnswerCount}
-              totalCorrectAnswersNeeded={totalCorrectAnswersNeeded}
-              setQuitMessageShown={setQuitMessageShown}
-              hearts={hearts}
-              navigation={navigation}
-            />
-          </View>
-          <View style={styles.questionSection}>
-            <Text style={styles.writeQuestionText}>Write this in English</Text>
-
-            <View style={styles.writeInputContainer}>
-              <View style={styles.imageBubbleContainer}>
-                <View style={styles.speechBubble}>
-                  <Text>{question}</Text>
-                  <View style={styles.speechBubbleArrow} />
-                </View>
-              </View>
-
-              <View style={styles.selectedAnswersContainer}>
-                {selectedAnswers.map((i) => (
-                  <TouchableOpacity
-                    key={i}
-                    style={styles.selectedAnswerTile}
-                    onPress={() => {
-                      setSelectedAnswers((currentAnswers) =>
-                        currentAnswers.filter((x) => x !== i)
-                      );
-                    }}
-                  >
-                    <Text>{answerTiles[i]}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-            <View style={styles.answerTilesContainer}>
-              {answerTiles.map((answerTile, i) => (
-                <TouchableOpacity
-                  key={i}
-                  style={[
-                    styles.answerTileButton,
-                    selectedAnswers.includes(i) &&
-                      styles.answerTileButtonDisabled,
-                  ]}
-                  disabled={selectedAnswers.includes(i)}
-                  onPress={() =>
-                    setSelectedAnswers((currentAnswers) => [
-                      ...currentAnswers,
-                      i,
-                    ])
-                  }
-                >
-                  <Text
-                    style={[
-                      styles.answerTileText,
-                      selectedAnswers.includes(i) &&
-                        styles.answerTileTextDisabled,
-                    ]}
-                  >
-                    {answerTile}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-
-      <CheckAnswer
-        correctAnswer={correctAnswer.map((i) => answerTiles[i]).join(" ")}
-        correctAnswerShown={correctAnswerShown}
-        isAnswerCorrect={isAnswerCorrect}
-        onCheckAnswer={onCheckAnswer}
-        onFinish={onFinish}
-        onSkip={onSkip}
-      />
-
-      <QuitMessage
-        quitMessageShown={quitMessageShown}
-        setQuitMessageShown={setQuitMessageShown}
-        navigation={navigation}
-      />
-    </SafeAreaView>
   );
 };
 

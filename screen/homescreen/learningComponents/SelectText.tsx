@@ -133,7 +133,7 @@ const SelectText: React.FC<SelectTextProps> = ({
   return (
     <View style={styles.container}>
       <Text style={styles.questionText}>
-        {question.promptTextTemplate}{" "}
+        {question.promptTextTemplate + "\n"}
         <Text style={styles.highlightText}>{question.targetWordNative}</Text>
       </Text>
 
@@ -151,10 +151,6 @@ const SelectText: React.FC<SelectTextProps> = ({
         disabled={!selectedChoice}
       >
         <Text style={styles.buttonText}>Kiểm tra</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.skipButton} onPress={onNextQuestion}>
-        <Text style={styles.buttonText}>Bỏ qua</Text>
       </TouchableOpacity>
     </View>
   );

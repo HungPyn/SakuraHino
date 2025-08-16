@@ -1,7 +1,16 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from "react-native";
 
-// 1. Định nghĩa các kiểu dữ liệu
 export enum QuestionType {
   MULTIPLE_CHOICE_VOCAB_IMAGE = "MULTIPLE_CHOICE_VOCAB_IMAGE",
   MULTIPLE_CHOICE_TEXT_ONLY = "MULTIPLE_CHOICE_TEXT_ONLY",
@@ -35,45 +44,154 @@ export interface Question {
   choices: Choice[];
 }
 
-// 2. Định nghĩa Props cho component Writing
-//    Bạn có thể thêm các props khác tùy theo nhu cầu
 interface WritingProps {
   question: Question;
   onCheckAnswer: () => void;
   onNextQuestion: () => void;
-  hearts: number | null;
+  onSelectedWords: (words: string[]) => void; // giống WordOrder
+  hearts?: number | null;
 }
 
-// 3. Cập nhật component để nhận props và sử dụng chúng
-const Writing: React.FC<WritingProps> = ({ question, onNextQuestion }) => {
+const Writing: React.FC<WritingProps> = ({
+  question,
+  onCheckAnswer,
+  onNextQuestion,
+  onSelectedWords,
+}) => {
+  const [userInput, setUserInput] = useState("");
+
+  // Gửi chữ người dùng giống WordOrder khi bấm Hoàn tất
+  const handleSubmit = () => {
+    const trimmed = userInput.trim();
+    if (!trimmed) {
+      Alert.alert("Thông báo", "Vui lòng nhập câu trả lời!");
+      return;
+    }
+
+    // gửi chữ đã trim lên cha
+    onSelectedWords([trimmed]);
+    console.log("Đã gửi chữ:", trimmed);
+
+    // delay 1 giây trước khi gọi kiểm tra
+
+    onCheckAnswer();
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Màn hình: Luyện Viết</Text>
-      {/* Bây giờ bạn có thể hiển thị dữ liệu từ prop `question` */}
-      <Text style={styles.questionText}>{question.promptTextTemplate}</Text>
-      <TouchableOpacity onPress={onNextQuestion}>
-        <Text>Bỏ qua</Text>
-      </TouchableOpacity>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, width: "100%", alignItems: "center" }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <Text style={styles.prompt}>{question.promptTextTemplate}</Text>
+        <Text style={styles.bigTargetWord}>{question.targetWordNative}</Text>
+
+        <TextInput
+          style={styles.textInput}
+          value={userInput}
+          onChangeText={(text) => {
+            setUserInput(text); // cập nhật state local
+            onSelectedWords([text.trim()]); // cập nhật luôn state cha
+          }}
+          multiline
+          placeholder="Nhập câu trả lời..."
+        />
+
+        {userInput ? (
+          <Text style={styles.preview}>Bạn đã nhập: {userInput}</Text>
+        ) : null}
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.buttonText}>Kiểm tra</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    backgroundColor: "#f2f7fa",
     alignItems: "center",
-    backgroundColor: "#e6f7ff",
+    paddingTop: 60,
   },
-  text: {
+  bigTargetWord: {
+    fontSize: 60,
+    fontWeight: "800",
+    color: "#1EBE5B",
+    textAlign: "center",
+    marginBottom: 20,
+    letterSpacing: 2,
+  },
+  prompt: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 20,
     color: "#333",
   },
-  questionText: {
-    marginTop: 20,
+  highlight: { color: "#1ebf5b" },
+  textInput: {
+    width: "85%",
+    minHeight: 200,
+    borderWidth: 1,
+    borderColor: "#1EBE5B",
+    borderRadius: 15,
+    padding: 15,
     fontSize: 18,
+    backgroundColor: "#fff",
+    textAlignVertical: "top",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  preview: {
+    marginTop: 15,
+    fontSize: 16,
     fontStyle: "italic",
+    color: "#555",
+    textAlign: "center",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    marginTop: 40,
+    justifyContent: "space-around",
+    width: "85%",
+  },
+  skipButton: {
+    flex: 1,
+    backgroundColor: "#ff7043",
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginRight: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  submitButton: {
+    flex: 1,
+    backgroundColor: "#1EBE5B",
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginLeft: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 18,
+    textAlign: "center",
   },
 });
 

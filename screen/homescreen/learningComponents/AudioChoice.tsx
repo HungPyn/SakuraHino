@@ -181,10 +181,6 @@ const AudioChoice: React.FC<AudioChoiceProps> = ({
       >
         <Text style={styles.buttonText}>Kiểm tra</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity style={styles.skipButton} onPress={onNextQuestion}>
-        <Text style={styles.buttonText}>Bỏ qua</Text>
-      </TouchableOpacity>
     </View>
   );
 };
