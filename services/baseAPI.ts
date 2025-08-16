@@ -1,19 +1,19 @@
 import { Platform } from "react-native";
 // Địa chỉ IP của máy tính bạn (đã lấy được từ ipconfig)
 const LOCAL_IP = "192.168.100.94";
-const PORT = "8080";
-
-let baseApi = "";
-
-if (Platform.OS === "android") {
-  // Trình giả lập Android
-  baseApi = `http://10.0.2.2:${PORT}`;
-} else if (Platform.OS === "ios") {
-  // Trình giả lập iOS
-  baseApi = `http://localhost:${PORT}`;
-} else {
-  // Các trường hợp khác (web, điện thoại thật)
-  baseApi = `http://${LOCAL_IP}:${PORT}`;
+const AUTH_PORT = "8080";
+const USER_PORT = "8080";
+const TOPIC_PORT = "8080";
+function getBaseApi(port: string) {
+  if (Platform.OS === "android") {
+    return `http://10.0.2.2:${port}`;
+  } else if (Platform.OS === "ios") {
+    return `http://localhost:${port}`;
+  } else {
+    return `http://${LOCAL_IP}:${port}`;
+  }
 }
 
-export default baseApi;
+export const baseAuthApi = getBaseApi(AUTH_PORT);
+export const baseTopicApi = getBaseApi(TOPIC_PORT);
+export const baseUserApi = getBaseApi(USER_PORT);
