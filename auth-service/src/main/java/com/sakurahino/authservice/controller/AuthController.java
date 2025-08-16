@@ -49,6 +49,13 @@ public class AuthController {
         return new SuccessResponse("Đăng ký thành công");
     }
 
+    @PostMapping("/registerAndLogin")
+    public SuccessResponse registerAndLogin(@Valid @RequestBody RegisterRequestDTO dto) {
+        LoginRequestDTO loginDto = new LoginRequestDTO(dto.getUsername(), dto.getPassword());
+        authService.register(dto);
+        return login(loginDto);
+    }
+
     @PostMapping("/login")
     public SuccessResponse login( @Valid @RequestBody LoginRequestDTO dto) {
         return new SuccessResponse(authService.login(dto));
