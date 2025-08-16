@@ -17,3 +17,5 @@ function getBaseApi(port: string) {
 export const baseAuthApi = getBaseApi(AUTH_PORT);
 export const baseTopicApi = getBaseApi(TOPIC_PORT);
 export const baseUserApi = getBaseApi(USER_PORT);
+//dung chung
+export const baseApi = getBaseApi(TOPIC_PORT);

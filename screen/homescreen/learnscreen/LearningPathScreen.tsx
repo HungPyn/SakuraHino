@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   View,
@@ -32,7 +32,7 @@ import {
   ActiveDumbbellSvg,
   PracticeExerciseSvg,
 } from "../../../components/Svgs";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useBoundStore } from "../../../hooks/useBoundStore";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { BottomBar } from "../../../components/custombar/BottomBar";
@@ -98,6 +98,14 @@ const COLOR_PALETTES = [
   { backgroundColor: "#FFC800", borderColor: "#FFB800", textColor: "#FFFFFF" },
   { backgroundColor: "#FF4B4B", borderColor: "#E54242", textColor: "#FFFFFF" },
   { backgroundColor: "#7D53B2", borderColor: "#6C4A9E", textColor: "#FFFFFF" },
+  { backgroundColor: "#FF8C42", borderColor: "#E67A35", textColor: "#FFFFFF" }, // cam sáng
+  { backgroundColor: "#00BFA6", borderColor: "#00A38E", textColor: "#FFFFFF" }, // ngọc lam
+  { backgroundColor: "#FF6F91", borderColor: "#E85D7D", textColor: "#FFFFFF" }, // hồng
+  { backgroundColor: "#4C5B5C", borderColor: "#3C4A4B", textColor: "#FFFFFF" }, // xám đậm
+  { backgroundColor: "#2D87BB", borderColor: "#246E99", textColor: "#FFFFFF" }, // xanh navy
+
+  { backgroundColor: "#9CCC65", borderColor: "#7CB342", textColor: "#FFFFFF" }, // xanh lá nhạt
+  { backgroundColor: "#F06292", borderColor: "#E91E63", textColor: "#FFFFFF" }, // hồng đậm
 ];
 
 // Định nghĩa chiều cao của một chủ đề ở đây để toàn bộ component có thể truy cập
@@ -229,7 +237,6 @@ const HoverLabel = ({
     </Animated.View>
   );
 };
-
 const TileTooltip = ({
   isVisible,
   closeTooltip,
@@ -300,11 +307,7 @@ const TileTooltip = ({
               },
             ]}
             onPress={
-              status === "ACTIVE"
-                ? onStart
-                : status === "COMPLETE"
-                ? onPractice
-                : undefined
+              status === "ACTIVE" || status === "COMPLETE" ? onStart : undefined
             }
             disabled={status === "LOCKED"}
           >
@@ -490,28 +493,30 @@ const LearningPathScreen = () => {
   const [selectedTab, setSelectedTab] = useState<Tab>("Learn");
   const [topics, setTopics] = useState<Topic[]>([]);
 
-  useEffect(() => {
-    const fetchTopics = async () => {
-      try {
-        const data: Topic[] = await topicService.getTopics();
-        if (data) {
-          const coloredTopics = data.map((topic, index) => {
-            const colorIndex = index % COLOR_PALETTES.length;
-            const fixedColor = COLOR_PALETTES[colorIndex];
-            // console.log("topic lấy ra là:", JSON.stringify(topic, null, 2));
-            return {
-              ...topic,
-              ...fixedColor,
-            };
-          });
-          setTopics(coloredTopics);
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách topics:", error);
+  const fetchTopics = async () => {
+    try {
+      const data: Topic[] = await topicService.getTopics();
+      if (data) {
+        const coloredTopics = data.map((topic, index) => {
+          const colorIndex = index % COLOR_PALETTES.length;
+          const fixedColor = COLOR_PALETTES[colorIndex];
+          // console.log("topic lấy ra là:", JSON.stringify(topic, null, 2));
+          return {
+            ...topic,
+            ...fixedColor,
+          };
+        });
+        setTopics(coloredTopics);
       }
-    };
-    fetchTopics();
-  }, []);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách topics:", error);
+    }
+  };
+  useFocusEffect(
+    useCallback(() => {
+      fetchTopics();
+    }, [])
+  );
 
   const getTopBarColors = (y: number): { bg: string; border: string } => {
     const currentTopicIndex = Math.floor(y / TOPIC_HEIGHT);

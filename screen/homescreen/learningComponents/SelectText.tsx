@@ -123,7 +123,7 @@ const SelectText: React.FC<SelectTextProps> = ({
               isSelected && { fontWeight: "700", color: "#00796B" },
             ]}
           >
-            {item.textForeign}
+            {item.textForeign + "  " + item.textRomaji}
           </Text>
         </Animated.View>
       </TouchableOpacity>

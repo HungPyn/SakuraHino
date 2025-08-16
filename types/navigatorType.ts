@@ -30,7 +30,12 @@ export type RootStackParamList = {
   Guidebook: { code: string; unitNumber: number };
   LearningPath: undefined;
   Profile: undefined;
-  Result: { type: string; xp: number; commitTime: string };
+  Result: {
+    corect: number;
+    totalQuestion: number;
+    score: number;
+    commitTime: string;
+  };
 };
 export type LessonScreenRouteProp = RouteProp<RootStackParamList, "Lesson">;
 

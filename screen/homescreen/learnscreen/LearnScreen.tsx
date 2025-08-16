@@ -161,19 +161,42 @@ const Lesson = () => {
   const [isStartingLesson, setIsStartingLesson] = useState(true);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
   const [score, setScore] = useState(0);
+  const [onePoint, setOnePoint] = useState(0);
   const [originalQuestionsLength, setOriginalQuestionsLength] =
     useState<number>(0); // chỉ 1 số thôi
 
+  //lưu câu đúng cho thông báo sai
+  const [correctAnswerText, setCorrectAnswerText] = useState("");
   //luu cau sai
   const [questionIncorrect, setQuestionIncorrect] = useState<Question[]>([]);
-  const totalCorrectAnswersNeeded = 2;
   const { lessonCode } = route.params;
 
-  const onSkip = () => {
+  //lưu kết quả lesson
+  const createResult = async () => {
+    const result = {
+      lessonCode,
+      score,
+      totalQuestion: originalQuestionsLength,
+      correctCount: correctAnswerCount,
+      wrongCount: incorrectAnswerCount,
+      durationSeconds: Math.floor((endTime.current - startTime.current) / 1000),
+    };
+    try {
+      const questions = await questionService.createResult(result);
+      setQuestions(questions);
+      setOriginalQuestionsLength(questions.length); // Lưu lại độ dài ban đầu của mảng câu hỏi
+      console.log("Kết quả đã lưu:", result);
+    } catch (error) {
+      console.error("Lỗi khi lưu kết quả câu hỏi:", error);
+    }
+  };
+  ///
+  const onSkip = async () => {
     setSelectedAnswer(null);
     setCorrectAnswerShown(true);
     setIsAnswerChecked(false);
     setSelectedAnswers([]);
+    setCorrectAnswerText("");
 
     if (currentQuestionIndex === questions.length - 1) {
       if (!isRetryingIncorrect && questionIncorrect.length > 0) {
@@ -194,6 +217,14 @@ const Lesson = () => {
         console.log("tổng số câu là:", originalQuestionsLength);
         console.log("số câu đúng là:", correctAnswerCount);
         console.log("số câu sai là:", incorrectAnswerCount);
+        const commitTime = formatTime(endTime.current - startTime.current);
+        await createResult();
+        navigation.replace("Result", {
+          corect: correctAnswerCount,
+          totalQuestion: originalQuestionsLength,
+          score: score,
+          commitTime: commitTime,
+        });
       }
     } else {
       // next câu tiếp theo
@@ -217,8 +248,15 @@ const Lesson = () => {
       const questions = await questionService.getQuestion(lessonCode);
       setQuestions(questions);
       setOriginalQuestionsLength(questions.length); // Lưu lại độ dài ban đầu của mảng câu hỏi
+
       console.log("Độ dài ban đầu của mảng câu hỏi:", questions.length);
-      // console.log("Câu hỏi đã lấy:", JSON.stringify(questions, null, 2));
+      // Bổ sung logic tính toán điểm
+      if (questions.length > 0) {
+        const calculatedPoints = 100 / questions.length;
+        setOnePoint(calculatedPoints);
+        console.log("Điểm mỗi câu là:", calculatedPoints);
+        // console.log("Câu hỏi đã lấy:", JSON.stringify(questions, null, 2));
+      }
     } catch (error) {
       console.error("Lỗi khi gọi API lấy câu hỏi:", error);
     }
@@ -309,10 +347,11 @@ const Lesson = () => {
         setSelectedAnswer(null);
         if (isRetryingIncorrect) {
           setScore((prev) => prev + 5);
+          setScore((prev) => prev + onePoint / 2);
           setCorrectAnswerCount((x) => x + 1);
           setIncorrectAnswerCount((x) => x - 1);
         } else {
-          setScore((prev) => prev + 10);
+          setScore((prev) => prev + onePoint);
           setCorrectAnswerCount((x) => x + 1);
         }
       } else {
@@ -324,7 +363,13 @@ const Lesson = () => {
           setIncorrectAnswerCount((x) => x + 1);
         }
 
-        // setCorrectAnswerShown(false);
+        const correctText =
+          currentQuestion.choices.find((choice) => choice.isCorrect)
+            ?.textForeign || "";
+        const correctRomaji =
+          currentQuestion.choices.find((choice) => choice.isCorrect)
+            ?.textRomaji || "";
+        setCorrectAnswerText(correctText + "\n" + correctRomaji);
       }
     }
     // check cho câu hỏi sắp xếp
@@ -354,11 +399,11 @@ const Lesson = () => {
         setIsAnswerChecked(true);
         setSelectedWords([]);
         if (isRetryingIncorrect) {
-          setScore((prev) => prev + 5);
+          setScore((prev) => prev + onePoint / 2);
           setCorrectAnswerCount((x) => x + 1);
           setIncorrectAnswerCount((x) => x - 1);
         } else {
-          setScore((prev) => prev + 10);
+          setScore((prev) => prev + onePoint);
           setCorrectAnswerCount((x) => x + 1);
         }
       } else {
@@ -415,11 +460,11 @@ const Lesson = () => {
         setIsCorrectAnswer(true);
         setIsAnswerChecked(true);
         if (isRetryingIncorrect) {
-          setScore((prev) => prev + 5);
+          setScore((prev) => prev + onePoint / 2);
           setCorrectAnswerCount((x) => x + 1);
           setIncorrectAnswerCount((x) => x - 1);
         } else {
-          setScore((prev) => prev + 10);
+          setScore((prev) => prev + onePoint);
           setCorrectAnswerCount((x) => x + 1);
         }
       } else {
@@ -480,11 +525,11 @@ const Lesson = () => {
         setIsCorrectAnswer(true);
         setIsAnswerChecked(true);
         if (isRetryingIncorrect) {
-          setScore((prev) => prev + 5);
+          setScore((prev) => prev + onePoint / 2);
           setCorrectAnswerCount((x) => x + 1);
           setIncorrectAnswerCount((x) => x - 1);
         } else {
-          setScore((prev) => prev + 10);
+          setScore((prev) => prev + onePoint);
           setCorrectAnswerCount((x) => x + 1);
         }
       } else {
@@ -612,6 +657,7 @@ const Lesson = () => {
                 correctAnswer={selectedAnswer?.textForeign || ""}
                 correctAnswerShown={isAnswerChecked}
                 isAnswerCorrect={isCorrectAnswer}
+                questionType={currentQuestion.questionType}
                 onFinish={onSkip}
                 onCheckAnswer={onCheckAnswer}
                 onSkip={onSkip}
@@ -652,9 +698,10 @@ const Lesson = () => {
           <View>
             {isAnswerChecked && (
               <CheckAnswer
-                correctAnswer={selectedAnswer?.textForeign || ""}
+                correctAnswer={correctAnswerText}
                 correctAnswerShown={isAnswerChecked}
                 isAnswerCorrect={isCorrectAnswer}
+                questionType={currentQuestion.questionType}
                 onFinish={onSkip}
                 onCheckAnswer={onCheckAnswer}
                 onSkip={onSkip}
@@ -695,9 +742,10 @@ const Lesson = () => {
           <View>
             {isAnswerChecked && (
               <CheckAnswer
-                correctAnswer={selectedAnswer?.textForeign || ""}
+                correctAnswer={correctAnswerText}
                 correctAnswerShown={isAnswerChecked}
                 isAnswerCorrect={isCorrectAnswer}
+                questionType={currentQuestion.questionType}
                 onFinish={onSkip}
                 onCheckAnswer={onCheckAnswer}
                 onSkip={onSkip}
@@ -738,9 +786,10 @@ const Lesson = () => {
           <View>
             {isAnswerChecked && (
               <CheckAnswer
-                correctAnswer={selectedAnswer?.textForeign || ""}
+                correctAnswer={currentQuestion.targetWordNative || ""}
                 correctAnswerShown={isAnswerChecked}
                 isAnswerCorrect={isCorrectAnswer}
+                questionType={currentQuestion.questionType}
                 onFinish={onSkip}
                 onCheckAnswer={onCheckAnswer}
                 onSkip={onSkip}
@@ -784,6 +833,7 @@ const Lesson = () => {
                 correctAnswer={selectedAnswer?.textForeign || ""}
                 correctAnswerShown={isAnswerChecked}
                 isAnswerCorrect={isCorrectAnswer}
+                questionType={currentQuestion.questionType}
                 onFinish={onSkip}
                 onCheckAnswer={onCheckAnswer}
                 onSkip={onSkip}
@@ -827,6 +877,7 @@ const Lesson = () => {
                 correctAnswer={selectedAnswer?.textForeign || ""}
                 correctAnswerShown={isAnswerChecked}
                 isAnswerCorrect={isCorrectAnswer}
+                questionType={currentQuestion.questionType}
                 onFinish={onSkip}
                 onCheckAnswer={onCheckAnswer}
                 onSkip={onSkip}
@@ -950,6 +1001,7 @@ const CheckAnswer = ({
   isAnswerCorrect,
   correctAnswerShown,
   correctAnswer,
+  questionType,
   onCheckAnswer, // Thêm prop này vào đây
   onFinish,
   onSkip,
@@ -957,6 +1009,7 @@ const CheckAnswer = ({
   isAnswerCorrect: boolean;
   correctAnswerShown: boolean;
   correctAnswer: string;
+  questionType: QuestionType;
   onCheckAnswer: () => void; // Khai báo type
   onFinish: () => void;
   onSkip: () => void;
@@ -986,12 +1039,22 @@ const CheckAnswer = ({
               <View style={styles.closeIconContainer}>
                 <BigCloseSvg />
               </View>
-              <View style={styles.correctAnswerSolution}>
-                <Text style={styles.correctAnswerText}>Correct solution:</Text>
-                <Text style={styles.correctAnswerSolutionText}>
-                  {correctAnswer}
-                </Text>
-              </View>
+
+              {questionType === QuestionType.MULTIPLE_CHOICE_TEXT_ONLY ||
+              questionType === QuestionType.AUDIO_CHOICE ||
+              questionType === QuestionType.WORD_ORDER ? (
+                // Nếu là các loại câu hỏi trên, hiển thị đáp án đúng
+                <View style={styles.correctAnswerSolution}>
+                  <Text style={styles.correctAnswerText}>
+                    Correct solution:
+                  </Text>
+                  <Text style={styles.correctAnswerSolutionText}>
+                    {correctAnswer}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.correctAnswerText}>Incorrect</Text>
+              )}
             </View>
           )}
           <TouchableOpacity
