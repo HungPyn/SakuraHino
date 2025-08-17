@@ -29,4 +29,11 @@ public class UserQuestionController {
         var response = questionService.getQuestionsPractice(topicCode, limit);
         return new SuccessResponse(response);
     }
+
+    // Lấy câu hỏi để người dùng mới làm test đầu vào
+    @GetMapping("/tests/initial")
+    public SuccessResponse getQuestionsByTests() {
+        var response = questionService.getQuestionsTestForUser();
+        return new SuccessResponse(response);
+    }
 }

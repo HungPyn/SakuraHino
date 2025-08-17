@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 
@@ -55,14 +56,14 @@ public class UserStatusTopicRepositoryCustomImpl implements UserStatusTopicRepos
 
             StringBuilder sql = new StringBuilder();
             sql.append("INSERT INTO user_topic_status (user_id, topic_id, progress_status, completed_at) VALUES ");
-
+            Instant now = Instant.now();
             for (int i = 0; i < batch.size(); i++) {
                 UserTopicStatus item = batch.get(i);
                 sql.append(String.format("('%s', %d, '%s', '%s')",
                         item.getUserId(),
                         item.getTopic().getId(),
                         item.getProgressStatus().name(),
-                        Instant.now()));
+                        Timestamp.from(now)));
 
                 if (i < batch.size() - 1) {
                     sql.append(", ");

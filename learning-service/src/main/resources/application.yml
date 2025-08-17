@@ -60,3 +60,6 @@ logging:
   level:
     root: INFO
     com.sakurahino.learningservice: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.type.descriptor.sql: TRACE

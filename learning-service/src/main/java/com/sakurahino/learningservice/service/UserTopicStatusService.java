@@ -16,4 +16,8 @@ public interface UserTopicStatusService {
     List<TopicWithStatusDTO> findTopicsWithStatusByUser();
 
     void updateTopicStatusAndUnlockNext(String userId, Topic currentTopic, ProgressStatus newStatus);
+
+    // hàm này là dùng để unlocked topic người dùng mới khi làm bài test
+    void createTopicForUserAfterTest(Integer correctQuestion);
+
 }

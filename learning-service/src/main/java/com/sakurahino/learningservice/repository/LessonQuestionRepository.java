@@ -1,6 +1,7 @@
 package com.sakurahino.learningservice.repository;
 
 import com.sakurahino.learningservice.entity.LessonQuestion;
+import com.sakurahino.learningservice.enums.LearningStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface LessonQuestionRepository extends JpaRepository<LessonQuestion, Integer> {
-    List<LessonQuestion> findLessonQuestionsByLesson_Id(Integer lessonId);
+
     List<LessonQuestion> findLessonQuestionsByLesson_IdOrderByIdDesc(Integer toppicId);
 
     //user
@@ -26,4 +27,20 @@ public interface LessonQuestionRepository extends JpaRepository<LessonQuestion, 
 """)
     List<LessonQuestion> findAllByTopicCodeWithChoicesPublished(@Param("topicCode") String topicCode);
 
+// Lấy random câu hỏi từ topic, chỉ từ lesson published
+    @Query(value = """
+    SELECT q.* FROM lesson_questions q
+    JOIN lessons l ON q.lesson_id = l.id
+    JOIN topics t ON l.topic_id = t.topic_id
+    WHERE t.status = :status
+      AND l.status = :status
+      AND t.topic_id = :topicId
+    ORDER BY RAND()
+    LIMIT :limit
+    """, nativeQuery = true)
+    List<LessonQuestion> findRandomPublishedQuestionsByTopic(
+            @Param("topicId") Integer topicId,
+            @Param("limit") int limit,
+            @Param("status") String status
+    );
 }

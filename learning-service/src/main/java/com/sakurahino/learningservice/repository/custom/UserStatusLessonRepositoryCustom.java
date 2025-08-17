@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface UserStatusLessonRepositoryCustom {
+
+    List<Integer> findExistingLessonIdsForUser(@Param("userId") String userId, @Param("lessonIds") List<Integer> lessonIds);
     List<String> findUserIdToUnlockLesson(@Param("position")int currentPosition, @Param("lessonId")int lessonId);
     void batchInsertUserStatusLesson(List<UserLessonStatus> userLessonStatuses, int batchSize);
 

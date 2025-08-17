@@ -125,6 +125,7 @@ public class UserLessonStatusServiceImpl implements UserLessonStatusService {
                     lessonStatus.setUserId(userId);
                     lessonStatus.setLesson(firstLesson);
                     lessonStatus.setProgressStatus(ProgressStatus.UNLOCKED);
+                    lessonStatus.setCompletedAt(Instant.now());
                     return userStatusLessonRepository.save(lessonStatus);
                 });
     }

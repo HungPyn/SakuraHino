@@ -13,13 +13,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface LessonRepository extends JpaRepository<Lesson, Integer> {
-
-    //----------
-    List<Lesson> findLessonsByTopic_IdOrderByIdDesc(Integer topicId);
 
     Page<Lesson> findAllByTopic_IdOrderByCreatedAtDesc(Integer topicId,Pageable pageable);
 
@@ -48,4 +47,14 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
 
 
     Lesson findFirstByTopicOrderByPositionAsc(Topic topic);
+
+    @Query("""
+    SELECT l.id 
+    FROM Lesson l
+    WHERE l.topic.id = :topicId
+      AND l.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
+    ORDER BY l.position ASC
+""")
+    List<Integer> findLessonIdsByTopicId(@Param("topicId") Integer topicId);
+
 }

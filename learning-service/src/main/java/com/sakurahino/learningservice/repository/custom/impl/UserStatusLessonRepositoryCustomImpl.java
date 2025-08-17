@@ -10,6 +10,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 
@@ -19,6 +20,14 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
     @PersistenceContext
     private EntityManager em;
 
+    @Override
+    public List<Integer> findExistingLessonIdsForUser(String userId, List<Integer> lessonIds) {
+        String jpql = "SELECT uls.lesson.id FROM UserLessonStatus uls WHERE uls.userId = :userId AND uls.lesson.id IN :lessonIds";
+        return em.createQuery(jpql, Integer.class)
+                .setParameter("userId", userId)
+                .setParameter("lessonIds", lessonIds)
+                .getResultList();
+    }
     @Override
     public List<String> findUserIdToUnlockLesson(int currentPosition, int lessonId) {
         String jpql = """
@@ -53,14 +62,14 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
 
             StringBuilder sql = new StringBuilder();
             sql.append("INSERT INTO user_lesson_status (user_id, lesson_id, progress_status, completed_at) VALUES ");
-
+            Instant now = Instant.now();
             for (int i = 0; i < batch.size(); i++) {
                 UserLessonStatus item = batch.get(i);
                 sql.append(String.format("('%s', %d, '%s', '%s')",
                         item.getUserId(),
                         item.getLesson().getId(),
                         item.getProgressStatus().name(),
-                        Instant.now()));
+                        Timestamp.from(now)));
 
                 if (i < batch.size() - 1) {
                     sql.append(", ");
