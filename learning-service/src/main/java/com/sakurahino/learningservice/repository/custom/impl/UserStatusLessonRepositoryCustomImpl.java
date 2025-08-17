@@ -2,6 +2,7 @@ package com.sakurahino.learningservice.repository.custom.impl;
 
 import com.sakurahino.learningservice.dto.lesson.LessonWithStatusDTO;
 import com.sakurahino.learningservice.entity.UserLessonStatus;
+import com.sakurahino.learningservice.enums.LearningStatus;
 import com.sakurahino.learningservice.enums.ProgressStatus;
 import com.sakurahino.learningservice.repository.custom.UserStatusLessonRepositoryCustom;
 import jakarta.persistence.EntityManager;
@@ -80,21 +81,42 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
             l.lessonName,
             t.code,
             l.position,
-            COALESCE(uls.progressStatus, com.sakurahino.learningservice.enums.ProgressStatus.LOCKED)
+            COALESCE(uls.progressStatus, :lockedStatus)
         )
         FROM Lesson l
         JOIN l.topic t
         LEFT JOIN UserLessonStatus uls
             ON uls.lesson.code = l.code AND uls.userId = :userId
-        WHERE l.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
-        ORDER BY t.code, l.position
+        WHERE l.status = :publishedStatus
+        ORDER BY l.position ASC
     """;
 
         return em.createQuery(jsql, LessonWithStatusDTO.class)
                 .setParameter("userId", userId)
+                .setParameter("lockedStatus", ProgressStatus.LOCKED)
+                .setParameter("publishedStatus", LearningStatus.PUBLISHED)
                 .getResultList();
     }
 
 
+    public boolean areAllLessonsPassed(String userId, String topicCode) {
+        String jpql = """
+        SELECT CASE
+                 WHEN COUNT(l) = SUM(CASE WHEN l.progressStatus = :passed THEN 1 ELSE 0 END) 
+                 THEN TRUE 
+                 ELSE FALSE 
+               END
+        FROM UserLessonStatus l
+        WHERE l.userId = :userId
+          AND l.lesson.topic.code = :topicCode
+    """;
 
+        Boolean result = em.createQuery(jpql, Boolean.class)
+                .setParameter("userId", userId)
+                .setParameter("topicCode", topicCode)
+                .setParameter("passed", ProgressStatus.PASSED)
+                .getSingleResult();
+
+        return Boolean.TRUE.equals(result);
+    }
 }

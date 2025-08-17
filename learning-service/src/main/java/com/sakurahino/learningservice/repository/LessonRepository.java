@@ -1,7 +1,10 @@
 package com.sakurahino.learningservice.repository;
 
 import com.sakurahino.learningservice.entity.Lesson;
+import com.sakurahino.learningservice.entity.Topic;
 import com.sakurahino.learningservice.enums.LearningStatus;
+import com.sakurahino.learningservice.enums.ResultStatus;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,8 +23,6 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
 
     Page<Lesson> findAllByTopic_IdOrderByCreatedAtDesc(Integer topicId,Pageable pageable);
 
-    boolean existsByLessonName(String lessonName);
-
     boolean existsByCode(String code);
 
     @Query("SELECT MAX(l.position) FROM Lesson l WHERE l.topic.id = :topicId")
@@ -30,6 +31,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
     boolean existsByLessonNameAndTopicId(String lessonName, Integer topicId);
 
     Long countByTopicIdAndStatus(Integer topicId, LearningStatus status);
+
 
 
     @Query("SELECT l FROM Lesson l " +
@@ -45,4 +47,20 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate,
             Pageable pageable);
+    Lesson findByCode(String code);
+
+
+    @Query("SELECT l FROM Lesson l " +
+            "WHERE l.topic.id = :topicId " +
+            "AND l.status = :status " +
+            "AND l.position > :currentPosition " +
+            "ORDER BY l.position ASC")
+    List<Lesson> findNextPublishedLesson(
+            @Param("topicId") Integer topicId,
+            @Param("status") LearningStatus status,
+            @Param("currentPosition") Integer currentPosition
+    );
+
+    Lesson findFirstByTopicOrderByPositionAsc(Topic topic);
+
 }

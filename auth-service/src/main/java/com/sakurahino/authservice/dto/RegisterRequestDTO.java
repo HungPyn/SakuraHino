@@ -21,6 +21,5 @@ public class RegisterRequestDTO {
     @Size(min = 6, max = 32, message = "Mật khẩu phải từ 6 đến 32 ký tự")
     private String password;
 
-    @NotNull(message = "Vai trò không được để trống")
-    private Role role;
+    private Role role = Role.USER;
 }

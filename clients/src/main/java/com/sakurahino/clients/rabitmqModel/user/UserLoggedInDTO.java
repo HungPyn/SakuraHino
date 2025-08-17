@@ -1,4 +1,4 @@
-package com.sakurahino.clients.rabitmqModel;
+package com.sakurahino.clients.rabitmqModel.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

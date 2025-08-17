@@ -4,8 +4,9 @@ import com.sakurahino.ampqclient.RabbitMQMessageProducer;
 import com.sakurahino.clients.commons.RabbitKey;
 import com.sakurahino.clients.enums.Role;
 import com.sakurahino.clients.feign.UploadServiceClients;
-import com.sakurahino.clients.rabitmqModel.RegisterSuccessDTO;
-import com.sakurahino.clients.rabitmqModel.UserDeletedDTO;
+import com.sakurahino.clients.rabitmqModel.user.RegisterSuccessDTO;
+import com.sakurahino.clients.rabitmqModel.user.UserDeletedDTO;
+import com.sakurahino.clients.rabitmqModel.user.UserStatusMessageDTO;
 import com.sakurahino.common.dto.PaginatedResponse;
 import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
@@ -25,11 +26,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Slf4j
@@ -136,12 +139,19 @@ public class UserServiceImpl  implements UserService {
         userRepository.save(user);
         log.info("User status set to DELETED for ID: {}", userId);
 
-        UserDeletedDTO userDeletedDTO = new UserDeletedDTO();
-        userDeletedDTO.setUserId(userId);
-        userDeletedDTO.setStatus(user.getStatus());
+        // gửi cập nhậ trạng thái sang bên auth-service
+        UserStatusMessageDTO userStatusMessageDTO = new UserStatusMessageDTO();
+        userStatusMessageDTO.setUserId(userId);
+        userStatusMessageDTO.setStatus(user.getStatus());
 
-        rabbitMQProducer.publish(userDeletedDTO, RabbitKey.EXCHANGE_USER, RabbitKey.ROUTING_USER_DELETED);
-        log.info("Published user deletion event to RabbitMQ for user ID: {}", userId);
+        log.info("[RabbitMQ] Sending user status delete to auth-service: userId={}, status={}, exchange={}, routingKey={}",
+                userId, user.getStatus(), RabbitKey.EXCHANGE_USER, RabbitKey.ROUTING_USER_UPDATE);
+
+        rabbitMQProducer.publish(
+                userStatusMessageDTO,
+                RabbitKey.EXCHANGE_USER,
+                RabbitKey.ROUTING_USER_UPDATE
+        );
     }
 
     @Override
@@ -158,8 +168,23 @@ public class UserServiceImpl  implements UserService {
         user.setStatus(dto.getStatus());
         user.setUpdatedDay(Instant.now());
 
+        // gửi cập nhậ trạng thái sang bên auth-service
+        UserStatusMessageDTO userStatusMessageDTO = new UserStatusMessageDTO();
+        userStatusMessageDTO.setUserId(userId);
+        userStatusMessageDTO.setStatus(dto.getStatus());
+
+        log.info("[RabbitMQ] Sending user status update to auth-service: userId={}, status={}, exchange={}, routingKey={}",
+                userId, dto.getStatus(), RabbitKey.EXCHANGE_USER, RabbitKey.ROUTING_USER_UPDATE);
+
+        rabbitMQProducer.publish(
+                userStatusMessageDTO,
+                RabbitKey.EXCHANGE_USER,
+                RabbitKey.ROUTING_USER_UPDATE
+        );
+
         userRepository.save(user);
         log.info("User updated successfully by admin: {}", userId);
+
         return userServiceMapper.toResponseUserDTO(user);
     }
 
@@ -217,4 +242,23 @@ public class UserServiceImpl  implements UserService {
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
         return userServiceMapper.toCheckedResponseDTO(user);
     }
+
+    @Override
+    @Scheduled(cron = "0 5 0 * * *", zone = "Asia/Ho_Chi_Minh")
+    public void checkAndResetStreak() {
+        log.info("=== Bắt đầu kiểm tra streak và freeze của người dùng ===");
+
+        Instant yesterday = Instant.now().minus(1, ChronoUnit.DAYS);
+
+        // 1. Reset streak nếu không có freeze
+        int resetCount = userRepository.resetStreakForInactiveUsers(yesterday);
+        log.info("Đã reset streak cho {} người dùng không hoạt động và không có freeze", resetCount);
+
+        // 2. Sử dụng freeze nếu có và bỏ lỡ ngày
+        int freezeCount = userRepository.useFreezeForInactiveUsers(yesterday);
+        log.info("Đã sử dụng freeze cho {} người dùng bỏ lỡ ngày", freezeCount);
+
+        log.info("=== Hoàn thành kiểm tra streak và freeze ===");
+    }
+
 }

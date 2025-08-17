@@ -23,17 +23,17 @@ public class UserStatusTopicRepositoryCustomImpl implements UserStatusTopicRepos
     @Override
     public List<String> findUserIdsToUnlockTopic(@Param("position") int currentPosition, @Param("topicId") Integer topicId) {
         String jpql = """
-            SELECT DISTINCT ust.userId
-            FROM UserTopicStatus ust
-            JOIN ust.topic t
-            WHERE t.position > :position
-              AND ust.progressStatus = :status
-              AND ust.userId NOT IN (
-                  SELECT ust2.userId
-                  FROM UserTopicStatus ust2
-                  WHERE ust2.topic.id = :topicId
-              )
-        """;
+                    SELECT DISTINCT ust.userId
+                    FROM UserTopicStatus ust
+                    JOIN ust.topic t
+                    WHERE t.position > :position
+                      AND ust.progressStatus = :status
+                      AND ust.userId NOT IN (
+                          SELECT ust2.userId
+                          FROM UserTopicStatus ust2
+                          WHERE ust2.topic.id = :topicId
+                      )
+                """;
 
         return em.createQuery(jpql, String.class)
                 .setParameter("position", currentPosition)
@@ -78,25 +78,23 @@ public class UserStatusTopicRepositoryCustomImpl implements UserStatusTopicRepos
     @Override
     public List<TopicWithStatusDTO> findPublishedTopicsWithStatus(String userId) {
         String jsql = """
-        SELECT new com.sakurahino.learningservice.dto.topic.TopicWithStatusDTO(
-            t.code,
-            t.name,
-            t.position,
-            t.status,
-            CASE
-                WHEN uts.progressStatus IS NOT NULL THEN uts.progressStatus
-                ELSE com.sakurahino.learningservice.enums.ProgressStatus.LOCKED
-            END
-        )
-        FROM Topic t
-        LEFT JOIN UserTopicStatus uts
-          ON t.id = uts.id AND uts.userId = :userId
-        WHERE t.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
-        ORDER BY t.position
-    """;
+                    SELECT new com.sakurahino.learningservice.dto.topic.TopicWithStatusDTO(
+                        t.code,
+                        t.name,
+                        t.position,
+                        COALESCE(uts.progressStatus, com.sakurahino.learningservice.enums.ProgressStatus.LOCKED)
+                        ,t.urlImage
+                    )
+                    FROM Topic t
+                    LEFT JOIN UserTopicStatus uts
+                      ON t.id = uts.topic.id AND uts.userId = :userId
+                    WHERE t.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
+                    ORDER BY t.position ASC
+                """;
         return em.createQuery(jsql, TopicWithStatusDTO.class)
                 .setParameter("userId", userId)
                 .getResultList();
     }
+
 
 }

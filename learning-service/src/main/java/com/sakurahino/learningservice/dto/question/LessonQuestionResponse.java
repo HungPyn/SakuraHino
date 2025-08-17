@@ -1,5 +1,6 @@
-package com.sakurahino.learningservice.dto;
+package com.sakurahino.learningservice.dto.question;
 
+import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceResponse;
 import com.sakurahino.learningservice.enums.QuestionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

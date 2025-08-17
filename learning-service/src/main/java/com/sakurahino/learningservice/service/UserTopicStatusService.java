@@ -3,6 +3,7 @@ package com.sakurahino.learningservice.service;
 import com.sakurahino.learningservice.dto.lesson.LessonWithStatusDTO;
 import com.sakurahino.learningservice.dto.topic.TopicWithStatusDTO;
 import com.sakurahino.learningservice.entity.Topic;
+import com.sakurahino.learningservice.enums.ProgressStatus;
 
 import java.util.List;
 
@@ -13,4 +14,6 @@ public interface UserTopicStatusService {
 
 
     List<TopicWithStatusDTO> findTopicsWithStatusByUser();
+
+    void updateTopicStatusAndUnlockNext(String userId, Topic currentTopic, ProgressStatus newStatus);
 }

@@ -1,14 +1,16 @@
 package com.sakurahino.learningservice.service;
 
-import com.sakurahino.learningservice.dto.LessonQuestionRequest;
-import com.sakurahino.learningservice.dto.LessonQuestionResponse;
+import com.sakurahino.learningservice.dto.question.LessonQuestionRequest;
+import com.sakurahino.learningservice.dto.question.LessonQuestionResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface QuestionService {
-    List<LessonQuestionResponse> getQuestionsByLessonId(Integer topicId);
+    List<LessonQuestionResponse> getQuestionsForUser(String code);
+    List<LessonQuestionResponse> getQuestionsPractice(String code,int limit);
+
+
     List<LessonQuestionResponse> getQuestionsByLessonIdAdmin(Integer topicId);
     LessonQuestionResponse getQuestionById(Integer id);
 

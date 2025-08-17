@@ -1,4 +1,4 @@
-package com.sakurahino.learningservice.dto;
+package com.sakurahino.learningservice.dto.questionchoice;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,15 +9,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class QuestionChoiceResponse {
-    private Integer id;
+public class ChoiceExcelRequest {
     private Integer lessonQuestionId;
     private String textForeign;
     private String textRomaji;
 
     private String imageUrl;
 
-    private String audioUrlForeign;
+    private String textAudioChoice;
 
     private Boolean isCorrect = false;
 

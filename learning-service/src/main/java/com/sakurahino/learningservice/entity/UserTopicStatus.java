@@ -32,7 +32,7 @@ public class UserTopicStatus {
     private ProgressStatus progressStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "topic_id", insertable = false, updatable = false)
+    @JoinColumn(name = "topic_id")
     private Topic topic;
 
     @Column(name = "completed_at")

@@ -1,6 +1,6 @@
 package com.sakurahino.userservice.service;
 
-import com.sakurahino.clients.rabitmqModel.RegisterSuccessDTO;
+import com.sakurahino.clients.rabitmqModel.user.RegisterSuccessDTO;
 import com.sakurahino.userservice.dto.*;
 
 import com.sakurahino.common.dto.PaginatedResponse;
@@ -25,4 +25,7 @@ public interface UserService {
     PublicUserResponseDTO updateForUser (UpdateProfileRequestDTO dto, MultipartFile file);
     PublicUserResponseDTO findByIdForUser();
     CheckedResponseDTO checkUser();
+
+    // xử lý người dùng không đăng nhập và chuyển freeze về flase nếu không có rs long streak
+    void checkAndResetStreak();
 }

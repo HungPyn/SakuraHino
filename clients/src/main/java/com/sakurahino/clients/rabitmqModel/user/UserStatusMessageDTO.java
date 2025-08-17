@@ -1,4 +1,4 @@
-package com.sakurahino.clients.rabitmqModel;
+package com.sakurahino.clients.rabitmqModel.user;
 
 import com.sakurahino.clients.enums.UserStatus;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDeletedDTO {
+public class UserStatusMessageDTO {
+
     private String userId;
+
     private UserStatus status;
 }

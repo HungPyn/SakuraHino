@@ -1,6 +1,6 @@
 package com.sakurahino.learningservice.service;
 
-import com.sakurahino.learningservice.dto.LessonQuestionResponse;
+import com.sakurahino.learningservice.dto.question.LessonQuestionResponse;
 import com.sakurahino.learningservice.dto.UserLessonCompleteRequest;
 
 import java.util.List;

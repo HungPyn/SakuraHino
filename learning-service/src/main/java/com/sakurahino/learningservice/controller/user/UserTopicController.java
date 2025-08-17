@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/learning/user/topics")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('USER')")
-public class UserTopicController {
+public class  UserTopicController {
 
     private final UserTopicStatusService userTopicStatusService;
 

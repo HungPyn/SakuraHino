@@ -1,4 +1,4 @@
-package com.sakurahino.clients.rabitmqModel;
+package com.sakurahino.clients.rabitmqModel.user;
 
 import com.sakurahino.clients.enums.Role;
 import com.sakurahino.clients.enums.UserStatus;

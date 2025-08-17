@@ -1,5 +1,6 @@
 package com.sakurahino.learningservice.entity;
 
+import com.sakurahino.learningservice.enums.ResultStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,9 +31,6 @@ public class LessonResult {
     @Column(name = "score")
     private Long score;
 
-    @Column(name = "status")
-    private Boolean status;
-
     @Column(name = "total_question")
     private Integer totalQuestion;
 
@@ -42,17 +40,16 @@ public class LessonResult {
     @Column(name = "wrong_count")
     private Integer wrongCount;
 
+    @Column(name = "duration_seconds")
+    private Long durationSeconds;
+
     @Column(name = "start_time")
     private Instant startTime;
 
     @Column(name = "completed_at")
     private Instant completedAt;
 
-    @Transient
-    public Long getLearningDurationInSeconds() {
-        if (startTime != null && completedAt != null) {
-            return completedAt.getEpochSecond() - startTime.getEpochSecond();
-        }
-        return null;
-    }
+    @Column(name = "status")
+    private ResultStatus status;
+
 }

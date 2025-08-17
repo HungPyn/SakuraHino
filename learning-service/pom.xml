@@ -14,8 +14,8 @@
 
     <artifactId>learning-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>topic-service</name>
-    <description>Topic Service for managing topics in microservice</description>
+    <name>learning-service</name>
+    <description>Learning Service for managing topics in microservice</description>
 
     <properties>
         <java.version>17</java.version>

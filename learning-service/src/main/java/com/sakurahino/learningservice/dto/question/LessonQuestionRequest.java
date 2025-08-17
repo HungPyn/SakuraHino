@@ -1,6 +1,6 @@
-package com.sakurahino.learningservice.dto;
+package com.sakurahino.learningservice.dto.question;
 
-import com.sakurahino.learningservice.enums.QuestionType;
+import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceRequest;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

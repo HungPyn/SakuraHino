@@ -1,9 +1,8 @@
 server:
-  port: 8083
+  port: 8084
 spring:
   application:
     name: learning-service
-
   servlet: # Thêm phần này vào dưới 'spring:'
     multipart:
       max-file-size: 10MB   # Ví dụ: cho phép mỗi file lên đến 10 MB
@@ -60,4 +59,4 @@ upload-service:
 logging:
   level:
     root: INFO
-    com.sakurahino.topicservice: DEBUG
+    com.sakurahino.learningservice: DEBUG

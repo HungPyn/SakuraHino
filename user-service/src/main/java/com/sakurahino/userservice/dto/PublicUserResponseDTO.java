@@ -16,4 +16,9 @@ public class PublicUserResponseDTO {
     private String username;
 
     private String avatarUrl;
+
+    private Integer longStreak;
+
+    private Long expScore;
+
 }

@@ -3,11 +3,11 @@ package com.sakurahino.learningservice.service.impl;
 import com.sakurahino.clients.feign.UploadServiceClients;
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.ex.ResourceException;
-import com.sakurahino.learningservice.dto.ChoiceExcelRequest;
-import com.sakurahino.learningservice.dto.LessonQuestionRequest;
-import com.sakurahino.learningservice.dto.LessonQuestionResponse;
-import com.sakurahino.learningservice.dto.QuestionChoiceResponse;
-import com.sakurahino.learningservice.dto.QuestionExcelRequest;
+import com.sakurahino.learningservice.dto.questionchoice.ChoiceExcelRequest;
+import com.sakurahino.learningservice.dto.question.LessonQuestionRequest;
+import com.sakurahino.learningservice.dto.question.LessonQuestionResponse;
+import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceResponse;
+import com.sakurahino.learningservice.dto.question.QuestionExcelRequest;
 import com.sakurahino.learningservice.entity.Lesson;
 import com.sakurahino.learningservice.entity.LessonQuestion;
 import com.sakurahino.learningservice.entity.QuestionChoice;
@@ -34,10 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,24 +50,48 @@ public class QuestionServiceImpl implements QuestionService {
     private final TopicRepository topicRepository;
     private final LessonRepository lessonRepository;
 
-    @Override
-    public List<LessonQuestionResponse> getQuestionsByLessonId(Integer lessonId) {
-        List<LessonQuestion> lessonQuestions = lessonQuestionRepository.findLessonQuestionsByLesson_Id(lessonId);
-        List<LessonQuestionResponse> lessonQuestionResponses =
-                lessonQuestions.stream().map(lessonQuestion -> {
-                    LessonQuestionResponse response = lessonQuestionMapper.mapQuestionResponse(lessonQuestion);
 
-                    if (lessonQuestion.getChoices() != null && !lessonQuestion.getChoices().isEmpty()) {
-                        List<QuestionChoiceResponse> choiceResponses = choiceMapper.mapChoiceListToResponseList(lessonQuestion.getChoices());
-                        response.setChoices(choiceResponses);
-                    } else {
-                        response.setChoices(List.of());
-                    }
-                    return response;
-                }).collect(Collectors.toList());
-        return lessonQuestionResponses;
+    //user
+    @Override
+    public List<LessonQuestionResponse> getQuestionsForUser(String code) {
+        List<LessonQuestion> listQuestions = lessonQuestionRepository.findLessonQuestionByLesson_Code(code);
+        return listQuestions.stream().map(lessonQuestionMapper::mapQuestionResponse).collect(Collectors.toList());
+    }
+    
+    // on tap cua moi topic
+    @Override
+    public List<LessonQuestionResponse> getQuestionsPractice(String code, int limit) {
+        List<LessonQuestion> allQuestions =
+                lessonQuestionRepository.findAllByTopicCodeWithChoicesPublished(code);
+
+        // Group theo lesson
+        Map<Integer, List<LessonQuestion>> questionsByLesson = allQuestions.stream()
+                .collect(Collectors.groupingBy(q -> q.getLesson().getId()));
+
+        List<LessonQuestion> pickedQuestions = new ArrayList<>();
+        Random random = new Random();
+
+        // Mỗi lesson chọn random 1 câu
+        for (List<LessonQuestion> questions : questionsByLesson.values()) {
+            int randomIndex = random.nextInt(questions.size());
+            pickedQuestions.add(questions.get(randomIndex));
+        }
+
+        // Nếu chưa đủ limit → random thêm từ pool còn lại
+        allQuestions.removeAll(pickedQuestions);
+        Collections.shuffle(allQuestions);
+        Collections.shuffle(pickedQuestions);
+
+        for (LessonQuestion q : allQuestions) {
+            if (pickedQuestions.size() >= limit) break;
+            pickedQuestions.add(q);
+        }
+
+        return pickedQuestions.stream().map(lessonQuestionMapper::mapQuestionResponse)
+                .toList();
     }
 
+    //admin
     @Override
     public List<LessonQuestionResponse> getQuestionsByLessonIdAdmin(Integer lessonId) {
         List<LessonQuestion> lessonQuestions = lessonQuestionRepository.findLessonQuestionsByLesson_IdOrderByIdDesc(lessonId);
@@ -399,7 +420,7 @@ public class QuestionServiceImpl implements QuestionService {
                         throw new ResourceException(ExceptionCode.DU_LIEU_TRUYEN_LEN_SAI.getStatus(),
                                 "Loại câu hỏi không hợp lệ '" + questionExcelRequest.getQuestionType() + "' tại hàng " + rowNum + ". Vui lòng kiểm tra enum QuestionType.");
                     }
-                    lessonQuestion.setQuestionType(questionType.toString());
+                    lessonQuestion.setQuestionType(questionType);
                     lessonQuestion.setPromptTextTemplate(questionExcelRequest.getPromptTextTemplate());
                     lessonQuestion.setTargetWordNative(questionExcelRequest.getTargetWordNative());
                     lessonQuestion.setTargetLanguageCode(questionExcelRequest.getTargetLanguageCode());
