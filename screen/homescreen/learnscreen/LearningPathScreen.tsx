@@ -474,10 +474,20 @@ const UnitSection = ({ topic }: { topic: Topic }) => {
           borderColor={topic.borderColor || "#46a302"}
           textColor={topic.textColor || "#FFFFFF"}
           onStart={() => {
+            if (selectedLesson.lessonName.toLowerCase() === "ôn tập") {
+              navigation.navigate("Lesson", {
+                lessonCode: "",
+                topicCode: selectedLesson.topicCode,
+                practice: true,
+              });
+            } else {
+              navigation.navigate("Lesson", {
+                lessonCode: selectedLesson.lessonCode,
+                topicCode: selectedLesson.topicCode,
+                practice: false,
+              });
+            }
             setSelectedLessonIndex(null);
-            navigation.navigate("Lesson", {
-              lessonCode: selectedLesson.lessonCode,
-            });
           }}
           onPractice={() => {}}
         />

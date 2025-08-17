@@ -35,6 +35,7 @@ import WordOrder from "../learningComponents/WordOrder";
 import AudioChoice from "../learningComponents/AudioChoice";
 import SelectText from "../learningComponents/SelectText";
 import SelectImage from "../learningComponents/SelectImage";
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
 // Định nghĩa kiểu cho navigation và route
 type LessonScreenNavigationProp = NativeStackScreenProps<
@@ -169,10 +170,10 @@ const Lesson = () => {
   const [correctAnswerText, setCorrectAnswerText] = useState("");
   //luu cau sai
   const [questionIncorrect, setQuestionIncorrect] = useState<Question[]>([]);
-  const { lessonCode } = route.params;
+  const { lessonCode, topicCode, practice } = route.params;
 
   //lưu kết quả lesson
-  const createResult = async () => {
+  const createResultLesson = async () => {
     const result = {
       lessonCode,
       score,
@@ -182,12 +183,28 @@ const Lesson = () => {
       durationSeconds: Math.floor((endTime.current - startTime.current) / 1000),
     };
     try {
-      const questions = await questionService.createResult(result);
-      setQuestions(questions);
-      setOriginalQuestionsLength(questions.length); // Lưu lại độ dài ban đầu của mảng câu hỏi
-      console.log("Kết quả đã lưu:", result);
+      const response = await questionService.createResultLesson(result);
+      console.log("Kết quả đã lưu:", response);
     } catch (error) {
       console.error("Lỗi khi lưu kết quả câu hỏi:", error);
+    }
+  };
+  //lưu kết quả ôn tập
+  const createResultPractice = async () => {
+    const result = {
+      topicCode,
+      score,
+      totalQuestion: originalQuestionsLength,
+      correctCount: correctAnswerCount,
+      wrongCount: incorrectAnswerCount,
+      durationSeconds: Math.floor((endTime.current - startTime.current) / 1000),
+    };
+    try {
+      const response = await questionService.createResultPractice(result);
+
+      console.log("Kết quả đã lưu:", response);
+    } catch (error) {
+      console.error("Lỗi khi lưu kết quả câu hỏi ôn tập:", error);
     }
   };
   ///
@@ -218,7 +235,12 @@ const Lesson = () => {
         console.log("số câu đúng là:", correctAnswerCount);
         console.log("số câu sai là:", incorrectAnswerCount);
         const commitTime = formatTime(endTime.current - startTime.current);
-        await createResult();
+        if (practice) {
+          await createResultPractice();
+        } else {
+          await createResultLesson();
+        }
+
         navigation.replace("Result", {
           corect: correctAnswerCount,
           totalQuestion: originalQuestionsLength,
@@ -255,36 +277,48 @@ const Lesson = () => {
         const calculatedPoints = 100 / questions.length;
         setOnePoint(calculatedPoints);
         console.log("Điểm mỗi câu là:", calculatedPoints);
-        // console.log("Câu hỏi đã lấy:", JSON.stringify(questions, null, 2));
+        // console.log("Câu hỏi bài học là", JSON.stringify(questions, null, 2));
       }
     } catch (error) {
       console.error("Lỗi khi gọi API lấy câu hỏi:", error);
     }
   };
-  useEffect(() => {
-    console.log("Giá trị lessonCode đã nhận được là:", lessonCode);
-    getQuestions();
-  }, [lessonCode]); // Sẽ chạy một lần khi lessonCode có giá trị
+  const getPracticeQuestions = async () => {
+    try {
+      const questions = await questionService.getPracticeQuestions(
+        topicCode,
+        15
+      );
+      setQuestions(questions);
+      setOriginalQuestionsLength(questions.length); // Lưu lại độ dài ban đầu của mảng câu hỏi
 
-  // Debug useEffect
-  useEffect(() => {
-    if (questions.length > 0) {
-      // console.log("Questions:", JSON.stringify(questions, null, 2));
-      console.log("Current Question Index:", currentQuestionIndex);
-      console.log("Current Question:", currentQuestion);
-      console.log("Current Question Type:", currentQuestion?.questionType);
-      console.log("Valid Question Types:", Object.values(QuestionType));
-      if (
-        !currentQuestion ||
-        !Object.values(QuestionType).includes(currentQuestion.questionType)
-      ) {
-        console.warn(
-          "Invalid or undefined questionType:",
-          currentQuestion?.questionType
-        );
+      console.log("Độ dài ban đầu của mảng câu hỏi:", questions.length);
+      // Bổ sung logic tính toán điểm
+      if (questions.length > 0) {
+        const calculatedPoints = 100 / questions.length;
+        setOnePoint(calculatedPoints);
+        console.log("Điểm mỗi câu là:", calculatedPoints);
+        // console.log("câu hỏi ôn tập là:", JSON.stringify(questions, null, 2));
       }
+    } catch (error) {
+      console.error("Lỗi khi gọi API lấy câu hỏi ôn tập:", error);
     }
-  }, [questions, currentQuestionIndex]);
+  };
+  useEffect(() => {
+    if (practice) {
+      console.log("Đây là dữ liệu ôn tập nhé:");
+      console.log("topicCode là:", topicCode);
+      console.log("practice là:", practice);
+      console.log("lessonCode là:", lessonCode);
+      getPracticeQuestions();
+    } else {
+      console.log("Đây là dữ liệu học tập bình thường nhé:");
+      console.log("lesson: topicCode là:", topicCode);
+      console.log("lesson: practice là:", practice);
+      console.log("lesson: lessonCode là:", lessonCode);
+      getQuestions();
+    }
+  }, [lessonCode, topicCode]); // Sẽ chạy một lần khi lessonCode có giá trị
 
   const currentQuestion = questions[currentQuestionIndex];
   if (!currentQuestion) {

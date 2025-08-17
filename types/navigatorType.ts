@@ -26,7 +26,7 @@ export type RootStackParamList = {
   LearningPathScreen: undefined;
   SettingsAccount: undefined;
   ProfileScreen: undefined;
-  Lesson: { lessonCode: string };
+  Lesson: { lessonCode: string; topicCode: string; practice: boolean };
   Guidebook: { code: string; unitNumber: number };
   LearningPath: undefined;
   Profile: undefined;
