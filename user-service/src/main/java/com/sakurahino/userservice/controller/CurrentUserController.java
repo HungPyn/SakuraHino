@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.userservice.dto.UpdateProfileRequestDTO;
 import com.sakurahino.userservice.service.UserService;
+import com.sakurahino.userservice.service.UserStatisticsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import java.io.IOException;
 public class CurrentUserController {
 
     private final UserService userService;
+    private final UserStatisticsService userStatisticsService;
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public SuccessResponse updateUser(@RequestPart("dto") String dtoAsString,
@@ -39,6 +41,17 @@ public class CurrentUserController {
     @GetMapping("/checked")
     public SuccessResponse checkUser() {
         var result = userService.checkUser();
+        return new SuccessResponse(result);
+    }
+
+    @GetMapping("/streaks")
+    SuccessResponse getTopStreaks (){
+        var result = userStatisticsService.topStreaks();
+        return new SuccessResponse(result);
+    }
+    @GetMapping("/exp")
+    SuccessResponse getTopExp (){
+        var result = userStatisticsService.topStreaks();
         return new SuccessResponse(result);
     }
 }

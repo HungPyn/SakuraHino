@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.List;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
@@ -52,4 +53,12 @@ public interface UserRepository extends JpaRepository<User, String> {
           AND us.lastDateLogin < :yesterday
     """)
     int useFreezeForInactiveUsers(@Param("yesterday") Instant yesterday);
+
+
+    // Lấy top 10 expScore cao nhất
+    List<User> findTop10ByOrderByExpScoreDesc();
+
+    // Lấy top 10 longStreak cao nhất
+    List<User> findTop10ByOrderByLongStreakDesc();
+
 }
