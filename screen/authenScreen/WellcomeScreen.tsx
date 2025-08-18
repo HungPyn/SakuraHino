@@ -21,11 +21,39 @@ export default function WelcomeScreen({ navigation }: Props) {
 
   useEffect(() => {
     const checkUserStatus = async () => {
+      await AsyncStorage.removeItem("hasOpenedApp");
+      await AsyncStorage.removeItem("isLoggedIn");
       const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
       const hasOpened = await AsyncStorage.getItem("hasOpenedApp");
 
       if (isLoggedIn === "true") {
-        navigation.replace("Home");
+        console.log("mở đang nhập");
+        navigation.replace("Login");
+      } else if (hasOpened === "true") {
+        navigation.navigate("Login", { login: true });
+      } else {
+        await AsyncStorage.setItem("hasOpenedApp", "true");
+        setTimeout(() => {
+          navigation.navigate("Login", { login: true });
+        }, 3000);
+      }
+
+      setLoading(false);
+    };
+
+    checkUserStatus();
+  }, []);
+
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      await AsyncStorage.removeItem("hasOpenedApp");
+      await AsyncStorage.removeItem("isLoggedIn");
+      const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
+      const hasOpened = await AsyncStorage.getItem("hasOpenedApp");
+
+      if (isLoggedIn === "true") {
+        console.log("mở đang nhập");
+        navigation.replace("Login");
       } else if (hasOpened === "true") {
         navigation.navigate("Login", { login: true });
       } else {

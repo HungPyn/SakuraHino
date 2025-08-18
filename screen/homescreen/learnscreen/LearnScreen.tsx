@@ -857,7 +857,7 @@ const Lesson = () => {
               onCheckAnswer={onCheckAnswer}
               onNextQuestion={onSkip}
               onSelectedWords={setSelectedWords}
-              hearts={hearts}
+              // hearts={hearts}
               // Thêm các props khác nếu cần
             />
           </View>

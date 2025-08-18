@@ -17,6 +17,7 @@ import ShopScreen from "../screen/homescreen/shop/ShopScreen";
 import SettingsAccount from "../screen/profile/SettingsAccount";
 import ProfileScreen from "../screen/profile/ProfileScreen";
 import Lesson from "../screen/homescreen/learnscreen/LearnScreen";
+import ExamScreen from "../screen/examscreen/ExamScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -58,7 +59,11 @@ export default function RootNavigator() {
         component={Leaderboard}
         options={{ headerShown: false }}
       />
-
+      <Stack.Screen
+        name="Exam"
+        component={ExamScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen
         name="Main"
         component={MainTabNavigator}

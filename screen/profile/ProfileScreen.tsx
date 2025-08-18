@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -13,17 +15,34 @@ import {
   BronzeLeagueSvg,
   EditPencilSvg,
   EmptyFireSvg,
-  FireSvg,
-  LightningProgressSvg,
   EmptyMedalSvg,
+  FireSvg,
+  GoogleLogoSvg,
+  LightningProgressSvg,
+  LockSvg,
   ProfileFriendsSvg,
   ProfileTimeJoinedSvg,
   SettingsGearSvg,
 } from "../../components/Svgs";
 import { useBoundStore } from "../../hooks/useBoundStore";
 import moment from "moment";
+import profileService from "../../services/profileService";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../types/navigatorType";
 
-const ProfileTopBar = () => {
+export interface User {
+  name: string;
+  email: string;
+  username: string;
+  avatarUrl: string;
+  longStreak: number;
+  expScore: number;
+}
+type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Profile"
+>;
+const ProfileTopBar = ({ user }: { user: User | null }) => {
   const navigation = useNavigation();
   return (
     <View style={styles.topBar}>
@@ -31,7 +50,7 @@ const ProfileTopBar = () => {
         <Text style={styles.srOnly}>Settings</Text>
       </TouchableOpacity>
       <Text style={styles.topBarTitle}>Profile</Text>
-      <TouchableOpacity onPress={() => navigation.navigate("SettingsAccount")}>
+      <TouchableOpacity>
         <SettingsGearSvg />
         <Text style={styles.srOnly}>Settings</Text>
       </TouchableOpacity>
@@ -39,58 +58,86 @@ const ProfileTopBar = () => {
   );
 };
 
-const ProfileTopSection = () => {
-  const navigation = useNavigation();
+const ProfileTopSection = ({ user }: { user: User | null }) => {
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
+
   const loggedIn = useBoundStore((x) => x.loggedIn);
-  const name = useBoundStore((x) => x.name);
-  const username = useBoundStore((x) => x.username);
   const rawDate = useBoundStore((x) => x.joinedAt).toDate();
   const joinedAt = moment(rawDate).format("MMMM YYYY");
-  const followingCount = 0;
-  const followersCount = 0;
-  const language = useBoundStore((x) => x.language);
+  type NavigationProp = NativeStackNavigationProp<
+    RootStackParamList,
+    "Profile"
+  >;
 
   useEffect(() => {
     if (!loggedIn) {
-      navigation.navigate("Home"); // Thay thế router.push("/")
+      navigation.navigate("Welcome"); // Thay thế router.push("/")
     }
   }, [loggedIn, navigation]);
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Xác nhận",
+      "Bạn có chắc chắn muốn đăng xuất không?",
+      [
+        {
+          text: "Hủy",
+          style: "cancel",
+        },
+        {
+          text: "Đăng xuất",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await profileService.logout();
+              navigation.replace("Welcome"); // quay về màn Welcome
+            } catch (error) {
+              console.error("Lỗi khi đăng xuất:", error);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
   return (
     <View style={styles.topSection}>
       <View style={styles.avatar}>
-        <Text style={styles.avatarText}>
-          {username.charAt(0).toUpperCase()}
-        </Text>
+        {user?.avatarUrl && (
+          <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
+        )}
       </View>
       <View style={styles.topSectionContent}>
         <View style={styles.topSectionHeader}>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.username}>{username}</Text>
+          <Text style={styles.name}>{user?.name}</Text>
+          <Text style={styles.username}>{user?.username}</Text>
         </View>
         <View style={styles.infoRow}>
           <ProfileTimeJoinedSvg />
-          <Text style={styles.infoText}>{`Joined ${joinedAt}`}</Text>
+          <Text style={styles.infoText}>{`Ngày tham gia: ${joinedAt}`}</Text>
         </View>
         <View style={styles.infoRow}>
           <ProfileFriendsSvg />
-          <Text
-            style={styles.infoText}
-          >{`${followingCount} Following / ${followersCount} Followers`}</Text>
+          <Text style={styles.infoText}>{"Email: " + user?.email}</Text>
         </View>
       </View>
       <TouchableOpacity
-        onPress={() => navigation.navigate("SettingsAccount")}
+        onPress={() => navigation.navigate("SettingsAccount", { user })}
         style={styles.editButton}
       >
         <EditPencilSvg />
-        <Text style={styles.editButtonText}>Edit profile</Text>
+        <Text style={styles.editButtonText}>Chỉnh sửa</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+        <Text style={styles.editButtonText}>Đăng xuất</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-const ProfileStatsSection = () => {
+const ProfileStatsSection = ({ user }: { user: User | null }) => {
   const streak = useBoundStore((x) => x.streak);
   const totalXp = 125;
   const league = "Bronze";
@@ -98,18 +145,18 @@ const ProfileStatsSection = () => {
 
   return (
     <View style={styles.statsSection}>
-      <Text style={styles.sectionTitle}>Statistics</Text>
+      <Text style={styles.sectionTitle}>Thống kê</Text>
       <View style={styles.statsGrid}>
         <View style={styles.statItem}>
-          {streak === 0 ? <EmptyFireSvg /> : <FireSvg />}
+          {user?.longStreak === 0 ? <EmptyFireSvg /> : <FireSvg />}
           <View style={styles.statContent}>
             <Text
               style={[
                 styles.statNumber,
-                streak === 0 && styles.statNumberInactive,
+                user?.longStreak === 0 && styles.statNumberInactive,
               ]}
             >
-              {streak}
+              {user?.longStreak || 0}
             </Text>
             <Text style={styles.statLabel}>Day streak</Text>
           </View>
@@ -117,7 +164,7 @@ const ProfileStatsSection = () => {
         <View style={styles.statItem}>
           <LightningProgressSvg size={35} />
           <View style={styles.statContent}>
-            <Text style={styles.statNumber}>{totalXp}</Text>
+            <Text style={styles.statNumber}>{user?.expScore || 0}</Text>
             <Text style={styles.statLabel}>Total XP</Text>
           </View>
         </View>
@@ -147,12 +194,12 @@ const ProfileStatsSection = () => {
   );
 };
 
-const ProfileFriendsSection = () => {
+const ProfileFriendsSection = ({ user }: { user: User | null }) => {
   const [state, setState] = useState<"FOLLOWING" | "FOLLOWERS">("FOLLOWING");
 
   return (
     <View style={styles.friendsSection}>
-      <Text style={styles.sectionTitle}>Friends</Text>
+      <Text style={styles.sectionTitle}>Bạn bè</Text>
       <View style={styles.friendsContainer}>
         <View style={styles.friendsButtons}>
           <TouchableOpacity
@@ -200,16 +247,31 @@ const ProfileFriendsSection = () => {
   );
 };
 const ProfileScreen = () => {
+  const [user, setUser] = useState<User | null>(null);
+
+  const getUser = async () => {
+    try {
+      const data = await profileService.getUser();
+      setUser(data);
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin người dùng:", error);
+    }
+  };
+
+  useEffect(() => {
+    getUser();
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ProfileTopBar />
+      <ProfileTopBar user={user} />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
       >
-        <ProfileTopSection />
-        <ProfileStatsSection />
-        <ProfileFriendsSection />
+        <ProfileTopSection user={user} />
+        <ProfileStatsSection user={user} />
+        <ProfileFriendsSection user={user} />
       </ScrollView>
       <BottomBar selectedTab="Profile" />
     </SafeAreaView>
@@ -240,6 +302,7 @@ const styles = StyleSheet.create({
 
   // ProfileTopBar
   topBar: {
+    marginTop: 10, // Để tránh bị che bởi TopBar
     position: "absolute",
     left: 0,
     right: 0,
@@ -262,13 +325,19 @@ const styles = StyleSheet.create({
 
   // ProfileTopSection
   topSection: {
-    flexDirection: "column-reverse",
+    flexDirection: "column", // avatar lên đầu thay vì column-reverse
     borderBottomWidth: 2,
     borderColor: "#e5e7eb",
     paddingBottom: 32,
     gap: 12,
   },
+  avatarImage: {
+    width: 100, // Đặt chiều rộng và chiều cao tùy ý
+    height: 100,
+    borderRadius: 50, // Tạo hình tròn
+  },
   avatar: {
+    marginTop: 10, // Đẩy avatar lên trên
     height: 80,
     width: 80,
     borderRadius: 9999,
@@ -317,8 +386,20 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     borderRadius: 16,
     borderBottomWidth: 4,
-    borderColor: "#3b82f6",
-    backgroundColor: "#60a5fa",
+    borderColor: "#edececff", // màu đỏ cho nút logout
+    backgroundColor: "#6ec0d0ff",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    alignSelf: "flex-start",
+    borderRadius: 16,
+    borderBottomWidth: 4,
+    borderColor: "#edececff", // màu đỏ cho nút logout
+    backgroundColor: "#eb5e5eff",
     paddingHorizontal: 20,
     paddingVertical: 12,
   },

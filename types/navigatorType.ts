@@ -11,6 +11,14 @@ export type MainTabParamList = {
   "Thống kê": undefined;
   "Hồ sơ": undefined;
 };
+export interface User {
+  name: string;
+  email: string;
+  username: string;
+  avatarUrl: string;
+  longStreak: number;
+  expScore: number;
+}
 
 export type RootStackParamList = {
   Welcome: undefined;
@@ -24,12 +32,13 @@ export type RootStackParamList = {
   Shop: undefined;
   QuickPractice: { type: PracticeType };
   LearningPathScreen: undefined;
-  SettingsAccount: undefined;
+  SettingsAccount: { user: User | null };
   ProfileScreen: undefined;
   Lesson: { lessonCode: string; topicCode: string; practice: boolean };
   Guidebook: { code: string; unitNumber: number };
   LearningPath: undefined;
   Profile: undefined;
+  Exam: undefined;
   Result: {
     corect: number;
     totalQuestion: number;

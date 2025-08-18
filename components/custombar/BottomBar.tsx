@@ -34,12 +34,8 @@ export const BottomBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
       navigation.navigate("Shop");
     } else if (href.startsWith("/profile")) {
       navigation.navigate("Profile");
-    } else if (href.startsWith("/learn?sign-up")) {
-      navigation.navigate("LessonScreen2", {
-        unitNumber: 1,
-        "fast-forward": 0,
-        practice: false,
-      });
+    } else if (href.startsWith("/exam")) {
+      navigation.navigate("Exam");
     } else if (href === "/leaderboard") {
       navigation.navigate("Leaderboard");
     }
@@ -82,6 +78,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     flexDirection: "row", // Để các item nằm ngang
     height: 88,
+    marginBottom: 10,
     // md:hidden không có tác dụng trong React Native, Responsive cần được xử lý bằng kích thước màn hình
   },
   itemWrapper: {

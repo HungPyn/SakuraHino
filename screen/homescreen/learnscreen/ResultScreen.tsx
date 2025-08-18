@@ -1,8 +1,15 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+  Easing,
+} from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import Icon from "react-native-vector-icons/FontAwesome"; // Import Icon từ FontAwesome
+import Icon from "react-native-vector-icons/FontAwesome";
 import type { RootStackParamList } from "../../../types/navigatorType";
 
 type ResultScreenRouteProp = NativeStackScreenProps<
@@ -19,6 +26,75 @@ const ResultScreen = () => {
   const route = useRoute<ResultScreenRouteProp>();
 
   const { corect, totalQuestion, score, commitTime } = route.params;
+
+  // Tách phút và giây từ chuỗi thời gian
+  const [minutes, seconds] = commitTime.split(":").map(Number);
+  const totalSeconds = minutes * 60 + seconds;
+
+  // State và Animated.Value cho hiệu ứng tăng điểm XP
+  const [animatedScore, setAnimatedScore] = useState(0);
+  const scoreValue = useRef(new Animated.Value(0)).current;
+
+  // State và Animated.Value cho hiệu ứng tăng số câu đúng
+  const [animatedCorrect, setAnimatedCorrect] = useState(0);
+  const correctValue = useRef(new Animated.Value(0)).current;
+
+  // State và Animated.Value cho hiệu ứng tăng thời gian
+  const [animatedTime, setAnimatedTime] = useState("00:00");
+  const timeValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Animation cho điểm số XP
+    Animated.timing(scoreValue, {
+      toValue: score,
+      duration: 1000,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+
+    // Animation cho số câu đúng
+    Animated.timing(correctValue, {
+      toValue: corect,
+      duration: 1000,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+
+    // Animation cho thời gian
+    Animated.timing(timeValue, {
+      toValue: totalSeconds,
+      duration: 1000,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+  }, [score, corect, totalSeconds, scoreValue, correctValue, timeValue]);
+
+  // Cập nhật giá trị hiển thị khi animated values thay đổi
+  useEffect(() => {
+    scoreValue.addListener(({ value }) => {
+      setAnimatedScore(Math.floor(value));
+    });
+
+    correctValue.addListener(({ value }) => {
+      setAnimatedCorrect(Math.floor(value));
+    });
+
+    timeValue.addListener(({ value }) => {
+      const animatedMinutes = Math.floor(value / 60);
+      const animatedSeconds = Math.floor(value % 60);
+      const formattedTime = `${String(animatedMinutes).padStart(
+        2,
+        "0"
+      )}:${String(animatedSeconds).padStart(2, "0")}`;
+      setAnimatedTime(formattedTime);
+    });
+
+    return () => {
+      scoreValue.removeAllListeners();
+      correctValue.removeAllListeners();
+      timeValue.removeAllListeners();
+    };
+  }, [scoreValue, correctValue, timeValue]);
 
   const handleGoToLearningPath = () => {
     navigation.replace("LearningPathScreen");
@@ -49,23 +125,32 @@ const ResultScreen = () => {
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Icon name="check-circle" size={24} color={mainColor} />
-            <Text style={styles.statText}>
-              <Text style={{ color: mainColor }}>{corect}</Text>/{totalQuestion}
-            </Text>
-            <Text style={styles.statLabel}>Đã trả lời đúng</Text>
+            <View style={styles.statCircle}>
+              <Text style={styles.statText}>
+                <Animated.Text style={{ color: mainColor }}>
+                  {animatedCorrect}
+                </Animated.Text>
+                /{totalQuestion}
+              </Text>
+            </View>
+            <Text style={styles.statLabel}>Đúng</Text>
           </View>
           <View style={styles.statItem}>
             <Icon name="bolt" size={24} color={mainColor} />
-            <Text style={[styles.statValue, { color: mainColor }]}>
-              {Math.floor(score)}
-            </Text>
+            <View style={styles.statCircle}>
+              <Text style={[styles.statValue, { color: mainColor }]}>
+                {animatedScore}
+              </Text>
+            </View>
             <Text style={styles.statLabel}>XP</Text>
           </View>
           <View style={styles.statItem}>
             <Icon name="clock-o" size={24} color={mainColor} />
-            <Text style={[styles.statValue, { color: mainColor }]}>
-              {commitTime}
-            </Text>
+            <View style={styles.statCircle}>
+              <Text style={[styles.statValue, { color: mainColor }]}>
+                {animatedTime}
+              </Text>
+            </View>
             <Text style={styles.statLabel}>Thời gian</Text>
           </View>
         </View>
@@ -98,7 +183,7 @@ const styles = StyleSheet.create({
   },
   topSection: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 80,
   },
   characterIcon: {
     marginBottom: 20,
@@ -112,19 +197,27 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     width: "100%",
     paddingHorizontal: 20,
+    marginTop: 40,
   },
   statItem: {
     alignItems: "center",
   },
-  statText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#555",
+  statCircle: {
+    width: 90, // Tùy chỉnh kích thước
+    height: 40, // Tùy chỉnh kích thước
+    backgroundColor: "#e0e0e0",
+    borderRadius: 20, // Làm cho góc bo tròn
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 5,
+  },
+  statText: {
+    fontSize: 18,
+    fontWeight: "bold",
   },
   statValue: {
     fontWeight: "bold",
-    fontSize: 24,
+    fontSize: 18,
   },
   statLabel: {
     fontSize: 16,
@@ -137,8 +230,9 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     width: "90%",
+    marginBottom: 30,
     paddingVertical: 18,
-    borderRadius: 12,
+    borderRadius: 50,
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },

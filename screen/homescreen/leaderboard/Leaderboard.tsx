@@ -1,443 +1,335 @@
-import React, { useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Image,
+  TouchableOpacity,
   ScrollView,
-  Platform,
+  SafeAreaView,
 } from "react-native";
-import { useNavigation, StackActions } from "@react-navigation/native";
-import dayjs from "dayjs";
-import weekday from "dayjs/plugin/weekday";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-
+import { BottomBar } from "../../../components/custombar/BottomBar";
+import React, { useEffect, useState } from "react";
 import {
   BronzeLeagueSvg,
-  FirstPlaceSvg,
-  LeaderboardBannerSvg,
-  LeaderboardExplanationSvg,
-  LockedLeaderboardSvg,
-  LockedLeagueSvg,
-  SecondPlaceSvg,
-  ThirdPlaceSvg,
+  FireSvg,
+  LightningProgressSvg,
 } from "../../../components/Svgs";
+import { useNavigation } from "@react-navigation/native";
+import leaderboardService from "../../../services/leaderboardService";
 
-import { useBoundStore } from "../../../hooks/useBoundStore";
-import { BottomBar } from "../../../components/custombar/BottomBar";
-import { useLeaderboardUsers } from "./useLeaderboardUsers";
-import type { RootStackParamList } from "../../../types/navigatorType";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-dayjs.extend(weekday);
-
-type LeaderboardScreenNavigationProp = NativeStackScreenProps<
-  RootStackParamList,
-  "Leaderboard"
->["navigation"];
-
-const LeaderboardExplanationSection = () => {
-  return (
-    <View style={leaderboardStyles.explanationContainer}>
-      <View style={leaderboardStyles.explanationTextContent}>
-        <Text style={leaderboardStyles.explanationHeading}>
-          What are leaderboards?
-        </Text>
-        <Text style={leaderboardStyles.explanationBoldText}>
-          Do lessons. Earn XP. Compete.
-        </Text>
-        <Text style={leaderboardStyles.explanationNormalText}>
-          Earn XP through lessons, then compete with players in a weekly
-          leaderboard
-        </Text>
-      </View>
-
-      <View style={leaderboardStyles.explanationSpacer}></View>
-
-      <LeaderboardExplanationSvg />
-    </View>
-  );
-};
-
-type TimeLeftUnit = "days" | "hours" | "minutes";
-
-const timeUntilStartOfWeek = (units: TimeLeftUnit): number => {
-  const startOfWeekDay = 0;
-  const startOfWeekHour = 20;
-  const now = dayjs();
-
-  let nextSunday = now.startOf("day").weekday(startOfWeekDay);
-
-  if (now.weekday() === startOfWeekDay && now.hour() < startOfWeekHour) {
-  } else {
-    if (now.weekday() === startOfWeekDay && now.hour() >= startOfWeekHour) {
-      nextSunday = nextSunday.add(1, "week");
-    } else if (now.weekday() > startOfWeekDay) {
-      nextSunday = nextSunday.add(1, "week");
-    }
-  }
-
-  nextSunday = nextSunday
-    .hour(startOfWeekHour)
-    .minute(0)
-    .second(0)
-    .millisecond(0);
-
-  return nextSunday.diff(now, units);
-};
-
-const timeLeft = (): `${number} ${TimeLeftUnit}` => {
-  const days = timeUntilStartOfWeek("days");
-  if (days > 0) {
-    return `${days} days`;
-  }
-  const hours = timeUntilStartOfWeek("hours");
-  if (hours > 0) {
-    return `${hours} hours`;
-  }
-  const minutes = timeUntilStartOfWeek("minutes");
-  if (minutes > 0) {
-    return `${minutes} minutes`;
-  }
-  return `0 minutes`;
-};
-
-const defaultPicture = "https://placekitten.com/100/100";
-
-const LeaderboardProfile = ({
-  place,
-  name,
-  xp,
-  isCurrentUser,
-}: {
-  place: number;
+// Khai báo interface User
+export interface User {
   name: string;
-  xp: number;
-  isCurrentUser: boolean;
+  email: string;
+  username: string;
+  avatarUrl: string;
+  longStreak: number;
+  expScore: number;
+}
+
+const COLORS = {
+  background: "#f0f2f5",
+  cardBackground: "#FFFFFF",
+  textColorPrimary: "#333333",
+  textColorSecondary: "#666666",
+  yellow: "#eab308",
+  orange: "#f97316",
+  green: "#22c55e",
+  blue: "#3b82f6",
+};
+
+// Dữ liệu người dùng mẫu cho bảng xếp hạng Streak
+
+// Component mới cho mỗi mục trong bảng xếp hạng
+const LeaderboardItem = ({
+  user,
+  rank,
+  score,
+  label,
+  scoreColor,
+}: {
+  user: User;
+  rank: number;
+  score: number;
+  label: string;
+  scoreColor: string;
 }) => {
+  const defaultAvatar = "https://placekitten.com/100/100";
   return (
-    <View
-      style={[
-        leaderboardStyles.profileContainer,
-        isCurrentUser ? leaderboardStyles.currentUserProfile : {},
-      ]}
-    >
-      <View style={leaderboardStyles.profileRankAndImage}>
-        {place === 1 ? (
-          <FirstPlaceSvg width={40} height={40} />
-        ) : place === 2 ? (
-          <SecondPlaceSvg width={40} height={40} />
-        ) : place === 3 ? (
-          <ThirdPlaceSvg width={40} height={40} />
-        ) : (
-          <View style={leaderboardStyles.profileRankNumberContainer}>
-            <Text style={leaderboardStyles.profileRankNumberText}>{place}</Text>
-          </View>
-        )}
-        <Image
-          style={leaderboardStyles.profileImage}
-          source={{ uri: defaultPicture }}
-        />
-      </View>
-      <View style={leaderboardStyles.profileNameContainer}>
-        <Text
-          numberOfLines={1}
-          ellipsizeMode="tail"
-          style={leaderboardStyles.profileNameText}
-        >
-          {name}
+    <View style={styles.leaderboardItem}>
+      <Text style={styles.rankText}>{rank}</Text>
+      <Image
+        style={styles.leaderboardAvatar}
+        source={{ uri: user.avatarUrl || defaultAvatar }}
+      />
+      <View style={styles.userInfo}>
+        <Text style={styles.userName} numberOfLines={1}>
+          {user.name}
+        </Text>
+        <Text style={styles.userUsername} numberOfLines={1}>
+          @{user.username}
         </Text>
       </View>
-      <Text style={leaderboardStyles.profileXpText}>{`${xp} XP`}</Text>
+      <View style={styles.scoreContainer}>
+        <Text style={[styles.scoreText, { color: scoreColor }]}>{score}</Text>
+        <Text style={styles.scoreLabel}>{label}</Text>
+      </View>
     </View>
   );
 };
 
-const Leaderboard = () => {
-  const navigation = useNavigation<LeaderboardScreenNavigationProp>();
-  const loggedIn = useBoundStore((x) => x.loggedIn);
-  const lessonsCompleted = useBoundStore((x) => x.lessonsCompleted);
+// Component chính của màn hình Leaderboard
+const LeaderboardScreen = () => {
+  const navigation = useNavigation();
+  const [streakUsersData, setStreakUsersData] = useState<User[]>([]);
+  const [expUsersData, setExpUsersData] = useState<User[]>([]);
+
+  //lay top streak
+  const getTopStreakUsers = async () => {
+    try {
+      const data = await leaderboardService.getTopStreakUsers();
+      setStreakUsersData(data);
+    } catch (error) {
+      console.error("Lỗi khi lấy top streak người dùng:", error);
+    }
+  };
+
+  //lay top exp
+  const getTopExpUsers = async () => {
+    try {
+      const data = await leaderboardService.getTopExpUsers();
+      setExpUsersData(data);
+    } catch (error) {
+      console.error("Lỗi khi lấy top exp người dùng:", error);
+    }
+  };
 
   useEffect(() => {
-    if (!loggedIn) {
-      navigation.dispatch(StackActions.replace("Login"));
-    }
-  }, [loggedIn, navigation]);
+    getTopStreakUsers();
+    getTopExpUsers();
+  }, []);
 
-  const lessonsToUnlockLeaderboard = 10;
-  const lessonsRemainingToUnlockLeaderboard =
-    lessonsToUnlockLeaderboard - lessonsCompleted;
-  const leaderboardIsUnlocked = lessonsCompleted >= lessonsToUnlockLeaderboard;
-
-  const leaderboardLeague = "Bronze League";
-
-  const leaderboardUsers = useLeaderboardUsers();
+  // Sắp xếp dữ liệu ngay trong component
+  const sortedStreakUsers = streakUsersData.sort(
+    (a, b) => b.longStreak - a.longStreak
+  );
+  const sortedExpUsers = expUsersData.sort((a, b) => b.expScore - a.expScore);
 
   return (
-    <SafeAreaView style={leaderboardStyles.mainContainer}>
-      <ScrollView
-        contentContainerStyle={leaderboardStyles.scrollViewContentContainer}
-      >
-        <View style={leaderboardStyles.contentWrapper}>
-          {!leaderboardIsUnlocked && (
-            <>
-              <LeaderboardBannerSvg width={300} height={150} />
-              <Text style={leaderboardStyles.unlockTitle}>
-                Unlock Leaderboards!
-              </Text>
-              <Text style={leaderboardStyles.unlockDescription}>
-                Complete {lessonsRemainingToUnlockLeaderboard} more lesson
-                {lessonsRemainingToUnlockLeaderboard === 1 ? "" : "s"} to start
-                competing
-              </Text>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("LessonScreen", { practice: true })
-                } // Giả sử 'LessonScreen' là tên màn hình bài học của bạn
-                style={leaderboardStyles.startButton}
-              >
-                <Text style={leaderboardStyles.startButtonText}>
-                  Start a lesson
-                </Text>
-              </TouchableOpacity>
-              <View style={leaderboardStyles.spacerHeight5}></View>
-              {/* Đảm bảo LockedLeaderboardSvg là component SVG của React Native */}
-              <LockedLeaderboardSvg width={200} height={200} />
-            </>
-          )}
-          {leaderboardIsUnlocked && (
-            <>
-              <View style={leaderboardStyles.stickyHeader}>
-                <View style={leaderboardStyles.leagueIconsContainer}>
-                  <BronzeLeagueSvg width={80} height={80} />
-                  <LockedLeagueSvg width={60} height={60} />
-                  <LockedLeagueSvg width={60} height={60} />
-                  <LockedLeagueSvg width={60} height={60} />
-                  <LockedLeagueSvg width={60} height={60} />
-                </View>
-                <Text style={leaderboardStyles.leagueTitle}>
-                  {leaderboardLeague}
-                </Text>
-                <View style={leaderboardStyles.leaderboardInfo}>
-                  <Text style={leaderboardStyles.leaderboardInfoText}>
-                    Top 20 advance to the next league
-                  </Text>
-                  <Text style={leaderboardStyles.leaderboardTimeLeft}>
-                    {timeLeft()}
-                  </Text>
-                </View>
-                <View style={leaderboardStyles.divider}></View>
-              </View>
-              <View style={leaderboardStyles.leaderboardList}>
-                {leaderboardUsers.map((user, i) => {
-                  return (
-                    <LeaderboardProfile
-                      key={user.name}
-                      place={i + 1}
-                      name={user.name}
-                      xp={user.xp}
-                      isCurrentUser={user.isCurrentUser}
-                    />
-                  );
-                })}
-              </View>
-            </>
-          )}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Text style={styles.headerTitle}>Bảng xếp hạng</Text>
+
+        {/* Bảng xếp hạng Top Streaks */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionTitleContainer}>
+            <FireSvg />
+            <Text style={styles.sectionTitleText}>Top Streaks</Text>
+          </View>
+          <View style={styles.leaderboardHeader}>
+            <Text style={styles.rankHeader}>Rank</Text>
+            <Text style={styles.nameHeader}>Tên người dùng</Text>
+            <Text style={styles.scoreHeader}>Streak</Text>
+          </View>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {sortedStreakUsers.map((user, index) => (
+              <LeaderboardItem
+                key={`streak-${index}`}
+                user={user}
+                rank={index + 1}
+                score={user.longStreak}
+                label="ngày"
+                scoreColor={COLORS.orange}
+              />
+            ))}
+          </ScrollView>
         </View>
-      </ScrollView>
+
+        {/* Bảng xếp hạng Top XP */}
+        <View style={styles.sectionContainerXP}>
+          <View style={styles.sectionTitleContainer}>
+            <LightningProgressSvg size={34} />
+            <Text style={styles.sectionTitleText}>Top XP</Text>
+          </View>
+          <View style={styles.leaderboardHeader}>
+            <Text style={styles.rankHeader}>Rank</Text>
+            <Text style={styles.nameHeader}>Tên người dùng</Text>
+            <Text style={styles.scoreHeader}>XP</Text>
+          </View>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {sortedExpUsers.map((user, index) => (
+              <LeaderboardItem
+                key={`exp-${index}`}
+                user={user}
+                rank={index + 1}
+                score={user.expScore}
+                label="XP"
+                scoreColor={COLORS.yellow}
+              />
+            ))}
+          </ScrollView>
+        </View>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("LearningPathScreen")}
+        >
+          <Text style={styles.seeMoreText}>Luyện tập ngay</Text>
+        </TouchableOpacity>
+      </View>
+
       <BottomBar selectedTab="Leaderboard" />
     </SafeAreaView>
   );
 };
 
-const leaderboardStyles = StyleSheet.create({
-  mainContainer: {
-    flex: 1, // Đảm bảo component chiếm toàn bộ không gian
-    backgroundColor: "#FFFFFF",
-  },
-  scrollViewContentContainer: {
-    flexGrow: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    paddingTop: 14,
-    paddingBottom: 28, // Để tạo khoảng trống cho BottomBar
-  },
-  contentWrapper: {
-    width: "100%", // Chiếm toàn bộ chiều rộng có sẵn
-    maxWidth: 600, // max-w-xl tương đương với khoảng 56rem ~ 896px trên web, cần điều chỉnh cho mobile
-    alignItems: "center",
-    paddingHorizontal: 20, // px-5
-    gap: 20, // gap-5,
-  },
-  // --- Unlock Leaderboard Styles ---
-  unlockTitle: {
-    textAlign: "center",
-    fontSize: 24, // text-2xl
+const styles = StyleSheet.create({
+  seeMoreText: {
+    fontSize: 17,
     fontWeight: "bold",
-    color: "#4B5563", // gray-700
-  },
-  unlockDescription: {
+    color: "#58ce14ff",
     textAlign: "center",
-    fontSize: 18, // text-lg
-    color: "#6B7280", // gray-500
+    marginTop: 10,
+    textDecorationLine: "underline",
   },
-  startButton: {
-    width: "auto",
-    borderRadius: 16, // rounded-2xl
-    borderWidth: 2,
-    borderBottomWidth: 4, // border-b-4
-    borderColor: "#E5E7EB", // gray-200
-    paddingHorizontal: 64, // px-16
-    paddingVertical: 8, // py-2
-    alignItems: "center",
-    justifyContent: "center",
-    // Các thuộc tính hover không áp dụng trực tiếp trong RN, cần dùng Pressable hoặc TouchableOpacity với state
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
   },
-  startButtonText: {
-    textAlign: "center",
+  container: {
+    flex: 1, // Cho phép View này chiếm toàn bộ không gian còn lại
+    paddingVertical: 20,
+    paddingHorizontal: 18,
+  },
+  headerTitle: {
+    fontSize: 24,
     fontWeight: "bold",
-    textTransform: "uppercase",
-    color: "#60A5FA", // blue-400
-  },
-  spacerHeight5: {
-    height: 20, // h-5
-  },
-
-  // --- Leaderboard Unlocked Styles ---
-  stickyHeader: {
-    width: "100%",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    paddingTop: 14, // -mt-14 + pt-14
-    paddingBottom: 20, // pb-5
-    // position: "absolute", // sticky không có trong RN, cần dùng thư viện hoặc tạo hiệu ứng thủ công
-    // top: 0,
-    // zIndex: 1,
-    // Để làm sticky header trong React Native cần dùng `FlatList` với `ListHeaderComponent` hoặc `SectionList`
-    // Hoặc xử lý thủ công với `Animated.event` trên `ScrollView`
-  },
-  leagueIconsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 20, // gap-5
+    paddingTop: 10,
     marginBottom: 10,
+    marginTop: 20,
+    color: COLORS.textColorPrimary,
   },
-  leagueTitle: {
-    fontSize: 24, // text-2xl
+  sectionContainer: {
+    marginTop: 25,
+    marginBottom: 5,
+    backgroundColor: "rgba(195, 243, 145, 1)",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    height: 280, // Chiều cao cố định cho mỗi bảng để ScrollView bên trong hoạt động
+  },
+  sectionContainerXP: {
+    marginTop: 20,
+    marginBottom: 5,
+    backgroundColor: "rgba(210, 234, 157, 1)",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    height: 280, // Chiều cao cố định cho mỗi bảng để ScrollView bên trong hoạt động
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    margin: 15,
+    color: COLORS.textColorPrimary,
+  },
+  leaderboardHeader: {
+    flexDirection: "row",
+    paddingHorizontal: 15,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.background,
+  },
+  sectionTitleContainer: {
+    flexDirection: "row",
+    marginLeft: 15,
+    marginBottom: 0,
+    marginTop: 5,
+  },
+  sectionTitleText: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginLeft: 8,
+    color: COLORS.textColorPrimary,
+  },
+  rankHeader: {
+    width: 50,
     fontWeight: "bold",
-    color: "#4B5563", // Có thể thay đổi màu nếu cần
-    marginBottom: 10,
+    color: COLORS.textColorSecondary,
   },
-  leaderboardInfo: {
-    width: "100%",
-    alignItems: "center",
-    gap: 4, // gap-1
-  },
-  leaderboardInfoText: {
-    fontSize: 18, // text-lg
-    color: "#6B7280", // gray-500
-  },
-  leaderboardTimeLeft: {
+  nameHeader: {
+    flex: 1,
     fontWeight: "bold",
-    color: "#FBBF24", // yellow-400
+    color: COLORS.textColorSecondary,
   },
-  divider: {
-    width: "100%",
-    height: 2, // border-b-2
-    backgroundColor: "#E5E7EB", // gray-200
-    marginTop: 10, // Khoảng cách sau divider
+  scoreHeader: {
+    width: 80,
+    fontWeight: "bold",
+    color: COLORS.textColorSecondary,
+    textAlign: "right",
   },
-  leaderboardList: {
-    width: "100%",
-    marginTop: 20, // Khoảng cách từ divider đến list
+  scrollContent: {
+    paddingBottom: 10,
   },
-
-  // --- Leaderboard Profile Styles ---
-  profileContainer: {
+  leaderboardItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 20, // gap-5
-    borderRadius: 16, // rounded-2xl
-    paddingHorizontal: 20, // px-5
-    paddingVertical: 8, // py-2
-    marginHorizontal: 0, // md:mx-0
-    // hover:bg-gray-100 không có trong RN, cần dùng TouchableOpacity với state
+    paddingHorizontal: 5,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
-  currentUserProfile: {
-    backgroundColor: "#E5E7EB", // gray-200
+  rankText: {
+    marginLeft: 10,
+    width: 50,
+    fontSize: 14,
+    fontWeight: "bold",
+    color: COLORS.textColorPrimary,
   },
-  profileRankAndImage: {
+  leaderboardAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: COLORS.textColorPrimary,
+  },
+  userUsername: {
+    fontSize: 12,
+    color: COLORS.textColorSecondary,
+  },
+  scoreContainer: {
+    marginRight: 10,
     flexDirection: "row",
     alignItems: "center",
-    gap: 16, // gap-4
+    width: 80,
+    justifyContent: "flex-end",
   },
-  profileRankNumberContainer: {
-    height: 40, // h-10
-    width: 40, // w-10
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  profileRankNumberText: {
+  scoreText: {
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#16A34A", // green-700
+    marginRight: 4,
   },
-  profileImage: {
-    height: 48, // h-12
-    width: 48, // w-12
-    borderRadius: 24, // rounded-full (một nửa chiều rộng/chiều cao)
-  },
-  profileNameContainer: {
-    flexGrow: 1, // grow
-    overflow: "hidden",
-  },
-  profileNameText: {
-    fontWeight: "bold",
-  },
-  profileXpText: {
-    flexShrink: 0, // shrink-0
-    color: "#6B7280", // gray-500
-  },
-
-  // --- Leaderboard Explanation Section Styles (for larger screens/conditional rendering) ---
-  explanationContainer: {
-    // Hidden on small screens, shown on xl screens.
-    // In React Native, you would typically hide this by not rendering it at all
-    // or using responsive hooks/libraries for different screen sizes.
-    // For now, I'll keep it defined but note it would be conditionally rendered.
-    // Equivalent to: hidden h-fit w-96 shrink-0 gap-5 rounded-2xl border-2 border-gray-200 p-6 xl:flex
-    width: 384, // w-96 (96 * 4 = 384px)
-
-    flexShrink: 0, // shrink-0
-    gap: 20, // gap-5
-    borderRadius: 16, // rounded-2xl
-    borderWidth: 2,
-    borderColor: "#E5E7EB", // gray-200
-    padding: 24, // p-6
-    flexDirection: "column", // flex (default for View is column)
-    // Only show on larger screens by not rendering on mobile
-    display: Platform.OS === "web" ? "flex" : "none", // Example: hide on non-web platforms
-  },
-  explanationTextContent: {
-    flexDirection: "column",
-    gap: 20, // gap-5
-  },
-  explanationHeading: {
-    fontWeight: "bold",
-    textTransform: "uppercase",
-    color: "#9CA3AF", // gray-400
-  },
-  explanationBoldText: {
-    fontWeight: "bold",
-    color: "#4B5563", // gray-700
-  },
-  explanationNormalText: {
-    color: "#9CA3AF", // gray-400
-  },
-  explanationSpacer: {
-    width: 40, // w-10
-    flexShrink: 0,
+  scoreLabel: {
+    fontSize: 12,
+    color: COLORS.textColorSecondary,
   },
 });
 
-export default Leaderboard;
+export default LeaderboardScreen;

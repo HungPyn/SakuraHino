@@ -237,7 +237,7 @@ export const LoginScreen = () => {
         ]}
       >
         <View style={styles.container}>
-          <View style={styles.header}>
+          {/* <View style={styles.header}>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setLoginScreenState("HIDDEN")}
@@ -263,7 +263,7 @@ export const LoginScreen = () => {
                 </Text>
               </TouchableOpacity>
             )}
-          </View>
+          </View> */}
 
           <View style={styles.contentArea}>
             <View style={styles.formContainer}>
@@ -317,7 +317,7 @@ export const LoginScreen = () => {
                   </View>
 
                   <View style={styles.socialButtonsContainer}>
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                       style={styles.socialButton}
                       onPress={() => alert("Tính năng Facebook chưa hỗ trợ")}
                     >
@@ -327,7 +327,7 @@ export const LoginScreen = () => {
                         style={styles.socialIcon}
                       />
                       <Text style={styles.socialButtonText}>Facebook</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                     <TouchableOpacity
                       style={styles.socialButton}
                       onPress={handleGoogleSignIn}
@@ -391,7 +391,7 @@ export const LoginScreen = () => {
                   </View>
 
                   <View style={styles.socialButtonsContainer}>
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                       style={styles.socialButton}
                       onPress={() => alert("Tính năng Facebook chưa hỗ trợ")}
                     >
@@ -401,7 +401,7 @@ export const LoginScreen = () => {
                         style={styles.socialIcon}
                       />
                       <Text style={styles.socialButtonText}>Facebook</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                     <TouchableOpacity
                       style={styles.socialButton}
                       onPress={handleGoogleSignIn}
@@ -504,12 +504,12 @@ export const LoginScreen = () => {
               )}
 
               {loginScreenState !== "FORGOT_PASSWORD" && (
-                <Text style={styles.mobileToggleAuthText}>
+                <View style={styles.mobileToggleAuthText}>
                   <Text style={styles.mobileToggleAuthQuestion}>
                     {loginScreenState === "LOGIN"
-                      ? "Don't have an account?"
-                      : "Have an account?"}
-                  </Text>{" "}
+                      ? "Don't have an account? "
+                      : "Have an account? "}
+                  </Text>
                   <TouchableOpacity
                     onPress={() =>
                       setLoginScreenState((x) =>
@@ -521,7 +521,7 @@ export const LoginScreen = () => {
                       {loginScreenState === "LOGIN" ? "sign up" : "log in"}
                     </Text>
                   </TouchableOpacity>
-                </Text>
+                </View>
               )}
             </View>
           </View>
@@ -740,8 +740,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   mobileToggleAuthText: {
-    textAlign: "center",
+    flexDirection: "row", // Sắp xếp các phần tử con theo chiều ngang
+    alignItems: "center", // Căn giữa theo chiều dọc
+    justifyContent: "center", // Căn giữa theo chiều ngang (nếu có khoảng trống)
   },
+
   mobileToggleAuthQuestion: {
     fontSize: 14,
     fontWeight: "bold",

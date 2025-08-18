@@ -7,7 +7,7 @@ type BottomBarItem = {
   icon: any;
 };
 
-export type Tab = "Learn" | "Shop" | "Profile" | "Leaderboard";
+export type Tab = "Learn" | "Shop" | "Profile" | "Leaderboard" | "Exam";
 
 export const useBottomBarItems = () => {
   const loggedIn = useBoundStore((x) => x.loggedIn);
@@ -36,6 +36,49 @@ export const useBottomBarItems = () => {
           <Path
             d="M16.1685 2.84462C16.6431 2.84231 17.1233 2.98589 17.5361 3.28558L17.5368 3.2861L29.9455 12.2319C30.9781 12.9822 31.207 14.4275 30.4568 15.4601C29.7067 16.4924 28.262 16.7215 27.2294 15.9719L27.2286 15.9714L16.1602 7.99185L5.09208 15.9712L5.09121 15.9719C4.05865 16.7213 2.61395 16.4923 1.86391 15.4599C1.11367 14.4273 1.34258 12.982 2.3752 12.2318L2.37679 12.2306L14.7839 3.28596L14.7846 3.28544C15.2022 2.98229 15.6887 2.83889 16.1685 2.84462Z"
             fill="#FF4B4B"
+          />
+        </Svg>
+      ),
+    },
+    {
+      name: "Exam",
+      href: "/exam",
+      icon: (
+        <Svg width="46" height="46" viewBox="0 0 46 46" fill="none">
+          <Path
+            d="M10 40H36V10H10V40Z"
+            stroke="#FFC800"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Path
+            d="M30 4H16V10H30V4Z"
+            stroke="#FFC800"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Path
+            d="M16 20H30"
+            stroke="#FFC800"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Path
+            d="M16 26H24"
+            stroke="#FFC800"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <Path
+            d="M16 32H30"
+            stroke="#FFC800"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </Svg>
       ),
@@ -78,6 +121,7 @@ export const useBottomBarItems = () => {
         </Svg>
       ),
     },
+
     {
       name: "Profile",
       href: loggedIn ? "/profile" : "/learn?sign-up",
