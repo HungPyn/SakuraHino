@@ -31,10 +31,12 @@
     },
     "plugins": [
       "expo-web-browser",
+      "expo-av",
       [
-        "expo-av",
+        "@react-native-voice/voice",
         {
-          "microphonePermission": "Cho phép ứng dụng truy cập microphone để ghi âm giọng nói."
+          "microphonePermission": "Ứng dụng cần quyền microphone để nhận dạng giọng nói",
+          "speechRecognitionPermission": "Ứng dụng cần quyền nhận dạng giọng nói để hoạt động"
         }
       ]
     ],

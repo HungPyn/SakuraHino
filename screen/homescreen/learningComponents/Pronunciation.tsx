@@ -50,17 +50,22 @@ interface PronunciationProps {
 
 const requestMicrophonePermission = async () => {
   if (Platform.OS === "android") {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-      {
-        title: "Quyền Microphone",
-        message: "Ứng dụng cần quyền microphone để nhận dạng giọng nói",
-        buttonNeutral: "Hỏi sau",
-        buttonNegative: "Hủy",
-        buttonPositive: "Đồng ý",
-      }
-    );
-    return granted === PermissionsAndroid.RESULTS.GRANTED;
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+        {
+          title: "Quyền Microphone",
+          message: "Ứng dụng cần quyền microphone để nhận dạng giọng nói",
+          buttonNeutral: "Hỏi sau",
+          buttonNegative: "Hủy",
+          buttonPositive: "Đồng ý",
+        }
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn("Permission request error:", err);
+      return false;
+    }
   }
   return true;
 };
@@ -77,30 +82,12 @@ const Pronunciation: React.FC<PronunciationProps> = ({
   const [voiceError, setVoiceError] = useState<string>("");
   const micAnimation = useRef(new Animated.Value(1)).current;
   const soundRef = useRef<Audio.Sound | null>(null);
-  const [isVoiceAvailable, setIsVoiceAvailable] = useState(false);
+  const [isVoiceServiceReady, setIsVoiceServiceReady] = useState(false);
 
-  const requestVoice = useCallback(async () => {
-    try {
-      if (Platform.OS === "ios") {
-        const available = await Voice.isAvailable();
-        setIsVoiceAvailable(!!available);
-        if (!available) console.warn("Voice service not available");
-      } else {
-        // Android coi như luôn khả dụng
-        setIsVoiceAvailable(true);
-      }
-    } catch (e) {
-      console.error("Voice availability error:", e);
-      setIsVoiceAvailable(false);
-    }
-  }, []);
-
+  // Đăng ký listeners và khởi tạo Voice service trong useEffect
   useEffect(() => {
-    requestVoice();
-  }, [requestVoice]);
-
-  useEffect(() => {
-    const onSpeechStart = (e: SpeechStartEvent) => {
+    // Đăng ký listeners
+    Voice.onSpeechStart = (e: SpeechStartEvent) => {
       setIsRecording(true);
       setUserTranscript("");
       setVoiceError("");
@@ -120,7 +107,7 @@ const Pronunciation: React.FC<PronunciationProps> = ({
       ).start();
     };
 
-    const onSpeechEnd = (e: SpeechEndEvent) => {
+    Voice.onSpeechEnd = (e: SpeechEndEvent) => {
       setIsRecording(false);
       Animated.timing(micAnimation, {
         toValue: 1,
@@ -129,7 +116,7 @@ const Pronunciation: React.FC<PronunciationProps> = ({
       }).start();
     };
 
-    const onSpeechResults = (e: SpeechResultsEvent) => {
+    Voice.onSpeechResults = (e: SpeechResultsEvent) => {
       if (e.value && e.value.length > 0) {
         const text = e.value[0];
         setUserTranscript(text);
@@ -138,54 +125,77 @@ const Pronunciation: React.FC<PronunciationProps> = ({
       }
     };
 
-    const onSpeechError = (e: SpeechErrorEvent) => {
+    Voice.onSpeechError = (e: SpeechErrorEvent) => {
       console.log("Speech error:", e);
       setVoiceError("Không nhận diện được giọng nói. Vui lòng thử lại.");
       setIsRecording(false);
       Alert.alert("Lỗi", "Không thể nhận dạng giọng nói!");
     };
 
-    Voice.onSpeechStart = onSpeechStart;
-    Voice.onSpeechEnd = onSpeechEnd;
-    Voice.onSpeechResults = onSpeechResults;
-    Voice.onSpeechError = onSpeechError;
+    // Kiểm tra và khởi tạo service
+    const checkVoiceService = async () => {
+      try {
+        const available = await Voice.isAvailable();
+        if (available) {
+          setIsVoiceServiceReady(true);
+          console.log("Voice service is available.");
+        } else {
+          setIsVoiceServiceReady(false);
+          console.warn("Voice service not available on this device.");
+        }
+      } catch (e) {
+        console.error("Error checking voice service:", e);
+        setIsVoiceServiceReady(false);
+      }
+    };
 
+    checkVoiceService();
+
+    // Cleanup
     return () => {
       Voice.destroy().then(Voice.removeAllListeners);
     };
   }, [onSelectedWords, onCheckAnswer, micAnimation]);
 
   const startRecording = async () => {
+    // 1. Kiểm tra trạng thái của dịch vụ trước khi bắt đầu
+    if (!isVoiceServiceReady) {
+      Alert.alert(
+        "Lỗi",
+        "Thiết bị này không hỗ trợ nhận dạng giọng nói hoặc dịch vụ chưa sẵn sàng."
+      );
+      return;
+    }
+
+    // 2. Kiểm tra quyền truy cập microphone
     const hasPermission = await requestMicrophonePermission();
-    if (!hasPermission) return;
+    if (!hasPermission) {
+      Alert.alert("Lỗi", "Vui lòng cấp quyền micro để sử dụng tính năng này.");
+      return;
+    }
 
     setUserTranscript("");
     setVoiceError("");
 
     try {
+      // Cấu hình âm thanh
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
 
-      if (Platform.OS === "android") {
-        // Android: try catch vì có thể không có SpeechRecognizer
-        try {
-          await Voice.start(question.targetLanguageCode);
-        } catch (err) {
-          console.warn("Voice start failed on Android:", err);
-          Alert.alert(
-            "Lỗi",
-            "Thiết bị Android này không hỗ trợ nhận dạng giọng nói."
-          );
-        }
-      } else {
-        await Voice.start(question.targetLanguageCode);
-      }
+      // 3. Gọi Voice.start() sau khi đã chắc chắn service sẵn sàng
+      await Voice.start(question.targetLanguageCode);
     } catch (e: any) {
       console.error("Voice start error:", e);
       setVoiceError(e.message || "Lỗi ghi âm");
       Alert.alert("Lỗi", "Không thể bắt đầu ghi âm!");
+      // 4. Nếu có lỗi, destroy service để tránh crash lần sau
+      try {
+        await Voice.destroy();
+      } catch (destroyError) {
+        console.error("Voice destroy error:", destroyError);
+      }
     }
   };
 
@@ -220,7 +230,8 @@ const Pronunciation: React.FC<PronunciationProps> = ({
           soundRef.current = null;
         }
       });
-    } catch {
+    } catch (e) {
+      console.error("Audio playback error:", e);
       setIsPlaying(false);
     }
   };
@@ -247,13 +258,22 @@ const Pronunciation: React.FC<PronunciationProps> = ({
             isRecording && { backgroundColor: "#ff7675" },
           ]}
           onPress={startRecording}
+          disabled={!isVoiceServiceReady}
         >
-          <Icon
-            name="microphone"
-            size={24}
-            color="#63c93eff"
-            style={{ marginRight: 12 }}
-          />
+          {isRecording ? (
+            <ActivityIndicator
+              size="small"
+              color="#63c93eff"
+              style={{ marginRight: 12 }}
+            />
+          ) : (
+            <Icon
+              name="microphone"
+              size={24}
+              color="#63c93eff"
+              style={{ marginRight: 12 }}
+            />
+          )}
           <Text style={styles.micText}>
             {isRecording ? "Đang nói..." : "Nhấn để nói"}
           </Text>

@@ -118,7 +118,7 @@ export const LoginScreen = () => {
         setUsername1(name.trim() || Math.random().toString().slice(2));
         setName(name.trim() || Math.random().toString().slice(2));
         logIn();
-        AsyncStorage.setItem("token", data.app);
+        AsyncStorage.setItem("token", data.appToken);
         console.log("User logged in successfully with Google");
         navigation.dispatch(StackActions.replace("LearningPathScreen"));
       } else {

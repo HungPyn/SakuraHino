@@ -1,15 +1,14 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
 } from "react-native";
+import SignatureCanvas from "react-native-signature-canvas";
+import { GoogleVisionAPI } from "./GoogleVisionAPI";
 
 export enum QuestionType {
   MULTIPLE_CHOICE_VOCAB_IMAGE = "MULTIPLE_CHOICE_VOCAB_IMAGE",
@@ -37,7 +36,7 @@ export interface Question {
   lessonId: number;
   questionType: QuestionType;
   promptTextTemplate: string;
-  targetWordNative: string;
+  targetWordNative: string; // ví dụ: "あ"
   targetLanguageCode: string;
   optionsLanguageCode: string;
   audioUrlQuestions: string | null;
@@ -48,65 +47,89 @@ interface WritingProps {
   question: Question;
   onCheckAnswer: () => void;
   onNextQuestion: () => void;
-  onSelectedWords: (words: string[]) => void; // giống WordOrder
+  onSelectedWords: (words: string[]) => void;
   hearts?: number | null;
 }
-
+const correctAnswer = "あ";
 const Writing: React.FC<WritingProps> = ({
   question,
   onCheckAnswer,
   onNextQuestion,
   onSelectedWords,
 }) => {
-  const [userInput, setUserInput] = useState("");
+  const [recognizedText, setRecognizedText] = useState("");
+  const signatureRef = useRef<SignatureCanvas | null>(null);
 
-  // Gửi chữ người dùng giống WordOrder khi bấm Hoàn tất
-  const handleSubmit = () => {
-    const trimmed = userInput.trim();
-    if (!trimmed) {
-      Alert.alert("Thông báo", "Vui lòng nhập câu trả lời!");
-      return;
+  const handleOK = async (signature: string) => {
+    try {
+      const result = await GoogleVisionAPI.recognizeHandwriting(signature);
+      const cleanResult = result.trim();
+      setRecognizedText(cleanResult);
+      onSelectedWords([cleanResult]);
+      onCheckAnswer();
+    } catch (error) {
+      Alert.alert("Lỗi", "Không nhận diện được chữ viết tay.");
     }
+  };
 
-    // gửi chữ đã trim lên cha
-    onSelectedWords([trimmed]);
-    console.log("Đã gửi chữ:", trimmed);
+  const handleClear = () => {
+    signatureRef.current?.clearSignature();
+    setRecognizedText("");
+  };
 
-    // delay 1 giây trước khi gọi kiểm tra
+  const handleCheck = () => {
+    if (signatureRef.current) {
+      signatureRef.current.readSignature();
+    } else {
+      Alert.alert("Thông báo", "Bạn chưa viết gì cả!");
+    }
+  };
 
-    onCheckAnswer();
+  const handleNext = () => {
+    handleClear();
+    Alert.alert("Bạn đã hoàn thành!", "Chuyển sang câu tiếp theo.");
+    onNextQuestion();
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={{ flex: 1, width: "100%", alignItems: "center" }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <Text style={styles.prompt}>{question.promptTextTemplate}</Text>
-        <Text style={styles.bigTargetWord}>{question.targetWordNative}</Text>
+      <Text style={styles.prompt}>{question.promptTextTemplate}</Text>
+      <Text style={styles.bigTargetWord}>{question.targetWordNative}</Text>
 
-        <TextInput
-          style={styles.textInput}
-          value={userInput}
-          onChangeText={(text) => {
-            setUserInput(text); // cập nhật state local
-            onSelectedWords([text.trim()]); // cập nhật luôn state cha
-          }}
-          multiline
-          placeholder="Nhập câu trả lời..."
-        />
+      <SignatureCanvas
+        ref={signatureRef}
+        onOK={handleOK}
+        descriptionText=""
+        minWidth={2}
+        maxWidth={4}
+        webStyle={`
+          .m-signature-pad--footer {display: none;}
+          body { background: #f0f0f0; }
+        `}
+        backgroundColor="#f0f0f0"
+        penColor="#000000"
+      />
 
-        {userInput ? (
-          <Text style={styles.preview}>Bạn đã nhập: {userInput}</Text>
-        ) : null}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.skipButton} onPress={handleClear}>
+          <Text style={styles.buttonText}>Xóa</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.submitButton} onPress={handleCheck}>
+          <Text style={styles.buttonText}>Kiểm tra</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.submitButton} onPress={handleNext}>
+          <Text style={styles.buttonText}>Tiếp theo</Text>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>Kiểm tra</Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+      {recognizedText ? (
+        <Text style={styles.resultText}>
+          Kết quả nhận diện: {recognizedText}{" "}
+          {recognizedText === question.targetWordNative ? "✅" : "❌"}
+        </Text>
+      ) : (
+        <Text style={styles.resultText}>Kết quả: Chưa có câu trả lời ❌</Text>
+      )}
     </SafeAreaView>
   );
 };
@@ -133,33 +156,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#333",
   },
-  highlight: { color: "#1ebf5b" },
-  textInput: {
-    width: "85%",
-    minHeight: 200,
-    borderWidth: 1,
-    borderColor: "#1EBE5B",
-    borderRadius: 15,
-    padding: 15,
-    fontSize: 18,
-    backgroundColor: "#fff",
-    textAlignVertical: "top",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  preview: {
-    marginTop: 15,
-    fontSize: 16,
-    fontStyle: "italic",
-    color: "#555",
-    textAlign: "center",
-  },
   buttonContainer: {
     flexDirection: "row",
-    marginTop: 40,
+    marginTop: 20,
     justifyContent: "space-around",
     width: "85%",
   },
@@ -169,11 +168,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 25,
     marginRight: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 4,
+    alignItems: "center",
   },
   submitButton: {
     flex: 1,
@@ -181,17 +176,20 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 25,
     marginLeft: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 4,
+    alignItems: "center",
   },
   buttonText: {
     color: "#fff",
     fontWeight: "700",
     fontSize: 18,
     textAlign: "center",
+  },
+  resultText: {
+    marginTop: 20,
+    fontSize: 20,
+    fontWeight: "600",
+    textAlign: "center",
+    color: "#333",
   },
 });
 
