@@ -39,5 +39,5 @@ include ':app'
 includeBuild(expoAutolinking.reactNativeGradlePlugin)
 
 // Thêm 2 dòng sau để liên kết thủ công thư viện giọng nói
-include ':@react-native-voice_voice'
-project(':@react-native-voice_voice').projectDir = new File(rootProject.projectDir, '../node_modules/@react-native-voice/voice/android')
+// include ':@react-native-voice_voice'
+// project(':@react-native-voice_voice').projectDir = new File(rootProject.projectDir, '../node_modules/@react-native-voice/voice/android')
