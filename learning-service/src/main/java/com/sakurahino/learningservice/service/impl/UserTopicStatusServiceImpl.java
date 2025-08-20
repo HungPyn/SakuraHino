@@ -1,5 +1,8 @@
 package com.sakurahino.learningservice.service.impl;
 
+import com.sakurahino.ampqclient.RabbitMQMessageProducer;
+import com.sakurahino.clients.commons.RabbitKey;
+import com.sakurahino.clients.rabitmqModel.learning.UserIsNewUpdateMessageDTO;
 import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.security.AuthHelper;
@@ -15,12 +18,14 @@ import com.sakurahino.learningservice.enums.ResultStatus;
 import com.sakurahino.learningservice.repository.*;
 import com.sakurahino.learningservice.service.UserLessonStatusService;
 import com.sakurahino.learningservice.service.UserTopicStatusService;
+import com.sakurahino.learningservice.utils.TimeUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +43,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
     private final UserLessonStatusService userLessonStatusService;
     private final UserStatusLessonRepository userStatusLessonRepository;
     private final PracticeResultRepository practiceResultRepository;
+    private final RabbitMQMessageProducer rabbitMQMessageProducer;
 
     //Tạo bản ghi mới ở user_topic_status khi admin chuyển topic sang public
     @Transactional
@@ -49,7 +55,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
 
         int position = currentTopic.getPosition();
         List<String> userIds = userTopicStatusRepository.findUserIdsToUnlockTopic(position, topicId);
-
+        log.info("Số lượng user sẽ được cập nhập {}", userIds.size());
         if (userIds.isEmpty()) {
             log.info("Không có user nào đủ điều kiện");
             return;
@@ -61,18 +67,19 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
             log.warn("Topic {} không có lesson nào", topicId);
             return;
         }
-
+        Instant now = TimeUtils.nowInstant();
         // 2️ Insert vào user_topic_status
         List<UserTopicStatus> topicStatusList = userIds.stream()
                 .map(uid -> UserTopicStatus.builder()
                         .userId(uid)
                         .topic(currentTopic)
                         .progressStatus(ProgressStatus.UNLOCKED)
+                        .completedAt(now)
                         .build())
                 .toList();
         userTopicStatusRepository.batchInsertUserStatusTopic(topicStatusList, 1000);
 
-      // 3️ Insert toàn bộ lesson vào user_lesson_status, tránh duplicate
+        // 3️ Insert toàn bộ lesson vào user_lesson_status, tránh duplicate
         List<UserLessonStatus> lessonStatusList = new ArrayList<>();
         for (String uid : userIds) {
             // Lấy danh sách lesson mà user đã có
@@ -88,6 +95,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
                             .userId(uid)
                             .lesson(lesson)
                             .progressStatus(ProgressStatus.UNLOCKED)
+                            .completedAt(now)
                             .build();
 
                     lessonStatusList.add(status);
@@ -129,7 +137,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
     private LessonWithStatusDTO buildPracticeLesson(String userId, TopicWithStatusDTO topicWithStatusDTO) {
         // Kiểm tra tất cả lesson thật đã pass chưa
         boolean allLessonsPassed = userStatusLessonRepository.areAllLessonsPassed(userId, topicWithStatusDTO.getTopicCode());
-        boolean checkPractice = practiceResultRepository.existsPassedPractice(userId,topicWithStatusDTO.getTopicCode(),ResultStatus.PASSED);
+        boolean checkPractice = practiceResultRepository.existsPassedPractice(userId, topicWithStatusDTO.getTopicCode(), ResultStatus.PASSED);
 
         int lastPosition = topicWithStatusDTO.getListLesson().stream()
                 .mapToInt(LessonWithStatusDTO::getPosition)
@@ -142,10 +150,9 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
         dto.setLessonName("Ôn tập");
         dto.setTopicCode(topicWithStatusDTO.getTopicCode());
         dto.setPosition(lastPosition + 1);
-        if (checkPractice){
+        if (checkPractice) {
             dto.setStatus(ProgressStatus.PASSED);
-        }
-        else if (allLessonsPassed) {
+        } else if (allLessonsPassed) {
             dto.setStatus(ProgressStatus.UNLOCKED);
         } else {
             dto.setStatus(ProgressStatus.LOCKED);
@@ -189,7 +196,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
                             nextTopicStatus.setProgressStatus(ProgressStatus.UNLOCKED);
                             nextTopicStatus.setUserId(userId);
                             nextTopicStatus.setTopic(nextTopic);
-                            nextTopicStatus.setCompletedAt(Instant.now());
+                            nextTopicStatus.setCompletedAt(TimeUtils.nowInstant());
                             return userTopicStatusRepository.save(nextTopicStatus);
                         });
                 userLessonStatusService.unlockFirstLessonOfTopic(userId, nextTopic);
@@ -239,7 +246,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
                 .limit(fullUnlockCount)
                 .forEach(topic -> {
                     log.debug("Mở toàn bộ topic {} cho user {}", topic.getId(), userId);
-                    unlockTopicAndLessons(topic);
+                    unlockTopicAndLessonsSafe(topic);
                 });
 
         // Nếu có topic cần mở bài học đầu tiên
@@ -247,49 +254,81 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
             Topic nextTopic = topics.get(nextLessonIndex);
 
             // Mở topic trước (nếu chưa mở)
-            unlockTopicOnly(nextTopic);
+            unlockTopicOnlySafe(nextTopic);
 
             // Sau đó mở bài học đầu tiên
             log.debug("Mở bài học đầu tiên của topic {} cho user {}", nextTopic.getId(), userId);
             userLessonStatusService.unlockFirstLessonOfTopic(userId, nextTopic);
         }
+        UserIsNewUpdateMessageDTO messageDTO = new UserIsNewUpdateMessageDTO();
+        messageDTO.setUserId(userId);
+        messageDTO.setIsNew(false);
+        rabbitMQMessageProducer
+                .publish(messageDTO,
+                        RabbitKey.EXCHANGE_LEARNING
+                        ,RabbitKey.ROUTING_USER_UPDATE_IS_NEW_USER);
     }
 
-    private void unlockTopicOnly(Topic topic) {
+    private void unlockTopicOnlySafe(Topic topic) {
         String userId = authHelper.getUserId();
         log.debug("Mở topic {} cho user {}", topic.getId(), userId);
 
-        userTopicStatusRepository.save(
-                UserTopicStatus.builder()
-                        .userId(userId)
-                        .topic(topic)
-                        .progressStatus(ProgressStatus.UNLOCKED)
-                        .completedAt(Instant.now())
-                        .build()
-        );
-    }
-
-    private void unlockTopicAndLessons(Topic topic) {
-        unlockTopicOnly(topic);
-
-        String userId = authHelper.getUserId();
-        List<UserLessonStatus> lessonStatuses = lessonRepository.findLessonIdsByTopicId(topic.getId())
-                .stream()
-                .map(lessonId -> {
-                    Lesson lesson = new Lesson();
-                    lesson.setId(lessonId);
-                    return UserLessonStatus.builder()
+        boolean exists = userTopicStatusRepository.existsByUserIdAndTopicId(userId, topic.getId());
+        if (!exists) {
+            userTopicStatusRepository.save(
+                    UserTopicStatus.builder()
                             .userId(userId)
-                            .lesson(lesson)
+                            .topic(topic)
                             .progressStatus(ProgressStatus.UNLOCKED)
-                            .completedAt(Instant.now())
-                            .build();
-                })
-                .toList();
-
-        userStatusLessonRepository.saveAll(lessonStatuses);
-        log.debug("Đã mở {} lessons cho topic {} của user {}", lessonStatuses.size(), topic.getId(), userId);
+                            .completedAt(TimeUtils.nowInstant())
+                            .build()
+            );
+            log.debug("Topic {} đã được unlock cho user {}", topic.getId(), userId);
+        } else {
+            log.debug("User {} đã có topic {}, không insert lại", userId, topic.getId());
+        }
     }
 
+    private void unlockTopicAndLessonsSafe(Topic topic) {
+        String userId = authHelper.getUserId();
+
+        // 1️⃣ Unlock topic nếu chưa unlock
+        unlockTopicOnlySafe(topic);
+
+        // 2️⃣ Lấy tất cả lesson của topic
+        List<Integer> lessonIds = lessonRepository.findLessonIdsByTopicId(topic.getId());
+        if (lessonIds.isEmpty()) {
+            log.debug("Topic {} không có lesson để unlock cho user {}", topic.getId(), userId);
+            return;
+        }
+
+        // 3️⃣ Lấy danh sách lesson mà user đã có (1 query duy nhất)
+        List<Integer> existingLessonIds = userStatusLessonRepository.findExistingLessonIdsForUser(userId, lessonIds);
+
+        // 4️⃣ Chỉ insert lesson chưa có
+        List<UserLessonStatus> userLessonStatuses = new ArrayList<>();
+        Instant now = TimeUtils.nowInstant();
+        for (Integer lessonId : lessonIds) {
+            if (!existingLessonIds.contains(lessonId)) {
+                Lesson lesson = new Lesson();
+                lesson.setId(lessonId);
+
+                userLessonStatuses.add(
+                        UserLessonStatus.builder()
+                                .userId(userId)
+                                .lesson(lesson)
+                                .progressStatus(ProgressStatus.UNLOCKED)
+                                .completedAt(now)
+                                .build()
+                );
+            }
+        }
+
+        // 5️⃣ Batch insert
+        if (!userLessonStatuses.isEmpty()) {
+            userStatusLessonRepository.batchInsertUserStatusLesson(userLessonStatuses, 1000);
+            log.debug("Đã mở {} lessons cho topic {} của user {}", userLessonStatuses.size(), topic.getId(), userId);
+        }
+    }
 
 }

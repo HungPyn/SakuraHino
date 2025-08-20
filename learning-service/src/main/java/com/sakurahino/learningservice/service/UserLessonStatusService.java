@@ -11,7 +11,7 @@ import java.util.Map;
 public interface UserLessonStatusService {
 
     // hàm này để mở topic chuyển trạng thái về UNLOCKED khi cp nhập lesson sang PUBLISHED nếu nó  giữa
-    void unlockNewlyPublishedLessonForUsers(Integer lessonId);
+    void unlockNewlyPublishedLessonForUsers(Lesson lesson);
 
 
     //user

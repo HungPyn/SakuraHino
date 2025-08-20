@@ -11,4 +11,7 @@ import java.util.Optional;
 @Repository
 public interface UserStatusLessonRepository  extends JpaRepository<UserLessonStatus, Integer>, UserStatusLessonRepositoryCustom {
     Optional<UserLessonStatus> findByUserIdAndLessonId(String userId, Integer lessonId);
+
+
+    boolean existsByUserIdAndLessonId(String userId,Integer lessonId);
 }

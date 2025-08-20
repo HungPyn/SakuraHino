@@ -20,7 +20,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import java.util.UUID;
@@ -34,6 +37,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordRepository passwordRepository;
     private final JwtUtil jwtUtil;
     private final RabbitMQMessageProducer rabbitMQProducer;
+    private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     @Override
     public void register(RegisterRequestDTO dto) {
@@ -44,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ExceptionCode.USERNAME_TON_TAI);
         }
 
-        Instant dayCreation = Instant.now();
+        Instant dayCreation =  ZonedDateTime.now(VN_ZONE).toInstant();
         String id = UUID.randomUUID().toString();
         String password = passwordEncoder.encode(dto.getPassword());
         User user = new User();
@@ -105,48 +109,63 @@ public class AuthServiceImpl implements AuthService {
     public ForgotPasswordEmailResponse getEmailByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
+
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new AppException(ExceptionCode.USER_BLOCKED);
         }
+
         return new ForgotPasswordEmailResponse(user.getEmail());
     }
 
     @Override
-    public void sendResetCode(ResetPasswordDTO.ForgotPasswordRequest verifyCodeRequest) {
-        User user = userRepository.findByUsername(verifyCodeRequest.getUsername())
+    public void sendResetCode(ResetPasswordDTO.ForgotPasswordRequest dto) {
+        User user = userRepository.findByUsername(dto.getUsername())
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
 
-        String code = String.format("%06d", new Random().nextInt(1000000));
-        Instant dayCreation = Instant.now();
+        // Tạo code 6 chữ số an toàn
+        SecureRandom random = new SecureRandom();
+        String code = String.format("%06d", random.nextInt(1000000));
+
+        Instant nowUtc = ZonedDateTime.now(VN_ZONE).toInstant();
 
         ResetPassword resetPassword = new ResetPassword();
         resetPassword.setUsername(user.getUsername());
         resetPassword.setCode(code);
-        resetPassword.setCreatedAt(dayCreation);
-        resetPassword.setExpiresAt(dayCreation.plus(10, ChronoUnit.MINUTES));
+        resetPassword.setCreatedAt(nowUtc);
+        resetPassword.setExpiresAt(nowUtc.plus(10, ChronoUnit.MINUTES));
         resetPassword.setUsed(false);
 
         passwordRepository.save(resetPassword);
-        // Gửi message rabbit-mq den notifytion-serivce
-        SendResetCodeMessage sendResetCodeMessage = new SendResetCodeMessage();
-        sendResetCodeMessage.setEmail(user.getEmail());
-        sendResetCodeMessage.setCode(resetPassword.getCode());
-        rabbitMQProducer.publish(sendResetCodeMessage, RabbitKey.EXCHANGE_AUTH, RabbitKey.ROUTING_SEND_FORGOT_PASSWORD);
 
+        // Gửi message RabbitMQ
+        SendResetCodeMessage message = new SendResetCodeMessage();
+        message.setEmail(user.getEmail());
+        message.setCode(code);
+        rabbitMQProducer.publish(message, RabbitKey.EXCHANGE_AUTH, RabbitKey.ROUTING_SEND_FORGOT_PASSWORD);
     }
 
     @Override
-    public boolean checkCode(ResetPasswordDTO.VerifyCodeRequest verifyCodeRequest) {
-        ResetPassword resetPassword = passwordRepository.findByUsername(verifyCodeRequest.getUsername())
+    public boolean checkCode(ResetPasswordDTO.VerifyCodeRequest dto) {
+        ResetPassword resetPassword = passwordRepository.findByUsername(dto.getUsername())
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
-        if (!resetPassword.getCode().equals(verifyCodeRequest.getCode())) {
+
+        if (resetPassword.isUsed()) {
+            throw new AppException(ExceptionCode.MA_XAC_NHAN_DA_SU_DUNG);
+        }
+
+        if (!resetPassword.getCode().equals(dto.getCode())) {
             throw new AppException(ExceptionCode.MA_XAC_NHAN_KHONG_HOP_LE);
         }
+
         Instant now = Instant.now();
-        Instant expiredAt = resetPassword.getExpiresAt();
-        if (expiredAt.isBefore(now)) {
+        if (resetPassword.getExpiresAt().isBefore(now)) {
             throw new AppException(ExceptionCode.MA_XAC_NHAN_HET_HAN);
         }
+
+        // Đánh dấu code đã dùng
+        resetPassword.setUsed(true);
+        passwordRepository.save(resetPassword);
+
         return true;
     }
 
@@ -158,9 +177,20 @@ public class AuthServiceImpl implements AuthService {
         if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
             throw new AppException(ExceptionCode.MAT_KHAU_COMFIRM_SAI);
         }
-        String password = passwordEncoder.encode(dto.getNewPassword());
-        user.setPassword(password);
+
+        // Lấy ResetPassword chưa dùng và hợp lệ
+        ResetPassword resetPassword = passwordRepository.findByUsername(dto.getUsername())
+                .filter(r -> !r.isUsed())
+                .filter(r -> r.getExpiresAt().isAfter(Instant.now()))
+                .orElseThrow(() -> new AppException(ExceptionCode.MA_XAC_NHAN_KHONG_HOP_LE));
+
+        String encodedPassword = passwordEncoder.encode(dto.getNewPassword());
+        user.setPassword(encodedPassword);
         userRepository.save(user);
+
+        // Đánh dấu code đã dùng
+        resetPassword.setUsed(true);
+        passwordRepository.save(resetPassword);
     }
 
 }

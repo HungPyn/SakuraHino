@@ -21,6 +21,7 @@ import com.sakurahino.learningservice.repository.PracticeResultRepository;
 import com.sakurahino.learningservice.repository.UserStatusLessonRepository;
 import com.sakurahino.learningservice.service.LessonResultService;
 import com.sakurahino.learningservice.service.UserLessonStatusService;
+import com.sakurahino.learningservice.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.List;
+import java.time.ZonedDateTime;
 
 @Service
 @Slf4j
@@ -105,7 +106,7 @@ public class LessonResultServiceImpl implements LessonResultService {
     }
 
     private LessonResult buildLessonResult(LessonResultRequestDTO dto, Lesson lesson) {
-        Instant completedAt = Instant.now();
+        Instant completedAt = TimeUtils.nowInstant(); // giờ VN
         Instant startTime = completedAt.minusSeconds(dto.getDurationSeconds());
 
         LessonResult lessonResult = new LessonResult();
@@ -124,20 +125,22 @@ public class LessonResultServiceImpl implements LessonResultService {
 
     // Kiểm tra lần đầu làm bài trong ngày (trước thời điểm hiện tại)
     protected boolean isFirstLessonToday(String userId, Instant currentTime) {
-        Instant startOfDay = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"))
-                .atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh"))
-                .toInstant();
+        // 00:00 giờ VN hôm nay
+        Instant startOfDay = TimeUtils.startOfDayInstant(); // phương thức trả về 00:00 giờ VN hôm nay
+
         boolean lessonExists = lessonResultRepository.existsByUserIdAndStatusBetween(
                 userId, ResultStatus.PASSED, startOfDay, currentTime
         );
+
         boolean practiceExists = practiceResultRepository.existsByUserIdAndStatusAfter(
                 userId, ResultStatus.PASSED, startOfDay, currentTime
         );
 
-        log.info("Lesson exists today: {}", lessonExists);
-        log.info("Practice exists today: {}", practiceExists);
-        log.info("Start of day: {}, Current time: {}", startOfDay, currentTime);
+        log.info("User {} đã làm bài hôm nay? Lesson: {}, Practice: {}",
+                userId, lessonExists, practiceExists);
+        log.debug("StartOfDay (VN): {}, CurrentTime: {}", startOfDay, currentTime);
 
+        // Nếu chưa có lesson hoặc practice nào → là lần đầu
         return !(lessonExists || practiceExists);
     }
 }

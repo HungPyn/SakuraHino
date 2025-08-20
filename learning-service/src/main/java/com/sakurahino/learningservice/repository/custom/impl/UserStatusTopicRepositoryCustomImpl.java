@@ -10,8 +10,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Repository
@@ -56,15 +56,19 @@ public class UserStatusTopicRepositoryCustomImpl implements UserStatusTopicRepos
 
             StringBuilder sql = new StringBuilder();
             sql.append("INSERT INTO user_topic_status (user_id, topic_id, progress_status, completed_at) VALUES ");
-            Instant now = Instant.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
+                    .withZone(ZoneId.of("Asia/Ho_Chi_Minh")); // múi giờ VN
             for (int i = 0; i < batch.size(); i++) {
                 UserTopicStatus item = batch.get(i);
-                sql.append(String.format("('%s', %d, '%s', '%s')",
+
+                String completedAt = item.getCompletedAt() != null
+                        ? "'" + formatter.format(item.getCompletedAt()) + "'"  // bọc trong ''
+                        : "NULL"; // nếu null thì để NULL
+                sql.append(String.format("('%s', %d, '%s',%s)",
                         item.getUserId(),
                         item.getTopic().getId(),
                         item.getProgressStatus().name(),
-                        Timestamp.from(now)));
-
+                        completedAt));
                 if (i < batch.size() - 1) {
                     sql.append(", ");
                 }

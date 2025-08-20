@@ -3,6 +3,7 @@ package com.sakurahino.userservice.listener;
 
 import com.sakurahino.clients.commons.RabbitKey;
 import com.sakurahino.clients.rabitmqModel.learning.StreakAndExpUpdateMessageDTO;
+import com.sakurahino.clients.rabitmqModel.learning.UserIsNewUpdateMessageDTO;
 import com.sakurahino.userservice.service.UserProgressService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +19,15 @@ public class LearningEventListener {
 
     @RabbitListener(queues = RabbitKey.QUEUE_USER_UPDATE_STREAK_AND_EXP)
     public void receiveUserUpdateStreamAndExp(StreakAndExpUpdateMessageDTO dto) {
-        log.info(" Nhận message đăng ký thành công từ learning-service: {}", dto);
+        log.info(" Nhận message cập nhập exp score và long streak thành công từ learning-service: {}", dto);
 
         userProgressService.updateExpAndStreak(dto.getUserId(),dto.getExpAmount(),dto.getLongStreak(),dto.getEventTime());
+    }
+
+    @RabbitListener(queues = RabbitKey.QUEUE_USER_UPDATE_IS_NEW_USER)
+    public void receiveUserUpdateIsNewUser(UserIsNewUpdateMessageDTO messageDTO) {
+        log.info("Nhận message cập nhập trạng thái user mới từ learning-service: {}", messageDTO);
+
+        userProgressService.updateIsNewUser(messageDTO);
     }
 }

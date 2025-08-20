@@ -8,7 +8,9 @@ spring:
     multipart:
       max-file-size: 10MB   # Ví dụ: cho phép mỗi file lên đến 10 MB
       max-request-size: 10MB
-
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   config:
     import: optional:configserver:http://localhost:8888
 

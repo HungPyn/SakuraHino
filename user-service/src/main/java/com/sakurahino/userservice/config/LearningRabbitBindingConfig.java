@@ -29,4 +29,19 @@ public class LearningRabbitBindingConfig {
                 .to(learningExchange)
                 .with(RabbitKey.ROUTING_USER_UPDATE_STREAK_AND_EXP);
     }
+
+    @Bean
+    public Queue updateIsNewUserSuccessQueue() {
+        return new Queue(RabbitKey.QUEUE_USER_UPDATE_IS_NEW_USER);
+    }
+
+    @Bean
+    public Binding updateIsNewUserSuccessBinding(
+            Queue updateIsNewUserSuccessQueue,
+            TopicExchange learningExchange) {
+        return BindingBuilder
+                .bind(updateIsNewUserSuccessQueue)
+                .to(learningExchange)
+                .with(RabbitKey.ROUTING_USER_UPDATE_IS_NEW_USER);
+    }
 }

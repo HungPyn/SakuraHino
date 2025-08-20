@@ -14,6 +14,7 @@ import com.sakurahino.learningservice.repository.LessonRepository;
 import com.sakurahino.learningservice.repository.TopicRepository;
 import com.sakurahino.learningservice.service.LessonService;
 import com.sakurahino.learningservice.service.UserLessonStatusService;
+import com.sakurahino.learningservice.utils.TimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.data.domain.Page;
@@ -37,9 +38,9 @@ public class LessonServiceImpl implements LessonService {
 
     @Override
     public PaginatedResponse<LessonResponseDTO> getLessonByTopicIdAdmin(Integer topicId, int page, int size) {
-       Pageable pageable = PageRequest.of(page, size);
-       Page<Lesson> lessonPage;
-       lessonPage = lessonRepository.findAllByTopic_IdOrderByCreatedAtDesc(topicId,pageable);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Lesson> lessonPage;
+        lessonPage = lessonRepository.findAllByTopic_IdOrderByCreatedAtDesc(topicId, pageable);
         List<LessonResponseDTO> responseList = lessonPage.getContent().stream()
                 .map(lessonMapper::mapToLessonResponse).toList();
         return new PaginatedResponse<>(
@@ -53,9 +54,9 @@ public class LessonServiceImpl implements LessonService {
 
     @Override
     public LessonResponseDTO getLessonById(Integer id) {
-        Lesson lesson = lessonRepository.findById(id).orElseThrow(()->
+        Lesson lesson = lessonRepository.findById(id).orElseThrow(() ->
                 new ResourceException(ExceptionCode.DU_LIEU_KHONG_TON_TAI.getStatus(), "Lesson không tồn tại"));
-        return  lessonMapper.mapToLessonResponse(lesson);
+        return lessonMapper.mapToLessonResponse(lesson);
     }
 
     @Override
@@ -99,9 +100,10 @@ public class LessonServiceImpl implements LessonService {
         } while (lessonRepository.existsByCode(code));
         log.debug("Code mới được tạo: {}", code);
 
+        Instant createdAt = TimeUtils.nowInstant();
         Lesson lesson = new Lesson();
         lesson.setTopic(topic);
-        lesson.setCreatedAt(Instant.now());
+        lesson.setCreatedAt(createdAt);
         lesson.setLessonName(lessonRequest.getLessonName());
         lesson.setStatus(lessonRequest.getStatus());
         lesson.setPosition(newPosition);
@@ -110,10 +112,26 @@ public class LessonServiceImpl implements LessonService {
 
         lessonRepository.save(lesson);
         log.info("Bài học mới đã được tạo thành công với id = {}, name = {}", lesson.getId(), lesson.getLessonName());
+            // Nếu bài học mới được tạo ở trạng thái PUBLISHED, gọi unlock cho user
+        if (lesson.getStatus() == LearningStatus.PUBLISHED) {
+            // Kiểm tra xem có bài học PUBLISHED nào khác trong topic không
+            boolean hasOtherPublished = lessonRepository.existsOtherPublishedLesson(
+                    topic.getId(), lesson.getId()
+            );
 
+            // Chỉ unlock nếu chưa có bài PUBLISHED nào trước đó
+            if (!hasOtherPublished) {
+                log.info("Bài học [{} - {}] là bài PUBLISHED đầu tiên. Bắt đầu mở khóa cho người dùng.",
+                        lesson.getId(), lesson.getLessonName());
+                userLessonStatusService.unlockNewlyPublishedLessonForUsers(lesson);
+                log.info("Hoàn tất gọi unlockNewlyPublishedLessonForUsers cho bài học [{}]", lesson.getId());
+            } else {
+                log.info("Bài học [{} - {}] không phải bài PUBLISHED đầu tiên, không mở khóa tự động.",
+                        lesson.getId(), lesson.getLessonName());
+            }
+        }
         return lessonMapper.mapToLessonResponse(lesson);
     }
-
 
     @Override
     public LessonResponseDTO update(Integer id, LessonRequestDTO lessonRequest) {
@@ -133,14 +151,14 @@ public class LessonServiceImpl implements LessonService {
         }
 
         if (!lesson.getLessonName().equals(lessonRequest.getLessonName()) &&
-                lessonRepository.existsByLessonNameAndTopicId(lessonRequest.getLessonName(), topic.getId())) {
+                lessonRepository.existsByLessonNameAndTopicIdAndIdNot(lessonRequest.getLessonName(), topic.getId(), lesson.getId())) {
             log.warn("[LESSON_UPDATE] Tên bài học '{}' đã tồn tại trong topicId={}", lessonRequest.getLessonName(), topic.getId());
             throw new AppException(ExceptionCode.LESSON_DA_TON_TAI);
         }
-
+         Instant updateAt = TimeUtils.nowInstant();
         lesson.setLessonName(lessonRequest.getLessonName());
         lesson.setStatus(lessonRequest.getStatus());
-        lesson.setUpdateAt(Instant.now());
+        lesson.setUpdateAt(updateAt);
         lesson.setMaxQuestions(lessonRequest.getMaxQuestions());
         lessonRepository.save(lesson);
 
@@ -148,11 +166,14 @@ public class LessonServiceImpl implements LessonService {
                 lesson.getId(), lesson.getLessonName(), lesson.getStatus());
 
         if (isChangingToPublished) {
-            log.info("Bài học [{} - {}] được chuyển sang trạng thái PUBLIC. Bắt đầu mở khóa cho người dùng.", lesson.getId(), lesson.getLessonName());
-
-            userLessonStatusService.unlockNewlyPublishedLessonForUsers(lesson.getId());
-
-            log.info("Đã gọi xong hàm unlockNewlyPublishedLessonForUsers cho bài học [{}]", lesson.getId());
+            boolean hasOtherPublishedLessons = lessonRepository.existsOtherPublishedLesson(topic.getId(), lesson.getId());
+            if (!hasOtherPublishedLessons) {
+                log.info("[UPDATE] Bài học [{} - {}] là bài PUBLISHED đầu tiên. Bắt đầu mở khóa cho người dùng.", lesson.getId(), lesson.getLessonName());
+                userLessonStatusService.unlockNewlyPublishedLessonForUsers(lesson);
+                log.info("Đã gọi xong hàm unlockNewlyPublishedLessonForUsers cho bài học [{}]", lesson.getId());
+            } else {
+                log.info("Bài học [{} - {}] không phải là bài PUBLISHED đầu tiên, không mở khóa tự động.", lesson.getId(), lesson.getLessonName());
+            }
         }
 
         return lessonMapper.mapToLessonResponse(lesson);

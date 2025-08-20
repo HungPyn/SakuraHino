@@ -8,6 +8,12 @@ spring:
       max-file-size: 10MB   # Ví dụ: cho phép mỗi file lên đến 10 MB
       max-request-size: 10MB
 
+  feign:
+    client:
+      config:
+        default:
+          connectTimeout: 5000   # thời gian chờ kết nối (ms)
+          readTimeout: 10000
   config:
     import: optional:configserver:http://localhost:8888
 

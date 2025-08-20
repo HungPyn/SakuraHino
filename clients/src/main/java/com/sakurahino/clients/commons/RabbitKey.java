@@ -19,6 +19,7 @@ public class RabbitKey {
 
         // learning-service → user-service (streak + exp)
         public static final String ROUTING_USER_UPDATE_STREAK_AND_EXP = "routing.users.update.streak.exp";
+        public static final String ROUTING_USER_UPDATE_IS_NEW_USER = "routing.users.update.is.new.user";
 
         // ==== QUEUE NAMES ====
 
@@ -32,6 +33,7 @@ public class RabbitKey {
 
         // learning-service → user-service
         public static final String QUEUE_USER_UPDATE_STREAK_AND_EXP = "queue.users.update.streak.exp";
+        public static final String QUEUE_USER_UPDATE_IS_NEW_USER = "queue.users.update.is.new.user";
 
         private RabbitKey() {}
 }

@@ -1,6 +1,5 @@
 package com.sakurahino.learningservice.service;
 
-import com.sakurahino.learningservice.dto.lesson.LessonWithStatusDTO;
 import com.sakurahino.learningservice.dto.topic.TopicWithStatusDTO;
 import com.sakurahino.learningservice.entity.Topic;
 import com.sakurahino.learningservice.enums.ProgressStatus;

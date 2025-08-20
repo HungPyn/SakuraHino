@@ -11,6 +11,7 @@ import java.util.List;
 public interface LessonMapper {
     @Mapping(source = "topic.id", target = "topicId")
     @Mapping(source = "topic.name",target = "topicName")
+    @Mapping(source = "status", target = "status")
     LessonResponseDTO mapToLessonResponse(Lesson lesson);
     List<LessonResponseDTO> mapLessonListToResponseList(List<Lesson> lessons);
 

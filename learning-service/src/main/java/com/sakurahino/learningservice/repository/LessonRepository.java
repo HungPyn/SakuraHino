@@ -28,6 +28,8 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
     Integer findMaxPositionByTopicId(@Param("topicId") Integer topicId);
 
     boolean existsByLessonNameAndTopicId(String lessonName, Integer topicId);
+    boolean existsByLessonNameAndTopicIdAndIdNot(String lessonName, Integer topicId, Integer lessonId);
+
 
     Long countByTopicIdAndStatus(Integer topicId, LearningStatus status);
 
@@ -57,4 +59,9 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
 """)
     List<Integer> findLessonIdsByTopicId(@Param("topicId") Integer topicId);
 
+    //check xem có phải là first lesson đầu tiên được public ra không
+    @Query("SELECT COUNT(l) > 0 FROM Lesson l " +
+            "WHERE l.topic.id = :topicId AND l.id <> :lessonId AND l.status = 'PUBLISHED'")
+    boolean existsOtherPublishedLesson(@Param("topicId") Integer topicId,
+                                       @Param("lessonId") Integer lessonId);
 }

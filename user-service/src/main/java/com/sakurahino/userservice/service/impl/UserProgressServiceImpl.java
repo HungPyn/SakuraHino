@@ -1,5 +1,6 @@
 package com.sakurahino.userservice.service.impl;
 
+import com.sakurahino.clients.rabitmqModel.learning.UserIsNewUpdateMessageDTO;
 import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.userservice.entity.User;
@@ -11,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +21,7 @@ import java.time.Instant;
 public class UserProgressServiceImpl implements UserProgressService {
 
     private final UserRepository userRepository;
+    private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     @Override
     @Transactional
@@ -52,6 +56,19 @@ public class UserProgressServiceImpl implements UserProgressService {
 
         userRepository.save(user);
         log.info("[UserProgress] Đã lưu cập nhật cho user {}", userId);
+    }
+
+    @Override
+    public void updateIsNewUser(UserIsNewUpdateMessageDTO messageDTO) {
+        User user = userRepository.findById(messageDTO.getUserId())
+                .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
+
+        log.info("[User Is New User] Bắt đầu cập nhập trạng thái cho userId={}",
+                user.getId());
+        Instant updatedUtc = ZonedDateTime.now(VN_ZONE).toInstant();
+        user.setUpdatedDay(updatedUtc);
+        user.setIsNewUser(messageDTO.getIsNew());
+        userRepository.save(user);
     }
 
 }

@@ -41,4 +41,10 @@ public interface TopicRepository extends JpaRepository<Topic, Integer> {
             @Param("status") LearningStatus status,
             Pageable pageable);
 
+
+    // Kiểm tra có topic nào trùng tên hay không (dùng cho tạo mới)
+    boolean existsByName(String name);
+
+    // Kiểm tra có topic nào trùng tên nhưng khác ID (dùng cho update)
+    boolean existsByNameAndIdNot(String name, Integer id);
 }
