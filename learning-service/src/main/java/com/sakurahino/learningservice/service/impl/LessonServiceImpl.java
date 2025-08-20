@@ -166,14 +166,13 @@ public class LessonServiceImpl implements LessonService {
                 lesson.getId(), lesson.getLessonName(), lesson.getStatus());
 
         if (isChangingToPublished) {
-            boolean hasOtherPublishedLessons = lessonRepository.existsOtherPublishedLesson(topic.getId(), lesson.getId());
-            if (!hasOtherPublishedLessons) {
-                log.info("[UPDATE] Bài học [{} - {}] là bài PUBLISHED đầu tiên. Bắt đầu mở khóa cho người dùng.", lesson.getId(), lesson.getLessonName());
-                userLessonStatusService.unlockNewlyPublishedLessonForUsers(lesson);
-                log.info("Đã gọi xong hàm unlockNewlyPublishedLessonForUsers cho bài học [{}]", lesson.getId());
-            } else {
-                log.info("Bài học [{} - {}] không phải là bài PUBLISHED đầu tiên, không mở khóa tự động.", lesson.getId(), lesson.getLessonName());
-            }
+            log.info("[UPDATE] Bài học [{} - {}] vừa chuyển sang PUBLISHED. Bắt đầu mở khóa cho người dùng.",
+                    lesson.getId(), lesson.getLessonName());
+
+            userLessonStatusService.unlockNewlyPublishedLessonForUsers(lesson);
+
+            log.info("[UPDATE] Đã xử lý xong mở khóa cho bài học [{} - {}]",
+                    lesson.getId(), lesson.getLessonName());
         }
 
         return lessonMapper.mapToLessonResponse(lesson);

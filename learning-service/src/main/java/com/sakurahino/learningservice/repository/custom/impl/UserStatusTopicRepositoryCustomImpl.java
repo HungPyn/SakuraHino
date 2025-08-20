@@ -83,23 +83,33 @@ public class UserStatusTopicRepositoryCustomImpl implements UserStatusTopicRepos
     @Override
     public List<TopicWithStatusDTO> findPublishedTopicsWithStatus(String userId) {
         String jsql = """
-                    SELECT new com.sakurahino.learningservice.dto.topic.TopicWithStatusDTO(
-                        t.code,
-                        t.name,
-                        t.position,
-                        COALESCE(uts.progressStatus, com.sakurahino.learningservice.enums.ProgressStatus.LOCKED)
-                        ,t.urlImage
-                    )
-                    FROM Topic t
-                    LEFT JOIN UserTopicStatus uts
-                      ON t.id = uts.topic.id AND uts.userId = :userId
-                    WHERE t.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
-                    ORDER BY t.position ASC
-                """;
+                SELECT new com.sakurahino.learningservice.dto.topic.TopicWithStatusDTO(
+                    t.code,
+                    t.name,
+                    t.position,
+                    COALESCE(uts.progressStatus, com.sakurahino.learningservice.enums.ProgressStatus.LOCKED),
+                    t.urlImage
+                )
+                FROM Topic t
+                LEFT JOIN UserTopicStatus uts
+                    ON t.id = uts.topic.id AND uts.userId = :userId
+                WHERE t.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
+                  AND EXISTS (
+                        SELECT 1 FROM Lesson l
+                        WHERE l.topic.id = t.id
+                          AND EXISTS (
+                                SELECT 1 FROM LessonQuestion q
+                                WHERE q.lesson.id = l.id
+                          )
+                  )
+                ORDER BY t.position ASC
+            """;
+
         return em.createQuery(jsql, TopicWithStatusDTO.class)
                 .setParameter("userId", userId)
                 .getResultList();
     }
+
 
 
 }

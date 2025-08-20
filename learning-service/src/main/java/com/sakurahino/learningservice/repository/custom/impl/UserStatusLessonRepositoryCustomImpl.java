@@ -103,6 +103,11 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
         LEFT JOIN UserLessonStatus uls
             ON uls.lesson.code = l.code AND uls.userId = :userId
         WHERE l.status = :publishedStatus
+          AND EXISTS (
+              SELECT 1
+              FROM LessonQuestion q
+              WHERE q.lesson = l
+          )
         ORDER BY l.position ASC
     """;
 
@@ -112,6 +117,7 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
                 .setParameter("publishedStatus", LearningStatus.PUBLISHED)
                 .getResultList();
     }
+
 
 
     public boolean areAllLessonsPassed(String userId, String topicCode) {
