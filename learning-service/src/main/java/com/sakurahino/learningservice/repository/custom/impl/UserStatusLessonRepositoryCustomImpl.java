@@ -117,21 +117,24 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
     public boolean areAllLessonsPassed(String userId, String topicCode) {
         String jpql = """
         SELECT CASE
-                 WHEN COUNT(l) = SUM(CASE WHEN l.progressStatus = :passed THEN 1 ELSE 0 END) 
-                 THEN TRUE 
-                 ELSE FALSE 
+                 WHEN COUNT(ls) = SUM(CASE WHEN uls.progressStatus = :passed THEN 1 ELSE 0 END)
+                 THEN TRUE ELSE FALSE
                END
-        FROM UserLessonStatus l
-        WHERE l.userId = :userId
-          AND l.lesson.topic.code = :topicCode
+        FROM Lesson ls
+        LEFT JOIN UserLessonStatus uls 
+               ON uls.lesson.id = ls.id 
+              AND uls.userId = :userId
+        WHERE ls.topic.code = :topicCode
+          AND ls.status = :published
     """;
 
-        Boolean result = em.createQuery(jpql, Boolean.class)
-                .setParameter("userId", userId)
-                .setParameter("topicCode", topicCode)
-                .setParameter("passed", ProgressStatus.PASSED)
-                .getSingleResult();
-
-        return Boolean.TRUE.equals(result);
+        return Boolean.TRUE.equals(
+                em.createQuery(jpql, Boolean.class)
+                        .setParameter("userId", userId)
+                        .setParameter("topicCode", topicCode)
+                        .setParameter("passed", ProgressStatus.PASSED)
+                        .setParameter("published", LearningStatus.PUBLISHED) // nếu có trạng thái publish cho lesson
+                        .getSingleResult()
+        );
     }
 }
