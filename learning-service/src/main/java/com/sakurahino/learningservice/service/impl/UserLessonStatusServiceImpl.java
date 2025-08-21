@@ -10,7 +10,9 @@ import com.sakurahino.learningservice.enums.LearningStatus;
 import com.sakurahino.learningservice.enums.ProgressStatus;
 import com.sakurahino.learningservice.repository.LessonRepository;
 import com.sakurahino.learningservice.repository.UserStatusLessonRepository;
+import com.sakurahino.learningservice.repository.UserTopicStatusRepository;
 import com.sakurahino.learningservice.service.UserLessonStatusService;
+import com.sakurahino.learningservice.utils.TimeUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,22 +32,30 @@ public class UserLessonStatusServiceImpl implements UserLessonStatusService {
 
     private final UserStatusLessonRepository userStatusLessonRepository;
     private final LessonRepository lessonRepository;
+    private final UserTopicStatusRepository userTopicStatusRepository;
 
     @Override
     @Transactional
-    public void unlockNewlyPublishedLessonForUsers(Integer lessonId) {
-        log.info("Bắt đầu mở khóa lesson với ID = {}", lessonId);
-        var currentLesson = lessonRepository.findById(lessonId)
+    public void unlockNewlyPublishedLessonForUsers(Lesson lesson) {
+        log.info("Bắt đầu mở khóa lesson với ID = {}", lesson.getId());
+        var currentLesson = lessonRepository.findById(lesson.getId())
                 .orElseThrow(() -> new AppException(ExceptionCode.LESSON_KHONG_TON_TAI));
+        List<String> listUserIds;
         int position = currentLesson.getPosition();
-        List<String> listUserIds = userStatusLessonRepository.findUserIdToUnlockLesson(position, lessonId);
+        boolean hasOtherPublishedLessons  = lessonRepository.existsOtherPublishedLesson(currentLesson.getTopic().getId(),currentLesson.getId());
+        if (!hasOtherPublishedLessons) {
+            listUserIds = userTopicStatusRepository.findUnlockedUserIdsByTopic(currentLesson.getTopic().getId(),ProgressStatus.UNLOCKED);
+        }else {
+
+            listUserIds = userStatusLessonRepository.findUserIdToUnlockLesson(position, currentLesson.getId());
+        }
 
         if (listUserIds.isEmpty()) {
-            log.info("Không có người dùng nào cần mở khóa bài học ID={} (position={})", lessonId, position);
+            log.info("Không có người dùng nào cần mở khóa bài học ID={} (position={})", currentLesson.getId(), position);
             return;
         }
 
-        log.info("Mở khóa bài học ID={} (position={}) cho {} người dùng", lessonId, position, listUserIds.size());
+        log.info("Mở khóa bài học ID={} (position={}) cho {} người dùng", currentLesson.getId(), position, listUserIds.size());
 
         List<UserLessonStatus> listInsert = new ArrayList<>();
         for (String userId : listUserIds) {
@@ -53,7 +63,7 @@ public class UserLessonStatusServiceImpl implements UserLessonStatusService {
             item.setUserId(userId);
             item.setLesson(currentLesson);
             item.setProgressStatus(ProgressStatus.UNLOCKED);
-            item.setCompletedAt(Instant.now());
+            item.setCompletedAt(TimeUtils.nowInstant());
             listInsert.add(item);
         }
         userStatusLessonRepository.batchInsertUserStatusLesson(listInsert, 1000);
@@ -100,7 +110,7 @@ public class UserLessonStatusServiceImpl implements UserLessonStatusService {
                         .orElseGet(() -> {
                             UserLessonStatus nextLessonStatus = new UserLessonStatus();
                             nextLessonStatus.setProgressStatus(ProgressStatus.UNLOCKED);
-                            nextLessonStatus.setCompletedAt(Instant.now());
+                            nextLessonStatus.setCompletedAt(TimeUtils.nowInstant());
                             nextLessonStatus.setUserId(userId);
                             nextLessonStatus.setLesson(nextLesson);
                             return userStatusLessonRepository.save(nextLessonStatus);
@@ -125,6 +135,7 @@ public class UserLessonStatusServiceImpl implements UserLessonStatusService {
                     lessonStatus.setUserId(userId);
                     lessonStatus.setLesson(firstLesson);
                     lessonStatus.setProgressStatus(ProgressStatus.UNLOCKED);
+                    lessonStatus.setCompletedAt(TimeUtils.nowInstant());
                     return userStatusLessonRepository.save(lessonStatus);
                 });
     }

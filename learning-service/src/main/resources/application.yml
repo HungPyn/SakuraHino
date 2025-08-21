@@ -8,6 +8,12 @@ spring:
       max-file-size: 10MB   # Ví dụ: cho phép mỗi file lên đến 10 MB
       max-request-size: 10MB
 
+  feign:
+    client:
+      config:
+        default:
+          connectTimeout: 5000   # thời gian chờ kết nối (ms)
+          readTimeout: 10000
   config:
     import: optional:configserver:http://localhost:8888
 
@@ -60,3 +66,6 @@ logging:
   level:
     root: INFO
     com.sakurahino.learningservice: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.type.descriptor.sql: TRACE

@@ -10,7 +10,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Repository
@@ -55,15 +56,19 @@ public class UserStatusTopicRepositoryCustomImpl implements UserStatusTopicRepos
 
             StringBuilder sql = new StringBuilder();
             sql.append("INSERT INTO user_topic_status (user_id, topic_id, progress_status, completed_at) VALUES ");
-
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
+                    .withZone(ZoneId.of("Asia/Ho_Chi_Minh")); // múi giờ VN
             for (int i = 0; i < batch.size(); i++) {
                 UserTopicStatus item = batch.get(i);
-                sql.append(String.format("('%s', %d, '%s', '%s')",
+
+                String completedAt = item.getCompletedAt() != null
+                        ? "'" + formatter.format(item.getCompletedAt()) + "'"  // bọc trong ''
+                        : "NULL"; // nếu null thì để NULL
+                sql.append(String.format("('%s', %d, '%s',%s)",
                         item.getUserId(),
                         item.getTopic().getId(),
                         item.getProgressStatus().name(),
-                        Instant.now()));
-
+                        completedAt));
                 if (i < batch.size() - 1) {
                     sql.append(", ");
                 }
@@ -78,23 +83,33 @@ public class UserStatusTopicRepositoryCustomImpl implements UserStatusTopicRepos
     @Override
     public List<TopicWithStatusDTO> findPublishedTopicsWithStatus(String userId) {
         String jsql = """
-                    SELECT new com.sakurahino.learningservice.dto.topic.TopicWithStatusDTO(
-                        t.code,
-                        t.name,
-                        t.position,
-                        COALESCE(uts.progressStatus, com.sakurahino.learningservice.enums.ProgressStatus.LOCKED)
-                        ,t.urlImage
-                    )
-                    FROM Topic t
-                    LEFT JOIN UserTopicStatus uts
-                      ON t.id = uts.topic.id AND uts.userId = :userId
-                    WHERE t.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
-                    ORDER BY t.position ASC
-                """;
+                SELECT new com.sakurahino.learningservice.dto.topic.TopicWithStatusDTO(
+                    t.code,
+                    t.name,
+                    t.position,
+                    COALESCE(uts.progressStatus, com.sakurahino.learningservice.enums.ProgressStatus.LOCKED),
+                    t.urlImage
+                )
+                FROM Topic t
+                LEFT JOIN UserTopicStatus uts
+                    ON t.id = uts.topic.id AND uts.userId = :userId
+                WHERE t.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
+                  AND EXISTS (
+                        SELECT 1 FROM Lesson l
+                        WHERE l.topic.id = t.id
+                          AND EXISTS (
+                                SELECT 1 FROM LessonQuestion q
+                                WHERE q.lesson.id = l.id
+                          )
+                  )
+                ORDER BY t.position ASC
+            """;
+
         return em.createQuery(jsql, TopicWithStatusDTO.class)
                 .setParameter("userId", userId)
                 .getResultList();
     }
+
 
 
 }

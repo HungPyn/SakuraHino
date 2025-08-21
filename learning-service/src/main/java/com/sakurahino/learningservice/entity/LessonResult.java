@@ -50,6 +50,7 @@ public class LessonResult {
     private Instant completedAt;
 
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private ResultStatus status;
 
 }

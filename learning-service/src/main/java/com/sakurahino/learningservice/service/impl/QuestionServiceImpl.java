@@ -11,6 +11,8 @@ import com.sakurahino.learningservice.dto.question.QuestionExcelRequest;
 import com.sakurahino.learningservice.entity.Lesson;
 import com.sakurahino.learningservice.entity.LessonQuestion;
 import com.sakurahino.learningservice.entity.QuestionChoice;
+import com.sakurahino.learningservice.entity.Topic;
+import com.sakurahino.learningservice.enums.LearningStatus;
 import com.sakurahino.learningservice.enums.QuestionType;
 import com.sakurahino.learningservice.mapper.ChoiceMapper;
 import com.sakurahino.learningservice.mapper.LessonQuestionMapper;
@@ -29,6 +31,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -50,15 +53,32 @@ public class QuestionServiceImpl implements QuestionService {
     private final TopicRepository topicRepository;
     private final LessonRepository lessonRepository;
 
+    // Phần này dùng cho user để lấy câu hỏi ra
+    private List<LessonQuestionResponse> mapAndShuffleQuestions(List<LessonQuestion> questions) {
+        // Shuffle tổng thể câu hỏi
+        Collections.shuffle(questions);
 
-    //user
+        // Map sang DTO và shuffle vị trí đáp án
+        return questions.stream()
+                .map(question -> {
+                    LessonQuestionResponse response = lessonQuestionMapper.mapQuestionResponse(question);
+
+                    List<QuestionChoiceResponse> choices = new ArrayList<>(response.getChoices());
+                    Collections.shuffle(choices);
+                    response.setChoices(choices);
+
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
     @Override
     public List<LessonQuestionResponse> getQuestionsForUser(String code) {
         List<LessonQuestion> listQuestions = lessonQuestionRepository.findLessonQuestionByLesson_Code(code);
-        return listQuestions.stream().map(lessonQuestionMapper::mapQuestionResponse).collect(Collectors.toList());
+
+        return mapAndShuffleQuestions(listQuestions);
     }
-    
-    // on tap cua moi topic
+
     @Override
     public List<LessonQuestionResponse> getQuestionsPractice(String code, int limit) {
         List<LessonQuestion> allQuestions =
@@ -86,10 +106,67 @@ public class QuestionServiceImpl implements QuestionService {
             if (pickedQuestions.size() >= limit) break;
             pickedQuestions.add(q);
         }
-
-        return pickedQuestions.stream().map(lessonQuestionMapper::mapQuestionResponse)
-                .toList();
+        return mapAndShuffleQuestions(pickedQuestions);
     }
+
+
+    @Override
+    public List<LessonQuestionResponse> getQuestionsTestForUser() {
+        List<Topic> topics = topicRepository.findFirstPublishedTopics(
+                LearningStatus.PUBLISHED,
+                PageRequest.of(0, 2)
+        );
+
+        if (topics.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        int totalQuestionsNeeded = 8;
+        int questionsPerTopic = (int) Math.ceil((double) totalQuestionsNeeded / topics.size());
+
+        // Lấy câu hỏi lần 1
+        List<LessonQuestionResponse> questions = topics.stream()
+                .flatMap(topic -> lessonQuestionRepository
+                        .findRandomPublishedQuestionsByTopic(
+                                topic.getId(),
+                                questionsPerTopic,
+                                LearningStatus.PUBLISHED.toString()
+                        ).stream()
+                )
+                .map(lessonQuestionMapper::mapQuestionResponse)
+                .collect(Collectors.toList());
+
+        // Nếu vẫn thiếu → lấy bù từ các topic đã chọn
+        if (questions.size() < totalQuestionsNeeded) {
+            int missing = totalQuestionsNeeded - questions.size();
+
+            // Random bù từ các topic đã có
+            List<LessonQuestionResponse> extra = topics.stream()
+                    .flatMap(topic -> lessonQuestionRepository
+                            .findRandomPublishedQuestionsByTopic(
+                                    topic.getId(),
+                                    missing, // tăng limit để có thể lấy bù
+                                    LearningStatus.PUBLISHED.toString()
+                            ).stream()
+                    )
+                    .map(lessonQuestionMapper::mapQuestionResponse)
+                    .toList();
+
+            // Tránh trùng câu hỏi
+            Set<Integer> existingIds = questions.stream()
+                    .map(LessonQuestionResponse::getId)
+                    .collect(Collectors.toSet());
+
+            extra.stream()
+                    .filter(q -> !existingIds.contains(q.getId()))
+                    .limit(missing)
+                    .forEach(questions::add);
+        }
+        System.out.println(questions.size() +"-> số câu hỏi được random ra");
+        return questions.stream().limit(totalQuestionsNeeded).toList();
+    }
+
+
 
     //admin
     @Override

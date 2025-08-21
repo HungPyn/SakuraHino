@@ -14,14 +14,12 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface LessonRepository extends JpaRepository<Lesson, Integer> {
 
-    //----------
-    List<Lesson> findLessonsByTopic_IdOrderByIdDesc(Integer topicId);
-
-    Page<Lesson> findAllByTopic_IdOrderByCreatedAtDesc(Integer topicId,Pageable pageable);
+    Page<Lesson> findAllByTopic_IdOrderByCreatedAtDesc(Integer topicId, Pageable pageable);
 
     boolean existsByCode(String code);
 
@@ -29,26 +27,25 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
     Integer findMaxPositionByTopicId(@Param("topicId") Integer topicId);
 
     boolean existsByLessonNameAndTopicId(String lessonName, Integer topicId);
+    boolean existsByLessonNameAndTopicIdAndIdNot(String lessonName, Integer topicId, Integer lessonId);
 
     Long countByTopicIdAndStatus(Integer topicId, LearningStatus status);
 
-
-
     @Query("SELECT l FROM Lesson l " +
             "WHERE (:tuKhoa IS NULL OR l.lessonName LIKE CONCAT('%', :tuKhoa, '%')) " +
-            "  AND (:topicId IS NULL OR l.topic.id = :topicId) " + // <-- Đã bổ sung
+            "  AND (:topicId IS NULL OR l.topic.id = :topicId) " +
             "  AND (:status IS NULL OR l.status = :status) " +
             "  AND (:startDate IS NULL OR l.createdAt >= :startDate) " +
             "  AND (:endDate IS NULL OR l.createdAt < :endDate)")
     Page<Lesson> findByFilters(
             @Param("tuKhoa") String tuKhoa,
-            @Param("topicId") Integer topicId, // <-- Đã bổ sung
+            @Param("topicId") Integer topicId,
             @Param("status") LearningStatus status,
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate,
             Pageable pageable);
-    Lesson findByCode(String code);
 
+    Lesson findByCode(String code);
 
     @Query("SELECT l FROM Lesson l " +
             "WHERE l.topic.id = :topicId " +
@@ -63,4 +60,18 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
 
     Lesson findFirstByTopicOrderByPositionAsc(Topic topic);
 
+    @Query("""
+        SELECT l.id 
+        FROM Lesson l
+        WHERE l.topic.id = :topicId
+          AND l.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
+        ORDER BY l.position ASC
+    """)
+    List<Integer> findLessonIdsByTopicId(@Param("topicId") Integer topicId);
+
+    // check xem có phải là first lesson đầu tiên được public ra không
+    @Query("SELECT COUNT(l) > 0 FROM Lesson l " +
+            "WHERE l.topic.id = :topicId AND l.id <> :lessonId AND l.status = 'PUBLISHED'")
+    boolean existsOtherPublishedLesson(@Param("topicId") Integer topicId,
+                                       @Param("lessonId") Integer lessonId);
 }

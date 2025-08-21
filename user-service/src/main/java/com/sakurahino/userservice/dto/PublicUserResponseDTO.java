@@ -20,5 +20,7 @@ public class PublicUserResponseDTO {
     private Integer longStreak;
 
     private Long expScore;
+    private Boolean isNewUser = false;
+
 
 }

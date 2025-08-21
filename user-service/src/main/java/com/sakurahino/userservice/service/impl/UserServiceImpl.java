@@ -5,7 +5,6 @@ import com.sakurahino.clients.commons.RabbitKey;
 import com.sakurahino.clients.enums.Role;
 import com.sakurahino.clients.feign.UploadServiceClients;
 import com.sakurahino.clients.rabitmqModel.user.RegisterSuccessDTO;
-import com.sakurahino.clients.rabitmqModel.user.UserDeletedDTO;
 import com.sakurahino.clients.rabitmqModel.user.UserStatusMessageDTO;
 import com.sakurahino.common.dto.PaginatedResponse;
 import com.sakurahino.common.ex.AppException;
@@ -32,6 +31,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -46,6 +47,7 @@ public class UserServiceImpl  implements UserService {
     private final AuthHelper authHelper;
     private final RabbitMQMessageProducer rabbitMQProducer;
     private final UploadServiceClients uploadServiceClients;
+    private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     // xử lý bất đồng bộ ừ auth-service sang
     @Override
@@ -163,10 +165,11 @@ public class UserServiceImpl  implements UserService {
                 userRepository.existsByEmail(dto.getEmail())) {
             throw new AppException(ExceptionCode.EMAIL_TON_TAI);
         }
+        Instant updateDay = ZonedDateTime.now(VN_ZONE).toInstant();
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setStatus(dto.getStatus());
-        user.setUpdatedDay(Instant.now());
+        user.setUpdatedDay(updateDay);
 
         // gửi cập nhậ trạng thái sang bên auth-service
         UserStatusMessageDTO userStatusMessageDTO = new UserStatusMessageDTO();
@@ -215,10 +218,10 @@ public class UserServiceImpl  implements UserService {
             log.debug("New avatar uploaded: {}", newUrlAvatar);
             user.setAvatarUrl(newUrlAvatar);
         }
-
+        Instant updateDay = ZonedDateTime.now(VN_ZONE).toInstant();
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
-        user.setUpdatedDay(Instant.now());
+        user.setUpdatedDay(updateDay);
         userRepository.save(user);
         log.info("User {} profile updated successfully", userId);
 
@@ -248,7 +251,8 @@ public class UserServiceImpl  implements UserService {
     public void checkAndResetStreak() {
         log.info("=== Bắt đầu kiểm tra streak và freeze của người dùng ===");
 
-        Instant yesterday = Instant.now().minus(1, ChronoUnit.DAYS);
+        ZonedDateTime yesterdayVn = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusDays(1);
+        Instant yesterday = yesterdayVn.toInstant();
 
         // 1. Reset streak nếu không có freeze
         int resetCount = userRepository.resetStreakForInactiveUsers(yesterday);

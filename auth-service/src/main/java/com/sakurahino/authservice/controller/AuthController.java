@@ -4,6 +4,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.sakurahino.ampqclient.RabbitMQMessageProducer;
 import com.sakurahino.authservice.dto.LoginRequestDTO;
 import com.sakurahino.authservice.dto.RegisterRequestDTO;
+import com.sakurahino.authservice.dto.ResetPasswordDTO;
 import com.sakurahino.authservice.entity.User;
 import com.sakurahino.authservice.repository.PasswordRepository;
 import com.sakurahino.authservice.repository.UserRepository;
@@ -19,12 +20,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.sakurahino.clients.rabitmqModel.user.RegisterSuccessDTO;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,9 +38,6 @@ public class AuthController {
     private final JwtGoogleService jwtGoogleService;
     private final AuthService authService;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final PasswordRepository passwordRepository;
-    private final JwtUtil jwtUtil;
     private final RabbitMQMessageProducer rabbitMQProducer;
 
     @PostMapping("/register")
@@ -61,11 +58,30 @@ public class AuthController {
         return new SuccessResponse(authService.login(dto));
     }
 
-    @PostMapping("/verify-code")
-    public SuccessResponse verifyCode(){
-        return new SuccessResponse();
+    // Xử lý controller về mật khẩu
+    @GetMapping("/{username}")
+    public SuccessResponse getEmailByUsername(@PathVariable("username") String username) {
+        return new SuccessResponse(authService.getEmailByUsername(username));
     }
 
+    @PostMapping("/verify-code")
+    public SuccessResponse verifyCode(@RequestBody @Valid ResetPasswordDTO.ForgotPasswordRequest dto){
+        authService.sendResetCode(dto);
+        return new SuccessResponse("Gửi mã code thành công");
+    }
+
+    @PostMapping("/check-code")
+    public SuccessResponse checkCode(@RequestBody @Valid ResetPasswordDTO.VerifyCodeRequest dto) {
+        var result = authService.checkCode(dto);
+        return new SuccessResponse(result);
+        }
+    @PostMapping("reset-password")
+    public SuccessResponse resetPassword(@RequestBody @Valid ResetPasswordDTO.ResetPasswordRequest dto) {
+        authService.resetPassword(dto);
+        return new SuccessResponse("Đổi mật khẩu thành công");
+    }
+
+    // này đăng nhập bằng google nhé
     @PostMapping("/google")
     public ResponseEntity<?> authenticateGoogle(@RequestBody Map<String, String> payload) {
         String idToken = payload.get("idToken");
@@ -103,7 +119,7 @@ public class AuthController {
             user.setEmail(email);
             user.setUsername(email.split("@")[0]);
             user.setRole(Role.USER);
-            user.setDayCreation(Instant.now());
+            user.setDayCreation( ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant());
 
             userRepository.save(user);
 

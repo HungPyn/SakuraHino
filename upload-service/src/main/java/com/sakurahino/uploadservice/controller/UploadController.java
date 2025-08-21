@@ -6,16 +6,21 @@ import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.ex.ResourceException;
 import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.uploadservice.service.UploadService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/files")
 @RequiredArgsConstructor
+@Slf4j
 public class UploadController {
 
     private final UploadService uploadService;
@@ -49,15 +54,25 @@ public class UploadController {
     }
 
     /**
-     * Xóa file theo objectName (vd: tts/abc123.mp3)
+     * Xóa file bất kỳ theo objectName (vd: uploads/abc123.png)
      */
-    @DeleteMapping("/{objectName}")
-    public SuccessResponse deleteFile(@PathVariable String objectName) {
-        boolean deleted = uploadService.deleteFile(objectName);
-        if (!deleted) {
-            throw new ResourceException(404, "File not found or already deleted: " + objectName);
+    @DeleteMapping("/**")
+    public ResponseEntity<Void> deleteFile(HttpServletRequest request) {
+        log.info("Bắt đầu xóa ảnh {}", request.getRequestURI());
+        // Lấy toàn bộ path sau /api/v1/files/
+        String path = (String) request.getAttribute(
+                HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        String bestMatchPattern = (String) request.getAttribute(
+                HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        String objectName = new AntPathMatcher().extractPathWithinPattern(bestMatchPattern, path);
+
+        if (objectName == null || objectName.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
-        return new SuccessResponse();
+
+        uploadService.deleteFile(objectName);
+        log.info("Xóa ảnh thành công: {}", objectName);
+        return ResponseEntity.ok().build();
     }
 
     private void validateFile(MultipartFile file) {

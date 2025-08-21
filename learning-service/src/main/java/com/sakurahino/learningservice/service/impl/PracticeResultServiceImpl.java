@@ -18,6 +18,7 @@ import com.sakurahino.learningservice.repository.PracticeResultRepository;
 import com.sakurahino.learningservice.repository.TopicRepository;
 import com.sakurahino.learningservice.service.PracticeResultService;
 import com.sakurahino.learningservice.service.UserTopicStatusService;
+import com.sakurahino.learningservice.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -73,7 +74,7 @@ public class PracticeResultServiceImpl implements PracticeResultService {
                         userId,
                         xpAmount,
                         streakIncrement,
-                        Instant.now()
+                        TimeUtils.nowInstant()
                 );
 
                 rabbitMQProducer.publish(
@@ -90,7 +91,8 @@ public class PracticeResultServiceImpl implements PracticeResultService {
     }
 
     private PracticeResult buildPracticeResult(PracticeResultRequestDTO dto, Topic topic) {
-        Instant completedAt = Instant.now();
+        // Lấy thời điểm hiện tại theo giờ VN
+        Instant completedAt = TimeUtils.nowInstant();
         Instant startTime = completedAt.minusSeconds(dto.getDurationSeconds());
 
         PracticeResult result = new PracticeResult();

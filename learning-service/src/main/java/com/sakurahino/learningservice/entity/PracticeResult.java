@@ -31,6 +31,7 @@ public class PracticeResult {
     private Long score;
 
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private ResultStatus status;
 
     @Column(name = "total_question")

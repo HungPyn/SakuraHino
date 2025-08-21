@@ -10,7 +10,10 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Repository
@@ -19,6 +22,14 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
     @PersistenceContext
     private EntityManager em;
 
+    @Override
+    public List<Integer> findExistingLessonIdsForUser(String userId, List<Integer> lessonIds) {
+        String jpql = "SELECT uls.lesson.id FROM UserLessonStatus uls WHERE uls.userId = :userId AND uls.lesson.id IN :lessonIds";
+        return em.createQuery(jpql, Integer.class)
+                .setParameter("userId", userId)
+                .setParameter("lessonIds", lessonIds)
+                .getResultList();
+    }
     @Override
     public List<String> findUserIdToUnlockLesson(int currentPosition, int lessonId) {
         String jpql = """
@@ -53,14 +64,18 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
 
             StringBuilder sql = new StringBuilder();
             sql.append("INSERT INTO user_lesson_status (user_id, lesson_id, progress_status, completed_at) VALUES ");
-
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
+                    .withZone(ZoneId.of("Asia/Ho_Chi_Minh")); // múi giờ VN
             for (int i = 0; i < batch.size(); i++) {
                 UserLessonStatus item = batch.get(i);
-                sql.append(String.format("('%s', %d, '%s', '%s')",
+                String completedAt = item.getCompletedAt() != null
+                        ? "'" + formatter.format(item.getCompletedAt()) + "'"  // bọc trong ''
+                        : "NULL"; // nếu null thì để NULL
+                sql.append(String.format("('%s', %d, '%s', %s)",
                         item.getUserId(),
                         item.getLesson().getId(),
                         item.getProgressStatus().name(),
-                        Instant.now()));
+                        completedAt));
 
                 if (i < batch.size() - 1) {
                     sql.append(", ");
@@ -88,6 +103,11 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
         LEFT JOIN UserLessonStatus uls
             ON uls.lesson.code = l.code AND uls.userId = :userId
         WHERE l.status = :publishedStatus
+          AND EXISTS (
+              SELECT 1
+              FROM LessonQuestion q
+              WHERE q.lesson = l
+          )
         ORDER BY l.position ASC
     """;
 
@@ -99,24 +119,28 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
     }
 
 
+
     public boolean areAllLessonsPassed(String userId, String topicCode) {
         String jpql = """
         SELECT CASE
-                 WHEN COUNT(l) = SUM(CASE WHEN l.progressStatus = :passed THEN 1 ELSE 0 END) 
-                 THEN TRUE 
-                 ELSE FALSE 
+                 WHEN COUNT(ls) = SUM(CASE WHEN uls.progressStatus = :passed THEN 1 ELSE 0 END)
+                 THEN TRUE ELSE FALSE
                END
-        FROM UserLessonStatus l
-        WHERE l.userId = :userId
-          AND l.lesson.topic.code = :topicCode
+        FROM Lesson ls
+        LEFT JOIN UserLessonStatus uls 
+               ON uls.lesson.id = ls.id 
+              AND uls.userId = :userId
+        WHERE ls.topic.code = :topicCode
+          AND ls.status = :published
     """;
 
-        Boolean result = em.createQuery(jpql, Boolean.class)
-                .setParameter("userId", userId)
-                .setParameter("topicCode", topicCode)
-                .setParameter("passed", ProgressStatus.PASSED)
-                .getSingleResult();
-
-        return Boolean.TRUE.equals(result);
+        return Boolean.TRUE.equals(
+                em.createQuery(jpql, Boolean.class)
+                        .setParameter("userId", userId)
+                        .setParameter("topicCode", topicCode)
+                        .setParameter("passed", ProgressStatus.PASSED)
+                        .setParameter("published", LearningStatus.PUBLISHED) // nếu có trạng thái publish cho lesson
+                        .getSingleResult()
+        );
     }
 }

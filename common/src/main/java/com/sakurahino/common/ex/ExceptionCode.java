@@ -14,6 +14,7 @@ public enum ExceptionCode {
     MAT_KHAU_COMFIRM_SAI(1006,"Mật khẩu xác nhận không đúng"),
     MA_XAC_NHAN_KHONG_HOP_LE(1004, "Mã xác nhận không hợp lệ"),
     MA_XAC_NHAN_HET_HAN(1005, "Mã xác nhận đã hết hạn"),
+    MA_XAC_NHAN_DA_SU_DUNG(1006,"Mã xác nhận đã sử dụng"),
 
     //dung cho chung chung
     DU_LIEU_KHONG_TON_TAI(1007, "Không tìm thấy tài nguyên"),
@@ -30,6 +31,7 @@ public enum ExceptionCode {
     LESSON_DA_TON_TAI(2003,"Tên bài học đã tồn tại"),
     MAX_PUBLIC_LESSON_REACHED(2004,"Số lượng bài học xuất bản đã tối ta"),
     LESSON_KHONG_TON_TAI(2005,"Bài học không tồn tại"),
+    TOPIC_NAME_FOUND(2009,"Tên chủ đề đã tồn tại"),
     // dùng bên status
     USER_LESSON_STATUS_NOT_FOUND(2006,"trạng thái bài học của user không tồn tại"),
     USER_TOPIC_STATUS_NOT_FOUND(2007,"trạng thái chu de của user không tồn tại"),

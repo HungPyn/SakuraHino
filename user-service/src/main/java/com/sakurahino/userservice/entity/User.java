@@ -39,7 +39,7 @@ public class User {
     private Instant updatedDay;
 
     @Column(name = "isNewUser")
-    private  Boolean isNewUser = false;
+    private  Boolean isNewUser = true;
 
     @Column(name = "long_steak")
     private Integer longStreak = 0;
