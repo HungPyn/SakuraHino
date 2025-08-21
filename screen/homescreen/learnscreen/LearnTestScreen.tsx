@@ -141,7 +141,7 @@ type SelectStringAnswer = (answer: string[]) => void;
 //                                MAIN COMPONENT
 // =========================================================================
 
-const Lesson = () => {
+const LessonTestScreen = () => {
   const navigation = useNavigation<LessonScreenNavigationProp>();
   const route = useRoute<LessonScreenRouteProp>();
 
@@ -170,20 +170,18 @@ const Lesson = () => {
   const [correctAnswerText, setCorrectAnswerText] = useState("");
   //luu cau sai
   const [questionIncorrect, setQuestionIncorrect] = useState<Question[]>([]);
-  const { lessonCode, topicCode, practice } = route.params;
+  const {
+    lessonCode = null,
+    topicCode = null,
+    practice = false,
+  } = route.params || {};
 
   //lưu kết quả lesson
-  const createResultLesson = async () => {
-    const result = {
-      lessonCode,
-      score,
-      totalQuestion: originalQuestionsLength,
-      correctCount: correctAnswerCount,
-      wrongCount: incorrectAnswerCount,
-      durationSeconds: Math.floor((endTime.current - startTime.current) / 1000),
-    };
+  const createResultLessonTest = async () => {
     try {
-      const response = await questionService.createResultLesson(result);
+      const response = await questionService.createResultLessonTest(
+        correctAnswerCount
+      );
       console.log("Kết quả đã lưu:", response);
     } catch (error) {
       console.error("Lỗi khi lưu kết quả câu hỏi:", error);
@@ -209,53 +207,41 @@ const Lesson = () => {
   };
   ///
   const onSkip = async () => {
+    // Reset các state
     setSelectedAnswer(null);
     setCorrectAnswerShown(true);
     setIsAnswerChecked(false);
     setSelectedAnswers([]);
-    setCorrectAnswerText("");
+    setCorrectAnswerText(""); // Kiểm tra nếu là câu hỏi cuối cùng
 
     if (currentQuestionIndex === questions.length - 1) {
-      if (!isRetryingIncorrect && questionIncorrect.length > 0) {
-        setQuestions([...questions, ...questionIncorrect]);
-        setCurrentQuestionIndex(originalQuestionsLength); // bắt đầu từ câu đầu của các câu sai
-        setIsRetryingIncorrect(true);
-        console.log("lam lai cau sai");
-      } else {
-        endTime.current = Date.now();
-        // kết thúc bài học, show tổng kết
-        console.log("Kết thúc bài học hiển thị màn tổng kết:");
-        console.log("Điểm số là:", score);
-        console.log(
-          "Thời gian làm bài là:",
-          (endTime.current - startTime.current) / 1000,
-          "giây"
-        );
-        console.log("tổng số câu là:", originalQuestionsLength);
-        console.log("số câu đúng là:", correctAnswerCount);
-        console.log("số câu sai là:", incorrectAnswerCount);
-        const commitTime = formatTime(endTime.current - startTime.current);
-        if (practice) {
-          await createResultPractice();
-        } else {
-          await createResultLesson();
-        }
+      // Kết thúc bài học, tính toán và hiển thị kết quả
+      endTime.current = Date.now();
+      console.log("Kết thúc bài học, hiển thị màn tổng kết:");
+      console.log("Điểm số là:", score);
+      console.log(
+        "Thời gian làm bài là:",
+        (endTime.current - startTime.current) / 1000,
+        "giây"
+      );
+      console.log("tổng số câu là:", originalQuestionsLength);
+      console.log("số câu đúng là:", correctAnswerCount);
+      console.log("số câu sai là:", incorrectAnswerCount);
+      const commitTime = formatTime(endTime.current - startTime.current); // Lưu kết quả vào database
 
-        navigation.replace("Result", {
-          isTest: false,
-          corect: correctAnswerCount,
-          totalQuestion: originalQuestionsLength,
-          score: score,
-          commitTime: commitTime,
-        });
-      }
+      await createResultLessonTest();
+
+      navigation.replace("Result", {
+        isTest: true,
+        corect: correctAnswerCount,
+        totalQuestion: originalQuestionsLength,
+        score: score,
+        commitTime: commitTime,
+      });
     } else {
-      // next câu tiếp theo
-      setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
-      if (
-        !isRetryingIncorrect &&
-        currentQuestion.questionType === QuestionType.PRONUNCIATION
-      ) {
+      // Nếu chưa phải câu cuối, chuyển sang câu hỏi tiếp theo
+      setCurrentQuestionIndex((prevIndex) => prevIndex + 1); // Logic đếm câu sai cho câu hỏi phát âm
+      if (currentQuestion.questionType === QuestionType.PRONUNCIATION) {
         setIncorrectAnswerCount((prevCount) => prevCount + 1);
       }
     }
@@ -268,7 +254,7 @@ const Lesson = () => {
   const [incorrectAnswerCount, setIncorrectAnswerCount] = useState(0);
   const getQuestions = async () => {
     try {
-      const questions = await questionService.getQuestion(lessonCode);
+      const questions = await questionService.getQuestionTest();
       setQuestions(questions);
       setOriginalQuestionsLength(questions.length); // Lưu lại độ dài ban đầu của mảng câu hỏi
 
@@ -280,6 +266,10 @@ const Lesson = () => {
         console.log("Điểm mỗi câu là:", calculatedPoints);
         // console.log("Câu hỏi bài học là", JSON.stringify(questions, null, 2));
       }
+      console.log(
+        "Câu hỏi bài học test là:",
+        JSON.stringify(questions, null, 2)
+      );
     } catch (error) {
       console.error("Lỗi khi gọi API lấy câu hỏi:", error);
     }
@@ -306,20 +296,8 @@ const Lesson = () => {
     }
   };
   useEffect(() => {
-    if (practice) {
-      console.log("Đây là dữ liệu ôn tập nhé:");
-      console.log("topicCode là:", topicCode);
-      console.log("practice là:", practice);
-      console.log("lessonCode là:", lessonCode);
-      getPracticeQuestions();
-    } else {
-      console.log("Đây là dữ liệu học tập bình thường nhé:");
-      console.log("lesson: topicCode là:", topicCode);
-      console.log("lesson: practice là:", practice);
-      console.log("lesson: lessonCode là:", lessonCode);
-      getQuestions();
-    }
-  }, [lessonCode, topicCode]); // Sẽ chạy một lần khi lessonCode có giá trị
+    getQuestions();
+  }, []); // Sẽ chạy một lần khi lessonCode có giá trị
 
   const currentQuestion = questions[currentQuestionIndex];
   if (!currentQuestion) {
@@ -353,11 +331,10 @@ const Lesson = () => {
     );
   }
   const hearts =
-    "fast-forward" in route.params &&
-    !isNaN(Number(route.params["fast-forward"]))
+    "fast-forward" in (route.params || {}) &&
+    !isNaN(Number(route.params?.["fast-forward"]))
       ? 3 - incorrectAnswerCount
       : null;
-
   // Tìm đáp án đúng từ dữ liệu API mới
   const correctAnswer = currentQuestion.choices.find(
     (choice) => choice.isCorrect
@@ -393,7 +370,7 @@ const Lesson = () => {
         setIsCorrectAnswer(false);
         setIsAnswerChecked(true);
         setSelectedAnswer(null);
-        setQuestionIncorrect((prev) => [...prev, currentQuestion]);
+        // setQuestionIncorrect((prev) => [...prev, currentQuestion]);
         if (!isRetryingIncorrect) {
           setIncorrectAnswerCount((x) => x + 1);
         }
@@ -445,7 +422,7 @@ const Lesson = () => {
         setIsCorrectAnswer(false);
         setIsAnswerChecked(true);
         setSelectedAnswer(null);
-        setQuestionIncorrect((prev) => [...prev, currentQuestion]);
+        // setQuestionIncorrect((prev) => [...prev, currentQuestion]);
         if (!isRetryingIncorrect) {
           setIncorrectAnswerCount((x) => x + 1);
         }
@@ -506,7 +483,7 @@ const Lesson = () => {
         setIsCorrectAnswer(false);
         setIsAnswerChecked(true);
         setSelectedAnswer(null);
-        setQuestionIncorrect((prev) => [...prev, currentQuestion]);
+        // setQuestionIncorrect((prev) => [...prev, currentQuestion]);
         if (!isRetryingIncorrect) {
           setIncorrectAnswerCount((x) => x + 1);
         }
@@ -571,7 +548,7 @@ const Lesson = () => {
         setIsCorrectAnswer(false);
         setIsAnswerChecked(true);
         setSelectedAnswer(null);
-        setQuestionIncorrect((prev) => [...prev, currentQuestion]);
+        // setQuestionIncorrect((prev) => [...prev, currentQuestion]);
         if (!isRetryingIncorrect) {
           setIncorrectAnswerCount((x) => x + 1);
         }
@@ -602,7 +579,7 @@ const Lesson = () => {
     //   ]);
   };
 
-  const unitNumber = Number(route.params["fast-forward"]);
+  const unitNumber = Number(route.params?.["fast-forward"]);
 
   // if (hearts !== null && hearts < 0 && !correctAnswerShown) {
   //   return (
@@ -1963,4 +1940,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Lesson;
+export default LessonTestScreen;

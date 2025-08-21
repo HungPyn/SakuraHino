@@ -26,7 +26,18 @@ export type RootStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   Home: undefined;
-  Leaderboard: undefined;
+  Alphabet: undefined;
+  LearnWriting: undefined;
+  WritingPractice: {
+    isLearning: boolean;
+    isKanji: boolean;
+    id: number;
+    word: string;
+    furigana: string;
+    romaji: string;
+    meaning: string;
+    audioUrl: string;
+  };
   Main: NavigatorScreenParams<MainTabParamList>;
   // LessonScreen: { practice: boolean } | undefined;
   Shop: undefined;
@@ -35,11 +46,13 @@ export type RootStackParamList = {
   SettingsAccount: { user: User | null };
   ProfileScreen: undefined;
   Lesson: { lessonCode: string; topicCode: string; practice: boolean };
+  LessonTest: undefined;
   Guidebook: { code: string; unitNumber: number };
   LearningPath: undefined;
   Profile: undefined;
   Exam: undefined;
   Result: {
+    isTest: boolean;
     corect: number;
     totalQuestion: number;
     score: number;

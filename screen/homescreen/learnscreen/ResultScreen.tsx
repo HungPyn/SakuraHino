@@ -25,7 +25,8 @@ const ResultScreen = () => {
   const navigation = useNavigation<ResultScreenNavigationProp>();
   const route = useRoute<ResultScreenRouteProp>();
 
-  const { corect, totalQuestion, score, commitTime } = route.params;
+  // Thêm 'isTest' vào destructuring từ route.params
+  const { isTest, corect, totalQuestion, score, commitTime } = route.params;
 
   // Tách phút và giây từ chuỗi thời gian
   const [minutes, seconds] = commitTime.split(":").map(Number);
@@ -100,10 +101,18 @@ const ResultScreen = () => {
     navigation.replace("LearningPathScreen");
   };
 
-  const isFailed = score < 70;
-  const mainColor = isFailed ? "#FF6347" : "#58CC02";
-  const headerText = isFailed ? "Cố gắng hơn nữa!" : "Hoàn hảo!";
-  const iconName = isFailed ? "frown-o" : "smile-o";
+  // --- LOGIC MỚI: Dựa vào isTest để hiển thị kết quả
+  let mainColor, headerText, iconName;
+  if (isTest) {
+    mainColor = "#58CC02"; // Luôn là màu xanh lá
+    headerText = "Hoàn thành!";
+    iconName = "smile-o";
+  } else {
+    const isFailed = score < 70;
+    mainColor = isFailed ? "#FF6347" : "#58CC02";
+    headerText = isFailed ? "Cố gắng hơn nữa!" : "Hoàn hảo!";
+    iconName = isFailed ? "frown-o" : "smile-o";
+  }
 
   return (
     <View style={styles.container}>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { StyleProp, ViewStyle } from "react-native";
 import { SvgProps } from "react-native-svg";
 import {
@@ -9,9 +9,13 @@ import {
   Dimensions,
 } from "react-native";
 import Svg, { G, Path } from "react-native-svg";
-import { useBoundStore } from "../hooks/useBoundStore";
-import { Calendar } from "./Calendar";
-import { FireSvg, GemSvg, MoreOptionsSvg } from "./Svgs";
+import {
+  EmptyMedalSvg,
+  FireSvg,
+  GemSvg,
+  LightningProgressSvg,
+  MoreOptionsSvg,
+} from "./Svgs";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type SvgComponentProps = SvgProps & {
@@ -64,90 +68,69 @@ const EmptyGemTopBarSvg = ({ style, ...props }: SvgComponentProps) => {
   );
 };
 
-const TopBar = ({ backgroundColor = "#58cc02", borderColor = "#46a302" }) => {
-  const [menu, setMenu] = useState("HIDDEN");
-  const streak = useBoundStore((x) => x.streak);
-  const lingots = useBoundStore((x) => x.lingots);
-  const language = useBoundStore((x) => x.language);
+// --- Định nghĩa kiểu dữ liệu cho props
+interface TopBarProps {
+  backgroundColor?: string;
+  borderColor?: string;
+  score: number;
+  streak: number;
+}
+
+const TopBar = ({
+  backgroundColor = "#58cc02",
+  borderColor = "#46a302",
+  score,
+  streak,
+}: TopBarProps) => {
   return (
-      <View
-        style={[
-          styles.header,
-          { backgroundColor, borderBottomColor: borderColor },
-        ]}
+    <View
+      style={[
+        styles.header,
+        { backgroundColor, borderBottomColor: borderColor },
+      ]}
+    >
+      <TouchableOpacity accessibilityLabel="See languages"></TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
+        accessibilityLabel="Toggle streak menu"
       >
-        <TouchableOpacity
-          onPress={() =>
-            setMenu((x) => (x === "LANGUAGES" ? "HIDDEN" : "LANGUAGES"))
-          }
-          accessibilityLabel="See languages"
-        ></TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setMenu((x) => (x === "STREAK" ? "HIDDEN" : "STREAK"))}
-          accessibilityLabel="Toggle streak menu"
-        >
-          {streak > 0 ? (
-            <FireSvg style={styles.icon} />
-          ) : (
-            <EmptyFireTopBarSvg style={styles.icon} />
-          )}
-          <Text
-            style={[
-              styles.text,
-              streak > 0 ? styles.textWhite : styles.textBlack,
-            ]}
-          >
-            {streak}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setMenu((x) => (x === "GEMS" ? "HIDDEN" : "GEMS"))}
-          accessibilityLabel="Toggle lingot menu"
-        >
-          {lingots > 0 ? (
-            <GemSvg style={styles.icon} />
-          ) : (
-            <EmptyGemTopBarSvg style={styles.icon} />
-          )}
-          <Text
-            style={[
-              styles.text,
-              lingots > 0 ? styles.textWhite : styles.textBlack,
-            ]}
-          >
-            {lingots}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => setMenu((x) => (x === "MORE" ? "HIDDEN" : "MORE"))}
-          accessibilityLabel="Toggle more menu"
-        >
-          <MoreOptionsSvg style={styles.icon} />
-        </TouchableOpacity>
-
-        <View
+        {streak > 0 ? (
+          <FireSvg style={styles.icon} />
+        ) : (
+          <EmptyFireTopBarSvg style={styles.icon} />
+        )}
+        <Text
           style={[
-            styles.menuContainer,
-            {
-              opacity: menu === "HIDDEN" ? 0 : 1,
-              height: menu === "HIDDEN" ? 0 : "auto",
-            },
+            styles.text,
+            streak > 0 ? styles.textWhite : styles.textBlack,
           ]}
-          pointerEvents={menu === "HIDDEN" ? "none" : "auto"}
         >
-          <TouchableOpacity
-            style={[styles.overlay, { opacity: menu === "HIDDEN" ? 0 : 0.3 }]}
-            onPress={() => setMenu("HIDDEN")}
-            accessibilityLabel="Hide menu"
-          />
-        </View>
-      </View>
- 
+          {streak}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
+        accessibilityLabel="Toggle lingot menu"
+      >
+        {/* THAY THẾ GEM BẰNG LIGHTNING */}
+        {score > 0 ? (
+          <LightningProgressSvg size={30} />
+        ) : (
+          <LightningProgressSvg size={30} />
+        )}
+        <Text
+          style={[styles.text, score > 0 ? styles.textWhite : styles.textBlack]}
+        >
+          {score}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity accessibilityLabel="Toggle more menu">
+        {/* <MoreOptionsSvg style={styles.icon} /> */}
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -183,100 +166,6 @@ const styles = StyleSheet.create({
   textBlack: {
     color: "#000",
     opacity: 0.2,
-  },
-  menuContainer: {
-    position: "absolute",
-    top: 58,
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-  },
-  menuContent: {
-    padding: 20,
-    flexDirection: "column",
-    gap: 12,
-    alignItems: "center",
-  },
-  languageItem: {
-    alignItems: "center",
-    gap: 8,
-  },
-  languageFlag: {
-    borderWidth: 4,
-    borderColor: "#3b82f6",
-    borderRadius: 16,
-  },
-  addLanguage: {
-    borderWidth: 4,
-    borderColor: "#fff",
-    borderRadius: 16,
-  },
-  addLanguageSvg: {
-    width: 80,
-    height: 64,
-  },
-  languageText: {
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  coursesText: {
-    fontWeight: "bold",
-    fontSize: 16,
-    color: "#9ca3af",
-  },
-  menuTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#000",
-  },
-  menuSubtitle: {
-    fontSize: 14,
-    color: "#9ca3af",
-  },
-  calendarContainer: {
-    width: "100%",
-  },
-  treasureChest: {
-    width: 96,
-    height: 96,
-  },
-  gemsContent: {
-    flexDirection: "column",
-    gap: 12,
-  },
-  shopLink: {
-    fontWeight: "bold",
-    fontSize: 14,
-    color: "#3b82f6",
-    textTransform: "uppercase",
-  },
-  menuLink: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    padding: 8,
-    width: "100%",
-  },
-  menuLinkBorder: {
-    borderTopWidth: 2,
-    borderTopColor: "#d1d5db",
-  },
-  menuIcon: {
-    width: 40,
-    height: 40,
-  },
-  menuLinkText: {
-    fontWeight: "bold",
-    fontSize: 16,
-    color: "#374151",
-  },
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height,
-    backgroundColor: "#000",
   },
 });
 

@@ -36,8 +36,8 @@ export const BottomBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
       navigation.navigate("Profile");
     } else if (href.startsWith("/exam")) {
       navigation.navigate("Exam");
-    } else if (href === "/leaderboard") {
-      navigation.navigate("Leaderboard");
+    } else if (href === "/learnWriting") {
+      navigation.navigate("LearnWriting");
     }
   };
 

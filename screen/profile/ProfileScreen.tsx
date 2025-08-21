@@ -17,9 +17,7 @@ import {
   EmptyFireSvg,
   EmptyMedalSvg,
   FireSvg,
-  GoogleLogoSvg,
   LightningProgressSvg,
-  LockSvg,
   ProfileFriendsSvg,
   ProfileTimeJoinedSvg,
   SettingsGearSvg,
@@ -27,6 +25,7 @@ import {
 import { useBoundStore } from "../../hooks/useBoundStore";
 import moment from "moment";
 import profileService from "../../services/profileService";
+import leaderboardService from "../../services/leaderboardService";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigatorType";
 
@@ -42,6 +41,57 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "Profile"
 >;
+
+// Khai báo lại các constants và component phụ từ LeaderboardScreen
+const COLORS = {
+  background: "#f0f2f5",
+  cardBackground: "#FFFFFF",
+  textColorPrimary: "#333333",
+  textColorSecondary: "#666666",
+  yellow: "#eab308",
+  orange: "#f97316",
+  green: "#22c55e",
+  blue: "#3b82f6",
+};
+
+const LeaderboardItem = ({
+  user,
+  rank,
+  score,
+  label,
+  scoreColor,
+}: {
+  user: User;
+  rank: number;
+  score: number;
+  label: string;
+  scoreColor: string;
+}) => {
+  const defaultAvatar = "https://placekitten.com/100/100";
+  return (
+    <View style={styles.leaderboardItem}>
+      <Text style={styles.rankText}>{rank}</Text>
+      <Image
+        style={styles.leaderboardAvatar}
+        source={{ uri: user.avatarUrl || defaultAvatar }}
+      />
+      <View style={styles.userInfo}>
+        <Text style={styles.userName} numberOfLines={1}>
+          {user.name}
+        </Text>
+        <Text style={styles.userUsername} numberOfLines={1}>
+          @{user.username}
+        </Text>
+      </View>
+      <View style={styles.scoreContainer}>
+        <Text style={[styles.scoreText, { color: scoreColor }]}>{score}</Text>
+        <Text style={styles.scoreLabel}>{label}</Text>
+      </View>
+    </View>
+  );
+};
+
+// Component chính của màn hình profile
 const ProfileTopBar = ({ user }: { user: User | null }) => {
   const navigation = useNavigation();
   return (
@@ -64,6 +114,7 @@ const ProfileTopSection = ({ user }: { user: User | null }) => {
   const loggedIn = useBoundStore((x) => x.loggedIn);
   const rawDate = useBoundStore((x) => x.joinedAt).toDate();
   const joinedAt = moment(rawDate).format("MMMM YYYY");
+
   type NavigationProp = NativeStackNavigationProp<
     RootStackParamList,
     "Profile"
@@ -71,7 +122,7 @@ const ProfileTopSection = ({ user }: { user: User | null }) => {
 
   useEffect(() => {
     if (!loggedIn) {
-      navigation.navigate("Welcome"); // Thay thế router.push("/")
+      navigation.navigate("Welcome");
     }
   }, [loggedIn, navigation]);
 
@@ -90,7 +141,7 @@ const ProfileTopSection = ({ user }: { user: User | null }) => {
           onPress: async () => {
             try {
               await profileService.logout();
-              navigation.replace("Welcome"); // quay về màn Welcome
+              navigation.replace("Welcome");
             } catch (error) {
               console.error("Lỗi khi đăng xuất:", error);
             }
@@ -194,60 +245,10 @@ const ProfileStatsSection = ({ user }: { user: User | null }) => {
   );
 };
 
-const ProfileFriendsSection = ({ user }: { user: User | null }) => {
-  const [state, setState] = useState<"FOLLOWING" | "FOLLOWERS">("FOLLOWING");
-
-  return (
-    <View style={styles.friendsSection}>
-      <Text style={styles.sectionTitle}>Bạn bè</Text>
-      <View style={styles.friendsContainer}>
-        <View style={styles.friendsButtons}>
-          <TouchableOpacity
-            style={[
-              styles.friendsButton,
-              state === "FOLLOWING" && styles.friendsButtonActive,
-            ]}
-            onPress={() => setState("FOLLOWING")}
-          >
-            <Text
-              style={[
-                styles.friendsButtonText,
-                state === "FOLLOWING" && styles.friendsButtonTextActive,
-              ]}
-            >
-              Following
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.friendsButton,
-              state === "FOLLOWERS" && styles.friendsButtonActive,
-            ]}
-            onPress={() => setState("FOLLOWERS")}
-          >
-            <Text
-              style={[
-                styles.friendsButtonText,
-                state === "FOLLOWERS" && styles.friendsButtonTextActive,
-              ]}
-            >
-              Followers
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.emptyFriendsContainer}>
-          <Text style={styles.emptyFriendsText}>
-            {state === "FOLLOWING"
-              ? "Not following anyone yet"
-              : "No followers yet"}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
-};
 const ProfileScreen = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [streakUsersData, setStreakUsersData] = useState<User[]>([]);
+  const [expUsersData, setExpUsersData] = useState<User[]>([]);
 
   const getUser = async () => {
     try {
@@ -258,9 +259,34 @@ const ProfileScreen = () => {
     }
   };
 
+  const getTopStreakUsers = async () => {
+    try {
+      const data = await leaderboardService.getTopStreakUsers();
+      setStreakUsersData(data);
+    } catch (error) {
+      console.error("Lỗi khi lấy top streak người dùng:", error);
+    }
+  };
+
+  const getTopExpUsers = async () => {
+    try {
+      const data = await leaderboardService.getTopExpUsers();
+      setExpUsersData(data);
+    } catch (error) {
+      console.error("Lỗi khi lấy top exp người dùng:", error);
+    }
+  };
+
   useEffect(() => {
     getUser();
+    getTopStreakUsers();
+    getTopExpUsers();
   }, []);
+
+  const sortedStreakUsers = streakUsersData.sort(
+    (a, b) => b.longStreak - a.longStreak
+  );
+  const sortedExpUsers = expUsersData.sort((a, b) => b.expScore - a.expScore);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -271,7 +297,69 @@ const ProfileScreen = () => {
       >
         <ProfileTopSection user={user} />
         <ProfileStatsSection user={user} />
-        <ProfileFriendsSection user={user} />
+
+        <View style={styles.leaderboardSection}>
+          <Text style={styles.sectionTitle}>Bảng xếp hạng</Text>
+          <View style={styles.sectionsWrapper}>
+            {/* Bảng xếp hạng Top Streaks */}
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionTitleContainer}>
+                <FireSvg />
+                <Text style={styles.sectionTitleText}>Top Streaks</Text>
+              </View>
+              <View style={styles.leaderboardHeader}>
+                <Text style={styles.rankHeader}>Rank</Text>
+                <Text style={styles.nameHeader}>Tên người dùng</Text>
+                <Text style={styles.scoreHeader}>Streak</Text>
+              </View>
+              <ScrollView
+                style={styles.leaderboardScroll}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true}
+              >
+                {sortedStreakUsers.map((user, index) => (
+                  <LeaderboardItem
+                    key={`streak-${index}`}
+                    user={user}
+                    rank={index + 1}
+                    score={user.longStreak}
+                    label="ngày"
+                    scoreColor={COLORS.orange}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Bảng xếp hạng Top XP */}
+            <View style={styles.sectionContainerXP}>
+              <View style={styles.sectionTitleContainer}>
+                <LightningProgressSvg size={34} />
+                <Text style={styles.sectionTitleText}>Top XP</Text>
+              </View>
+              <View style={styles.leaderboardHeader}>
+                <Text style={styles.rankHeader}>Rank</Text>
+                <Text style={styles.nameHeader}>Tên người dùng</Text>
+                <Text style={styles.scoreHeader}>XP</Text>
+              </View>
+              <ScrollView
+                style={styles.leaderboardScroll}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true}
+              >
+                {sortedExpUsers.map((user, index) => (
+                  <LeaderboardItem
+                    key={`exp-${index}`}
+                    user={user}
+                    rank={index + 1}
+                    score={user.expScore}
+                    label="XP"
+                    scoreColor={COLORS.yellow}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        </View>
       </ScrollView>
       <BottomBar selectedTab="Profile" />
     </SafeAreaView>
@@ -279,16 +367,16 @@ const ProfileScreen = () => {
 };
 const styles = StyleSheet.create({
   safeArea: {
-    marginTop: 14, // Để tránh bị che bởi TopBar
+    marginTop: 14,
     flex: 1,
     backgroundColor: "#fff",
   },
   container: {
     paddingHorizontal: 20,
-    marginTop: 64, // Để tránh bị che bởi TopBar
+    marginTop: 64,
   },
   contentContainer: {
-    paddingBottom: 90, // Để tránh bị che bởi BottomBar
+    paddingBottom: 90,
     gap: 20,
   },
   srOnly: {
@@ -299,10 +387,8 @@ const styles = StyleSheet.create({
     margin: -1,
     overflow: "hidden",
   },
-
-  // ProfileTopBar
   topBar: {
-    marginTop: 10, // Để tránh bị che bởi TopBar
+    marginTop: 10,
     position: "absolute",
     left: 0,
     right: 0,
@@ -322,22 +408,20 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#9ca3af",
   },
-
-  // ProfileTopSection
   topSection: {
-    flexDirection: "column", // avatar lên đầu thay vì column-reverse
+    flexDirection: "column",
     borderBottomWidth: 2,
     borderColor: "#e5e7eb",
     paddingBottom: 32,
     gap: 12,
   },
   avatarImage: {
-    width: 100, // Đặt chiều rộng và chiều cao tùy ý
+    width: 100,
     height: 100,
-    borderRadius: 50, // Tạo hình tròn
+    borderRadius: 50,
   },
   avatar: {
-    marginTop: 10, // Đẩy avatar lên trên
+    marginTop: 10,
     height: 80,
     width: 80,
     borderRadius: 9999,
@@ -386,7 +470,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     borderRadius: 16,
     borderBottomWidth: 4,
-    borderColor: "#edececff", // màu đỏ cho nút logout
+    borderColor: "#edececff",
     backgroundColor: "#6ec0d0ff",
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -398,7 +482,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     borderRadius: 16,
     borderBottomWidth: 4,
-    borderColor: "#edececff", // màu đỏ cho nút logout
+    borderColor: "#edececff",
     backgroundColor: "#eb5e5eff",
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -408,8 +492,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: "white",
   },
-
-  // ProfileStatsSection
   statsSection: {
     paddingVertical: 12,
   },
@@ -424,7 +506,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   statItem: {
-    width: "48%", // 2 cột
+    width: "48%",
     flexDirection: "row",
     gap: 8,
     borderRadius: 16,
@@ -447,46 +529,119 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#9ca3af",
   },
-
-  // ProfileFriendsSection
-  friendsSection: {
+  leaderboardSection: {
     paddingVertical: 12,
   },
-  friendsContainer: {
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: "#e5e7eb",
+  sectionsWrapper: {
+    gap: 20,
   },
-  friendsButtons: {
+  sectionContainer: {
+    backgroundColor: "rgba(195, 243, 145, 1)",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    height: 280, // Bắt buộc để ScrollView bên trong hoạt động
+  },
+  sectionContainerXP: {
+    backgroundColor: "rgba(210, 234, 157, 1)",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    height: 280, // Bắt buộc để ScrollView bên trong hoạt động
+  },
+  leaderboardScroll: {
+    flex: 1, // Đảm bảo ScrollView chiếm hết không gian còn lại
+  },
+  sectionTitleContainer: {
     flexDirection: "row",
-  },
-  friendsButton: {
-    flex: 1,
+    marginLeft: 15,
+    marginTop: 5,
     alignItems: "center",
-    justifyContent: "center",
-    borderBottomWidth: 2,
-    paddingVertical: 12,
-    borderColor: "#e5e7eb",
   },
-  friendsButtonActive: {
-    borderColor: "#3b82f6",
+  sectionTitleText: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginLeft: 8,
+    color: COLORS.textColorPrimary,
   },
-  friendsButtonText: {
+  leaderboardHeader: {
+    flexDirection: "row",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.background,
+  },
+  rankHeader: {
+    width: 50,
     fontWeight: "bold",
-    textTransform: "uppercase",
-    color: "#9ca3af",
+    color: COLORS.textColorSecondary,
   },
-  friendsButtonTextActive: {
-    color: "#3b82f6",
+  nameHeader: {
+    flex: 1,
+    fontWeight: "bold",
+    color: COLORS.textColorSecondary,
   },
-  emptyFriendsContainer: {
+  scoreHeader: {
+    width: 80,
+    fontWeight: "bold",
+    color: COLORS.textColorSecondary,
+    textAlign: "right",
+  },
+  leaderboardItem: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 40,
-    textAlign: "center",
+    paddingHorizontal: 5,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
-  emptyFriendsText: {
-    color: "#6b7280",
+  rankText: {
+    marginLeft: 10,
+    width: 50,
+    fontSize: 14,
+    fontWeight: "bold",
+    color: COLORS.textColorPrimary,
+  },
+  leaderboardAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: COLORS.textColorPrimary,
+  },
+  userUsername: {
+    fontSize: 12,
+    color: COLORS.textColorSecondary,
+  },
+  scoreContainer: {
+    marginRight: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    width: 80,
+    justifyContent: "flex-end",
+  },
+  scoreText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginRight: 4,
+  },
+  scoreLabel: {
+    fontSize: 12,
+    color: COLORS.textColorSecondary,
   },
 });
+
 export default ProfileScreen;

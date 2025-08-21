@@ -1,5 +1,4 @@
-import React, { use, useCallback, useEffect, useRef, useState } from "react";
-
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   TouchableOpacity,
@@ -10,7 +9,7 @@ import {
   Animated,
   Image,
   Modal,
-  Alert,
+  Dimensions,
 } from "react-native";
 import {
   GuidebookSvg,
@@ -31,18 +30,14 @@ import {
   ActiveTreasureSvg,
   ActiveTrophySvg,
   ActiveDumbbellSvg,
-  PracticeExerciseSvg,
 } from "../../../components/Svgs";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { useBoundStore } from "../../../hooks/useBoundStore";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { BottomBar } from "../../../components/custombar/BottomBar";
-import { Tab } from "../../../components/custombar/useBottomBarItems";
-import TopBar from "../../../components/TopBar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { RootStackParamList } from "../../../types/navigatorType";
 import topicService from "../../../services/topicService";
-import profileService from "../../../services/profileService";
+import { alphabetData } from "../../../services/alphabet";
 
 // --- Constants ---
 const COLORS = {
@@ -61,6 +56,14 @@ const COLORS = {
   textDark: "#000000",
 };
 
+interface Word {
+  id: number;
+  word: string;
+  romaji: string;
+  audioUrl: string;
+  status: "LOCKED" | "UNLOCKED" | "PASSED";
+}
+
 interface Lesson {
   lessonCode: string;
   lessonName: string;
@@ -71,7 +74,6 @@ interface Lesson {
 
 export type ProgressStatus = "LOCKED" | "UNLOCKED" | "PASSED";
 
-// Định nghĩa giao diện `Topic`
 interface Topic {
   topicCode: string;
   topicName: string;
@@ -83,17 +85,7 @@ interface Topic {
   borderColor?: string;
   textColor?: string;
 }
-export interface User {
-  name: string;
-  email: string;
-  username: string;
-  avatarUrl: string;
-  longStreak: number;
-  expScore: number;
-  isNewUser: boolean;
-}
 
-// Định nghĩa kiểu dữ liệu cho icon
 type TileType =
   | "star"
   | "book"
@@ -101,33 +93,26 @@ type TileType =
   | "treasure"
   | "trophy"
   | "fast-forward";
+type TileStatus = "LOCKED" | "ACTIVE" | "COMPLETE";
 
-// Định nghĩa các bảng màu
 const COLOR_PALETTES = [
   { backgroundColor: "#58CC02", borderColor: "#46A302", textColor: "#FFFFFF" },
   { backgroundColor: "#1CB0F6", borderColor: "#1899D6", textColor: "#FFFFFF" },
   { backgroundColor: "#FFC800", borderColor: "#FFB800", textColor: "#FFFFFF" },
   { backgroundColor: "#FF4B4B", borderColor: "#E54242", textColor: "#FFFFFF" },
   { backgroundColor: "#7D53B2", borderColor: "#6C4A9E", textColor: "#FFFFFF" },
-  { backgroundColor: "#FF8C42", borderColor: "#E67A35", textColor: "#FFFFFF" }, // cam sáng
-  { backgroundColor: "#00BFA6", borderColor: "#00A38E", textColor: "#FFFFFF" }, // ngọc lam
-  { backgroundColor: "#FF6F91", borderColor: "#E85D7D", textColor: "#FFFFFF" }, // hồng
-  { backgroundColor: "#4C5B5C", borderColor: "#3C4A4B", textColor: "#FFFFFF" }, // xám đậm
-  { backgroundColor: "#2D87BB", borderColor: "#246E99", textColor: "#FFFFFF" }, // xanh navy
-
-  { backgroundColor: "#9CCC65", borderColor: "#7CB342", textColor: "#FFFFFF" }, // xanh lá nhạt
-  { backgroundColor: "#F06292", borderColor: "#E91E63", textColor: "#FFFFFF" }, // hồng đậm
+  { backgroundColor: "#FF8C42", borderColor: "#E67A35", textColor: "#FFFFFF" },
+  { backgroundColor: "#00BFA6", borderColor: "#00A38E", textColor: "#FFFFFF" },
+  { backgroundColor: "#FF6F91", borderColor: "#E85D7D", textColor: "#FFFFFF" },
+  { backgroundColor: "#4C5B5C", borderColor: "#3C4A4B", textColor: "#FFFFFF" },
+  { backgroundColor: "#2D87BB", borderColor: "#246E99", textColor: "#FFFFFF" },
+  { backgroundColor: "#9CCC65", borderColor: "#7CB342", textColor: "#FFFFFF" },
+  { backgroundColor: "#F06292", borderColor: "#E91E63", textColor: "#FFFFFF" },
 ];
 
-// Định nghĩa chiều cao của một chủ đề ở đây để toàn bộ component có thể truy cập
 const TOPIC_HEIGHT = 400;
 
-// --- Navigation ---
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-// --- Helper Functions ---
-type TileStatus = "LOCKED" | "ACTIVE" | "COMPLETE";
-
+// --- Các Component khác (được giữ nguyên) ---
 const getTileLeftOffset = (index: number, unitNumber: number): number => {
   const tileLeftOffsets = [0, -45, -70, -45, 0, 45, 70, 45];
   const offsets =
@@ -156,7 +141,6 @@ const SvgTileIconComponentMap: { [key: string]: React.ComponentType<any> } = {
   FastForward: FastForwardSvg,
 };
 
-// --- Components ---
 const TileIcon = ({
   tileType,
   status,
@@ -192,7 +176,6 @@ const TileIcon = ({
       LOCKED: "FastForward",
     },
   };
-
   const iconName = iconMap[tileType]?.[status] || "default";
   const IconComponent = SvgTileIconComponentMap[iconName];
   const iconColor =
@@ -201,10 +184,7 @@ const TileIcon = ({
       : status === "ACTIVE"
       ? COLORS.green500
       : COLORS.gray400;
-
-  if (!IconComponent) {
-    return null;
-  }
+  if (!IconComponent) return null;
   return <IconComponent width={80} height={80} fill={iconColor} />;
 };
 
@@ -216,7 +196,6 @@ const HoverLabel = ({
   textColor: string;
 }) => {
   const bounceValue = useRef(new Animated.Value(1)).current;
-
   useEffect(() => {
     const bounce = () => {
       Animated.sequence([
@@ -235,7 +214,6 @@ const HoverLabel = ({
     };
     bounce();
   }, [bounceValue]);
-
   return (
     <Animated.View
       style={[styles.hoverLabel, { transform: [{ scale: bounceValue }] }]}
@@ -248,6 +226,7 @@ const HoverLabel = ({
     </Animated.View>
   );
 };
+
 const TileTooltip = ({
   isVisible,
   closeTooltip,
@@ -256,7 +235,6 @@ const TileTooltip = ({
   backgroundColor,
   textColor,
   onStart,
-  onPractice,
 }: {
   isVisible: boolean;
   closeTooltip: () => void;
@@ -269,7 +247,6 @@ const TileTooltip = ({
   onPractice: () => void;
 }) => {
   if (!isVisible) return null;
-
   const statusConfig = {
     ACTIVE: {
       bg: backgroundColor,
@@ -287,9 +264,7 @@ const TileTooltip = ({
       buttonText: "Luyện tập +5 XP",
     },
   };
-
   const config = statusConfig[status];
-
   return (
     <Modal
       visible={isVisible}
@@ -302,7 +277,6 @@ const TileTooltip = ({
           <Text style={[styles.tileTooltipText, { color: config.text }]}>
             {description}
           </Text>
-          {/* Sửa logic hiển thị nút bấm */}
           <TouchableOpacity
             style={[
               styles.tileTooltipButton,
@@ -342,13 +316,13 @@ const TileTooltip = ({
   );
 };
 
-const UnitSection = ({ topic }: { topic: Topic }) => {
+// Đổi tên component UnitSection thành WordSection và nhận wordsData làm props
+const WordSection = ({ wordsData }: { wordsData: Word[] }) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [selectedLessonIndex, setSelectedLessonIndex] = useState<null | number>(
+  const [selectedWordIndex, setSelectedWordIndex] = useState<null | number>(
     null
   );
-  const language = useBoundStore((state) => state.language);
 
   const getTileStatus = (status: ProgressStatus): TileStatus => {
     switch (status) {
@@ -362,143 +336,90 @@ const UnitSection = ({ topic }: { topic: Topic }) => {
     }
   };
 
-  const handleLessonPress = (
-    lesson: Lesson,
+  const handleWordPress = (
+    word: Word,
     index: number,
     status: ProgressStatus
   ) => {
-    // Luôn hiển thị pop-up khi bấm vào bất kỳ bài học nào.
-    setSelectedLessonIndex(index);
-  };
-  const getStatusText = (status: "LOCKED" | "UNLOCKED" | "PASSED"): string => {
-    switch (status) {
-      case "LOCKED":
-        return "Chưa mở khóa";
-      case "UNLOCKED":
-        return "Mở";
-      case "PASSED":
-        return "Đã hoàn thành";
-      default:
-        return "";
-    }
+    setSelectedWordIndex(index);
   };
 
-  const selectedLesson =
-    selectedLessonIndex !== null ? topic.listLesson[selectedLessonIndex] : null;
+  const selectedWord =
+    selectedWordIndex !== null ? wordsData[selectedWordIndex] : null;
 
   return (
     <View style={styles.unitSection}>
-      <View
-        style={[
-          styles.unitHeader,
-          {
-            backgroundColor: topic.backgroundColor || "#58cc02",
-          },
-        ]}
-      >
-        <View>
-          <Text style={styles.unitHeaderTitle}>{topic.topicName}</Text>
-          <Text style={styles.unitHeaderDescription}>
-            {getStatusText(topic.progressStatus)}
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={[
-            styles.guidebookButton,
-            {
-              borderColor: topic.borderColor || "#46a302",
-              backgroundColor: topic.backgroundColor || "#58cc02", // Thêm màu nền cho nút
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-            },
-          ]}
-        >
-          {topic.urlImage ? (
-            // Nếu có urlImage, hiển thị hình ảnh
-            <Image
-              source={{ uri: topic.urlImage }}
-              style={styles.guidebookImage}
-            />
-          ) : (
-            // Nếu không có, hiển thị Svg mặc định
-            <GuidebookSvg width={24} height={24} fill={"#FFFFFF"} />
-          )}
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.tilesContainer}>
-        {topic.listLesson &&
-          topic.listLesson.map((lesson, i: number) => {
-            const status = lesson.status;
-            const tileStatusForIcon = getTileStatus(status);
-            const tileTypeForIcon: TileType = i % 2 === 0 ? "book" : "star";
-            const colors =
-              status === "UNLOCKED"
-                ? {
-                    bg: topic.backgroundColor || "#58cc02",
-                    border: topic.borderColor || "#46a302",
-                  }
-                : status === "PASSED"
-                ? { bg: COLORS.green500, border: COLORS.green500 }
-                : { bg: COLORS.gray200, border: COLORS.gray400 };
-            return (
-              <View
-                key={i}
-                style={[
-                  styles.tileWrapper,
-                  {
-                    transform: [
-                      { translateX: getTileLeftOffset(i, topic.position) },
-                    ],
-                  },
-                ]}
-              >
-                {status === "UNLOCKED" && (
-                  <HoverLabel text="Start" textColor={colors.border} />
-                )}
-                <TouchableOpacity
-                  style={[
-                    styles.tileButton,
-                    { backgroundColor: colors.bg, borderColor: colors.border },
-                  ]}
-                  onPress={() => handleLessonPress(lesson, i, status)}
-                  activeOpacity={0.8}
-                >
-                  <TileIcon
-                    tileType={tileTypeForIcon}
-                    status={tileStatusForIcon}
-                  />
-                </TouchableOpacity>
-              </View>
-            );
-          })}
-      </View>
+        {wordsData.map((word, i: number) => {
+          const status = word.status;
+          const tileStatus = getTileStatus(status);
+          const colors =
+            status === "UNLOCKED"
+              ? {
+                  bg: COLOR_PALETTES[i % COLOR_PALETTES.length].backgroundColor,
+                  border: COLOR_PALETTES[i % COLOR_PALETTES.length].borderColor,
+                }
+              : status === "PASSED"
+              ? { bg: COLORS.green500, border: COLORS.green500 }
+              : { bg: COLORS.gray200, border: COLORS.gray400 };
 
-      {selectedLesson && (
+          return (
+            <View
+              key={i}
+              style={[
+                styles.tileWrapper,
+                {
+                  transform: [{ translateX: getTileLeftOffset(i, 0) }],
+                },
+              ]}
+            >
+              {status === "UNLOCKED" && (
+                <HoverLabel text="Start" textColor={colors.border} />
+              )}
+              <TouchableOpacity
+                style={[
+                  styles.tileButton,
+                  { backgroundColor: colors.bg, borderColor: colors.border },
+                ]}
+                onPress={() => handleWordPress(word, i, status)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.tileText}>{word.word}</Text>
+              </TouchableOpacity>
+            </View>
+          );
+        })}
+      </View>
+      {selectedWord && (
         <TileTooltip
-          isVisible={selectedLessonIndex !== null}
-          closeTooltip={() => setSelectedLessonIndex(null)}
-          status={getTileStatus(selectedLesson.status)}
-          description={selectedLesson.lessonName}
-          backgroundColor={topic.backgroundColor || "#58cc02"}
-          borderColor={topic.borderColor || "#46a302"}
-          textColor={topic.textColor || "#FFFFFF"}
+          isVisible={selectedWordIndex !== null}
+          closeTooltip={() => setSelectedWordIndex(null)}
+          status={getTileStatus(selectedWord.status)}
+          description={selectedWord.word + " (" + selectedWord.romaji + ")"}
+          backgroundColor={
+            COLOR_PALETTES[(selectedWordIndex ?? 0) % COLOR_PALETTES.length]
+              .backgroundColor
+          }
+          borderColor={
+            COLOR_PALETTES[(selectedWordIndex ?? 0) % COLOR_PALETTES.length]
+              .borderColor
+          }
+          textColor={
+            COLOR_PALETTES[(selectedWordIndex ?? 0) % COLOR_PALETTES.length]
+              .textColor
+          }
           onStart={() => {
-            if (selectedLesson.lessonName.toLowerCase() === "ôn tập") {
-              navigation.navigate("Lesson", {
-                lessonCode: "",
-                topicCode: selectedLesson.topicCode,
-                practice: true,
-              });
-            } else {
-              navigation.navigate("Lesson", {
-                lessonCode: selectedLesson.lessonCode,
-                topicCode: selectedLesson.topicCode,
-                practice: false,
-              });
-            }
-            setSelectedLessonIndex(null);
+            navigation.navigate("WritingPractice", {
+              isLearning: true,
+              isKanji: false,
+              id: selectedWord.id,
+              word: selectedWord.word,
+              romaji: selectedWord.romaji,
+              audioUrl: selectedWord.audioUrl,
+              furigana: "",
+              meaning: "",
+            });
+            setSelectedWordIndex(null);
           }}
           onPractice={() => {}}
         />
@@ -507,45 +428,17 @@ const UnitSection = ({ topic }: { topic: Topic }) => {
   );
 };
 
-// Component chính
+// --- Component chính ---
 const LearningPathScreen = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollY, setScrollY] = useState(0);
-  const [selectedTab, setSelectedTab] = useState<Tab>("Learn");
+  const [selectedTab, setSelectedTab] = useState<
+    "LearningPath" | "PracticeAlphabet"
+  >("LearningPath");
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [user, setUser] = useState<User | null>(null);
-  const navigation = useNavigation();
-
-  const getUser = async () => {
-    try {
-      const data = await profileService.getUser();
-      setUser(data);
-      // console.log("Thông tin người dùng:", JSON.stringify(data, null, 2));
-    } catch (error) {
-      console.error("Lỗi khi lấy thông tin người dùng:", error);
-    }
-  };
-  useEffect(() => {
-    // Đặt thời gian chờ 2000ms (2 giây) trước khi gọi hàm getUser()
-    const timer = setTimeout(() => {
-      getUser();
-    }, 2000);
-
-    // Đây là cleanup function. Nó sẽ chạy khi component unmount
-    // hoặc khi dependencies thay đổi, giúp tránh lỗi memory leak.
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    // console.log("User trươc skhi kiểm tra:", JSON.stringify(user, null, 2));
-    if (user?.isNewUser) {
-      Alert.alert(
-        "Chào mừng bạn đến với ứng dụng!",
-        "Hãy làm bài kiểm tra để bắt đầu."
-      );
-      navigation.navigate("LessonTest");
-    }
-  }, [getUser]);
+  const [words, setWords] = useState<Word[]>([]);
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const fetchTopics = async () => {
     try {
@@ -554,7 +447,6 @@ const LearningPathScreen = () => {
         const coloredTopics = data.map((topic, index) => {
           const colorIndex = index % COLOR_PALETTES.length;
           const fixedColor = COLOR_PALETTES[colorIndex];
-          // console.log("topic lấy ra là:", JSON.stringify(topic, null, 2));
           return {
             ...topic,
             ...fixedColor,
@@ -566,6 +458,11 @@ const LearningPathScreen = () => {
       console.error("Lỗi khi lấy danh sách topics:", error);
     }
   };
+
+  useEffect(() => {
+    setWords(alphabetData);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       fetchTopics();
@@ -582,32 +479,56 @@ const LearningPathScreen = () => {
 
   const topBarColors = getTopBarColors(scrollY);
 
+  // Hàm render giao diện học đường
+  const renderLearningPathView = () => (
+    <ScrollView
+      ref={scrollViewRef}
+      onScroll={(event) => setScrollY(event.nativeEvent.contentOffset.y)}
+      scrollEventThrottle={16}
+      contentContainerStyle={styles.scrollViewContent}
+      style={styles.mainScroll}
+    >
+      <WordSection wordsData={words} />
+    </ScrollView>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.topBar}>
-        <TopBar
-          backgroundColor={topBarColors.bg}
-          borderColor={topBarColors.border}
-          score={user?.expScore || 0}
-          streak={user?.longStreak || 0}
-        />
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            selectedTab === "LearningPath" && styles.tabButtonActive,
+          ]}
+          onPress={() => setSelectedTab("LearningPath")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === "LearningPath" && styles.tabTextActive,
+            ]}
+          >
+            Luyện viết
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            selectedTab === "PracticeAlphabet" && styles.tabButtonActive,
+          ]}
+          onPress={() => navigation.navigate("Alphabet")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === "PracticeAlphabet" && styles.tabTextActive,
+            ]}
+          >
+            Chữ cái
+          </Text>
+        </TouchableOpacity>
       </View>
-
-      <ScrollView
-        ref={scrollViewRef}
-        onScroll={(event) => setScrollY(event.nativeEvent.contentOffset.y)}
-        scrollEventThrottle={16}
-        contentContainerStyle={styles.scrollViewContent}
-        style={styles.mainScroll}
-      >
-        {topics.map((topic) => (
-          <UnitSection key={topic.topicCode} topic={topic} />
-        ))}
-      </ScrollView>
-      <TouchableOpacity style={styles.practiceButton} onPress={() => {}}>
-        <PracticeExerciseSvg />
-      </TouchableOpacity>
-
+      {renderLearningPathView()}
       {scrollY > 200 && (
         <TouchableOpacity
           style={styles.upArrowButton}
@@ -618,7 +539,7 @@ const LearningPathScreen = () => {
           <UpArrowSvg />
         </TouchableOpacity>
       )}
-      <BottomBar selectedTab={selectedTab} />
+      <BottomBar selectedTab="LearnWriting" />
     </SafeAreaView>
   );
 };
@@ -657,12 +578,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 4,
   },
   guidebookImage: {
-    width: 48, // Chiều rộng của hình ảnh bằng với nút bấm
-    height: 48, // Chiều cao của hình ảnh bằng với nút bấm
-    borderRadius: 24, // Bo tròn bằng một nửa kích thước để có hình tròn hoàn hảo
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     resizeMode: "cover",
   },
-
   guidebookText: { color: COLORS.textLight, fontWeight: "bold", marginLeft: 8 },
   tilesContainer: { marginTop: 40, width: "100%", alignItems: "center" },
   tileWrapper: { height: 100, alignItems: "center", justifyContent: "center" },
@@ -715,20 +635,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textTransform: "uppercase",
   },
-  practiceButton: {
-    position: "absolute",
-    bottom: 100,
-    left: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: COLORS.white,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.gray200,
-    elevation: 5,
-  },
   upArrowButton: {
     position: "absolute",
     bottom: 100,
@@ -742,6 +648,45 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLORS.gray200,
     elevation: 5,
+  },
+  tileText: {
+    fontSize: 28, // Kích thước chữ tùy chỉnh
+    fontWeight: "bold",
+    color: "#FFFFFF", // Màu chữ
+    textAlign: "center",
+  },
+  // Style cho thanh tab
+  tabContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 20,
+    marginTop: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 6,
+    marginHorizontal: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tabButton: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  tabButtonActive: {
+    backgroundColor: "#2ECC71",
+  },
+  tabText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#171a1aff",
+  },
+  tabTextActive: {
+    color: "#FFFFFF",
   },
 });
 

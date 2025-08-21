@@ -12,11 +12,14 @@ import LearningPathScreen from "../screen/homescreen/learnscreen/LearningPathScr
 import QuickPracticeScreen from "../screen/homescreen/practicescreen/QuickPracticeScreen";
 // import LessonScreen2 from "../screen/homescreen/learnscreen/LessonScreen2";
 import ResultScreen from "../screen/homescreen/learnscreen/ResultScreen";
-import Leaderboard from "../screen/homescreen/leaderboard/Leaderboard";
+import LearnWriting from "../screen/homescreen/learnWriting/LearnWriting";
+import Alphabet from "../screen/homescreen/learnWriting/Alphabet";
+import WritingPractice from "../screen/homescreen/learningComponents/WritingPractice";
 import ShopScreen from "../screen/homescreen/shop/ShopScreen";
 import SettingsAccount from "../screen/profile/SettingsAccount";
 import ProfileScreen from "../screen/profile/ProfileScreen";
 import Lesson from "../screen/homescreen/learnscreen/LearnScreen";
+import LessonTestScreen from "../screen/homescreen/learnscreen/LearnTestScreen";
 import ExamScreen from "../screen/examscreen/ExamScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -55,8 +58,18 @@ export default function RootNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="Leaderboard"
-        component={Leaderboard}
+        name="LearnWriting"
+        component={LearnWriting}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Alphabet"
+        component={Alphabet}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="WritingPractice"
+        component={WritingPractice}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -82,6 +95,11 @@ export default function RootNavigator() {
       <Stack.Screen
         name="Lesson"
         component={Lesson}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="LessonTest"
+        component={LessonTestScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

@@ -122,9 +122,61 @@ const createResultPractice = async (result: ResultPractice) => {
     return [];
   }
 };
+const getQuestionTest = async () => {
+  // const token = await AsyncStorage.getItem("token");
+  const token = await AsyncStorage.getItem("token");
+  console.log("Token retrieved from AsyncStorage:", token);
+  if (!token) {
+    console.error("Token not found in AsyncStorage");
+    return [];
+  }
+  try {
+    const response = await axios.get(
+      `${baseApi}/api/learning/user/questions/tests/initial`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data.data || [];
+  } catch (error) {
+    console.error("Lỗi khi gọi api lấy question test:", error);
+    return [];
+  }
+};
+
+const createResultLessonTest = async (correctQuestion: number) => {
+  // const token = await AsyncStorage.getItem("token");
+  const token = await AsyncStorage.getItem("token");
+  console.log("Token retrieved from AsyncStorage:", token);
+  if (!token) {
+    console.error("Token not found in AsyncStorage");
+    return [];
+  }
+  try {
+    const response = await axios.post(
+      `${baseApi}/api/learning/user/results/tests/initial/${correctQuestion}`,
+      null,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data || [];
+  } catch (error) {
+    console.error("Lỗi khi gọi thêm kết quả test:", error);
+    return [];
+  }
+};
 export default {
   getQuestion,
   createResultLesson,
   getPracticeQuestions,
   createResultPractice,
+  getQuestionTest,
+  createResultLessonTest,
 };
