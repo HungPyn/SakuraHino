@@ -13,19 +13,16 @@ import com.sakurahino.learningservice.entity.Topic;
 import com.sakurahino.learningservice.enums.ProgressStatus;
 import com.sakurahino.learningservice.enums.ResultStatus;
 import com.sakurahino.learningservice.mapper.ResultMapper;
-import com.sakurahino.learningservice.repository.LessonResultRepository;
 import com.sakurahino.learningservice.repository.PracticeResultRepository;
 import com.sakurahino.learningservice.repository.TopicRepository;
 import com.sakurahino.learningservice.service.PracticeResultService;
 import com.sakurahino.learningservice.service.UserTopicStatusService;
-import com.sakurahino.learningservice.utils.TimeUtils;
+import com.sakurahino.common.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 
 @Service
 @Slf4j
@@ -52,21 +49,25 @@ public class PracticeResultServiceImpl implements PracticeResultService {
 
         // Lấy số câu đúng cao nhất trước đó
         Integer bestCorrectBefore = practiceResultRepository
-                .findMaxCorrectCountByUserIdAndTopicId(userId, topic.getId())
+                .findMaxCorrectCountByUserIdAndTopicId(userId, topic.getId(),ResultStatus.PASSED)
                 .orElse(0);
 
         PracticeResult practiceResult = buildPracticeResult(dto, topic);
-
-        // ===== Tính XP =====
-        int currentCorrect = practiceResult.getCorrectCount();
-        int xpAmount = Math.max(0, (currentCorrect - bestCorrectBefore) * XP_PER_CORRECT);
-
+        int xpAmount = 0;
+        int streakIncrement = 0;
         // ===== Tính streak =====
-        int streakIncrement = lessonResultService.isFirstLessonToday(userId, practiceResult.getCompletedAt()) ? 1 : 0;
+        log.info("Checking first practice today for user {}", userId);
+        streakIncrement = lessonResultService.isFirstPassedToday(userId, practiceResult.getCompletedAt()) ? 1 : 0;
+        log.info("streakIncrement={}", streakIncrement);
         practiceResultRepository.save(practiceResult);
 
         // Nếu PASS thì update status và mở khóa topic tiếp theo
         if (practiceResult.getStatus() == ResultStatus.PASSED) {
+            // ===== Tính XP =====
+            int currentCorrect = practiceResult.getCorrectCount();
+            xpAmount = Math.max(0, (currentCorrect - bestCorrectBefore) * XP_PER_CORRECT);
+
+
             userTopicStatusService.updateTopicStatusAndUnlockNext(userId, topic, ProgressStatus.PASSED);
 
             if (xpAmount > 0 || streakIncrement > 0) {

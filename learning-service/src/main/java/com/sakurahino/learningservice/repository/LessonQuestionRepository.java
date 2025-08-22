@@ -1,7 +1,10 @@
 package com.sakurahino.learningservice.repository;
 
+import com.sakurahino.learningservice.entity.Lesson;
 import com.sakurahino.learningservice.entity.LessonQuestion;
 import com.sakurahino.learningservice.enums.LearningStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,8 +14,6 @@ import java.util.List;
 
 @Repository
 public interface LessonQuestionRepository extends JpaRepository<LessonQuestion, Integer> {
-
-    List<LessonQuestion> findLessonQuestionsByLesson_IdOrderByIdDesc(Integer toppicId);
 
     //user
     List<LessonQuestion> findLessonQuestionByLesson_Code(String lessonCode);
@@ -43,4 +44,13 @@ public interface LessonQuestionRepository extends JpaRepository<LessonQuestion, 
             @Param("limit") int limit,
             @Param("status") String status
     );
+
+    //admin
+    // Lấy tất cả LessonQuestion của một Lesson theo thứ tự tạo mới nhất
+    Page<LessonQuestion> findAllByLesson_IdOrderByCreatedAtDesc(Integer lessonId, Pageable pageable);
+
+    // đếm số lượng xem đã đạt đủ số lượng câu hỏi chưa ?
+    @Query("SELECT COUNT(q) FROM LessonQuestion q WHERE q.lesson.id = :lessonId AND q.status = :status")
+    int countQuestions(@Param("lessonId") Integer lessonId, @Param("status") LearningStatus status);
+
 }

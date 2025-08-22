@@ -1,5 +1,17 @@
 package com.sakurahino.learningservice.service;
 
+
+import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceRequest;
+import com.sakurahino.learningservice.entity.Lesson;
+import com.sakurahino.learningservice.entity.LessonQuestion;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.Map;
+
 public interface QuestionChoiceService {
 
+    void addQuestionChoice(LessonQuestion lessonQuestion, List<QuestionChoiceRequest> choiceRequests, Map<String, MultipartFile> imageFilesMap);
+
+    void updateQuestionChoice(String code, MultipartFile file);
 }

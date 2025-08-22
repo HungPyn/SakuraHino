@@ -8,7 +8,9 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface LessonQuestionMapper {
+
     @Mapping(source = "lesson.id", target = "lessonId")
+    @Mapping(source = "audioUrl",target = "audioUrl")
     LessonQuestionResponse mapQuestionResponse(LessonQuestion lessonQuestion);
 
     LessonQuestion mapEntityFromeRequest(LessonQuestionRequest lessonQuestionRequest);

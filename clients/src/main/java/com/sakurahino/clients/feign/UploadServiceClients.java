@@ -1,6 +1,7 @@
 package com.sakurahino.clients.feign;
 
 import com.sakurahino.clients.config.FeignMultipartSupportConfig;
+import com.sakurahino.clients.dto.AudioUploadResponseDTO;
 import com.sakurahino.clients.dto.UploadResponse;
 import com.sakurahino.common.retresponse.SuccessResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -23,5 +24,5 @@ public interface UploadServiceClients {
 
     // audio
     @PostMapping("/api/v1/files/tts")
-    UploadResponse upLoadText(@RequestParam("text") String text);
+    AudioUploadResponseDTO upLoadText(@RequestParam("text") String text);
 }

@@ -69,3 +69,5 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
     org.hibernate.type.descriptor.sql: TRACE
+    com.sakurahino.clients.feign.UploadServiceClients: DEBUG
+    feign: DEBUG

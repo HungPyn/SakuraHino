@@ -1,5 +1,6 @@
 package com.sakurahino.learningservice.entity;
 
+import com.sakurahino.learningservice.enums.LearningStatus;
 import com.sakurahino.learningservice.enums.QuestionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -12,19 +13,20 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "lesson_questions")
 @Getter
 @Setter
-@Entity
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "lesson_questions")
 public class LessonQuestion {
+
     @Id
-    @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
@@ -35,39 +37,40 @@ public class LessonQuestion {
     private Lesson lesson;
 
     @NotNull
-    @Lob
-    @Column(name = "question_type", nullable = false)
     @Enumerated(EnumType.STRING)
+    @Column(name = "question_type", nullable = false, length = 50)
     private QuestionType questionType;
 
     @NotNull
-    @Lob
+    @Lob // giữ lại vì có thể là text dài
     @Column(name = "prompt_text_template", nullable = false)
     private String promptTextTemplate;
 
     @NotNull
-    @Lob
-    @Column(name = "target_word_native", nullable = false)
+    @Column(name = "target_word_native", nullable = false, length = 255)
     private String targetWordNative;
 
-    @Size(max = 10)
     @NotNull
+    @Size(max = 10)
     @Column(name = "target_language_code", nullable = false, length = 10)
     private String targetLanguageCode;
 
-    @Size(max = 10)
-    @NotNull
-    @Column(name = "options_language_code", nullable = false, length = 10)
-    private String optionsLanguageCode;
 
     @Size(max = 255)
-    @Column(name = "audio_url_questions")
-    private String audioUrlQuestions;
+    @Column(name = "audio_url")
+    private String audioUrl;
 
-    @OneToMany(mappedBy = "lessonQuestion", // "lessonQuestion" là tên trường trong QuestionChoice entity
-            cascade = CascadeType.ALL,    // Áp dụng tất cả các thao tác (PERSIST, MERGE, REMOVE) cho choices
-            orphanRemoval = true,         // Xóa choices khỏi DB nếu chúng bị gỡ khỏi danh sách này
-            fetch = FetchType.LAZY)       // Chỉ tải choices khi truy cập
-    private List<QuestionChoice> choices = new ArrayList<>(); // Khởi tạo để tránh NullPointerException
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
 
+    private LearningStatus status;
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @OneToMany(mappedBy = "lessonQuestion",
+            cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<QuestionChoice> choices = new ArrayList<>();
 }

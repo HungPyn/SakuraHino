@@ -1,5 +1,6 @@
 package com.sakurahino.uploadservice.controller;
 
+import com.sakurahino.clients.dto.AudioUploadResponseDTO;
 import com.sakurahino.clients.dto.UploadResponse;
 import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
@@ -50,7 +51,7 @@ public class UploadController {
             throw new IllegalArgumentException("Text is required for synthesis");
         }
         String url = uploadService.synthesizeAndUpload(text);
-        return ResponseEntity.ok(new UploadResponse(url));
+        return ResponseEntity.ok(new AudioUploadResponseDTO(url));
     }
 
     /**
