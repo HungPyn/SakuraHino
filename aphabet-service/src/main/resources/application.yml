@@ -1,10 +1,19 @@
 server:
-  port: 8082
-
+  port: 8087
 spring:
   application:
-    name: auth-service
+    name: aphabet-service
+  servlet: # Thêm phần này vào dưới 'spring:'
+    multipart:
+      max-file-size: 10MB   # Ví dụ: cho phép mỗi file lên đến 10 MB
+      max-request-size: 10MB
 
+  feign:
+    client:
+      config:
+        default:
+          connectTimeout: 5000   # thời gian chờ kết nối (ms)
+          readTimeout: 10000
   config:
     import: optional:configserver:http://localhost:8888
 
@@ -28,9 +37,8 @@ spring:
       simple:
         acknowledge-mode: auto
 
-
   datasource:
-    url: jdbc:mysql://localhost:3306/auth_service_db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=True&useSSL=False
+    url: jdbc:mysql://localhost:3306/alphabet-service_db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true
     username: signserver
     password: signserver
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -51,16 +59,13 @@ eureka:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
 
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: 86400000
+upload-service:
+  base-url: ${UPLOAD_SERVICE_BASE_URL:http://localhost:8081/api/v1/files}
 
 logging:
   level:
     root: INFO
-    org.springframework.security: DEBUG
-    com.sakurahino.authservice: DEBUG
-
-google:
-  client:
-    id: ${GOOGLE_TOKEN}
+    com.sakurahino.learningservice: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.type.descriptor.sql: TRACE
