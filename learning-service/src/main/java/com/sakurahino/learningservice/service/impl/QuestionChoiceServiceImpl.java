@@ -34,6 +34,7 @@ public class QuestionChoiceServiceImpl implements QuestionChoiceService {
 
         switch (lessonQuestion.getQuestionType()) {
             case MULTIPLE_CHOICE_TEXT_ONLY:
+            case  AUDIO_CHOICE:
             case MULTIPLE_CHOICE_VOCAB_IMAGE:
                 choiceRequests.forEach(cr -> addChoice(lessonQuestion, cr, imageFilesMap));
                 break;

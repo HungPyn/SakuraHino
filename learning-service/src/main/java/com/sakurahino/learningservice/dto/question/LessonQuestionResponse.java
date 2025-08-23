@@ -1,6 +1,7 @@
 package com.sakurahino.learningservice.dto.question;
 
 import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceResponse;
+import com.sakurahino.learningservice.enums.LearningStatus;
 import com.sakurahino.learningservice.enums.QuestionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +21,7 @@ public class LessonQuestionResponse {
     private Integer lessonId;
 
     private QuestionType questionType;
+    private LearningStatus status;
 
     private String promptTextTemplate;
 
