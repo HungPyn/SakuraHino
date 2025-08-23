@@ -21,7 +21,7 @@ public interface QuestionService {
     PaginatedResponse<LessonQuestionResponse> getAllForAdmin(Integer lessonId,int page, int size);
     LessonQuestionResponse getQuestionById(Integer questionId);
     LessonQuestionResponse create(LessonQuestionRequest data, Map<String, MultipartFile> imageFilesMap);
-    LessonQuestionResponse update(Integer questionId,LessonQuestionRequest data);
+    LessonQuestionResponse update(Integer questionId,LessonQuestionRequest data, Map<String, MultipartFile> imageFilesMap);
     void delete(Integer questionId);
 
 }

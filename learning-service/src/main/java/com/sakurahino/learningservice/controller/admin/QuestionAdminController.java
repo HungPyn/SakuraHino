@@ -33,9 +33,9 @@ public class QuestionAdminController {
         return new SuccessResponse(response);
     }
 
-    @GetMapping("/{id}")
-    public SuccessResponse getQuestionById(@PathVariable Integer id) {
-        var response = questionService.getQuestionById(id);
+    @GetMapping("/{lessonId}")
+    public SuccessResponse getQuestionById(@PathVariable Integer lessonId) {
+        var response = questionService.getQuestionById(lessonId);
         return new SuccessResponse(response);
     }
 
@@ -53,5 +53,32 @@ public class QuestionAdminController {
 
         var response = questionService.create(data, imageFilesMap);
         return new SuccessResponse(response);
+    }
+
+    @PutMapping(value = "/{questionId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public SuccessResponse updateQuestion(
+            @PathVariable Integer questionId,
+            @RequestPart("data") @Valid LessonQuestionRequest data,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+
+        // Map file list sang map imageKey -> MultipartFile
+        Map<String, MultipartFile> imageFilesMap = new HashMap<>();
+        if (files != null) {
+            for (int i = 0; i < files.size(); i++) {
+                imageFilesMap.put("image" + (i + 1), files.get(i));
+            }
+        }
+
+        // Gọi service update
+        var response = questionService.update(questionId,data, imageFilesMap);
+        return new SuccessResponse(response);
+    }
+
+
+
+    @PatchMapping("/{questionId}")
+    public SuccessResponse deleteQuestionById(@PathVariable Integer questionId) {
+        questionService.delete(questionId);
+        return new SuccessResponse();
     }
 }

@@ -2,6 +2,8 @@ package com.sakurahino.learningservice.service.impl;
 
 import com.sakurahino.clients.dto.UploadResponse;
 import com.sakurahino.clients.feign.UploadServiceClients;
+import com.sakurahino.common.ex.AppException;
+import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceRequest;
 import com.sakurahino.learningservice.entity.LessonQuestion;
 import com.sakurahino.learningservice.entity.QuestionChoice;
@@ -15,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -51,8 +54,56 @@ public class QuestionChoiceServiceImpl implements QuestionChoiceService {
     }
 
     @Override
-    public void updateQuestionChoice(String code, MultipartFile file) {
+    public void updateQuestionChoice(Integer questionChoiceId,
+                                     QuestionChoiceRequest req,
+                                     Map<String, MultipartFile> imageFilesMap) {
+        boolean updated = false;
+        QuestionChoice qc = questionChoiceRepository.findById(questionChoiceId)
+                .orElseThrow(() -> new AppException(ExceptionCode.CHOICE_NOT_FOUND));
+        // Text Romaji
+        if (!Objects.equals(req.getTextRomaji(), qc.getTextRomaji())) {
+            qc.setTextRomaji(req.getTextRomaji());
+            updated = true;
+        }
 
+        // Text Foreign + Audio
+        if (!Objects.equals(req.getTextForeign(), qc.getTextForeign())) {
+            qc.setTextForeign(req.getTextForeign());
+            qc.setAudioUrlForeign(
+                    audioService.getOrUploadAudio(qc.getLessonQuestion(), qc, req.getTextForeign())
+            );
+            updated = true;
+        }
+
+        // Meaning
+        if (!Objects.equals(req.getMeaning(), qc.getMeaning())) {
+            qc.setMeaning(req.getMeaning());
+            updated = true;
+        }
+
+        // IsCorrect
+        if (!Objects.equals(req.getIsCorrect(), qc.getIsCorrect())) {
+            qc.setIsCorrect(req.getIsCorrect());
+            updated = true;
+        }
+
+        // Image (chỉ update nếu có multipart file mới)
+        if (req.getImageKey() != null && imageFilesMap != null) {
+            MultipartFile file = imageFilesMap.get(req.getImageKey());
+            if (file != null && !file.isEmpty()) {
+                String newUrl = uploadImage(file);
+                if (!Objects.equals(newUrl, qc.getImageUrl())) {
+                    // Nếu cần có thể xoá ảnh cũ ở đây qua uploadServiceClients.deleteFile(...)
+                    qc.setImageUrl(newUrl);
+                    updated = true;
+                }
+            }
+        }
+
+        // Lưu lại nếu có thay đổi
+        if (updated) {
+            questionChoiceRepository.save(qc);
+        }
     }
 
     private void addChoice(LessonQuestion question,

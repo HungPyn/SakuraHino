@@ -7,6 +7,7 @@ import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.util.TimeUtils;
 import com.sakurahino.learningservice.dto.question.LessonQuestionRequest;
 import com.sakurahino.learningservice.dto.question.LessonQuestionResponse;
+import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceRequest;
 import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceResponse;
 import com.sakurahino.learningservice.dto.topic.TopicResponseDTO;
 import com.sakurahino.learningservice.entity.Lesson;
@@ -229,8 +230,50 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public LessonQuestionResponse update(Integer questionId, LessonQuestionRequest data) {
-        return null;
+    @Transactional
+    public LessonQuestionResponse update(Integer questionId,LessonQuestionRequest data, Map<String, MultipartFile> imageFilesMap) {
+        // Lấy LessonQuestion hiện tại
+        LessonQuestion question = lessonQuestionRepository.findById(questionId)
+                .orElseThrow(() -> new AppException(ExceptionCode.QUESTION_NOT_FOUND));
+
+        boolean updated = false;
+
+        // Cập nhật các field cơ bản của LessonQuestion nếu có thay đổi
+        if (!Objects.equals(data.getStatus(), question.getStatus())) {
+            question.setStatus(data.getStatus());
+            updated = true;
+        }
+        if (!Objects.equals(data.getTargetWordNative(), question.getTargetWordNative())) {
+            question.setTargetWordNative(data.getTargetWordNative());
+            updated = true;
+            // Nếu là câu hỏi có audio, update audio URL
+            if (data.getQuestionType() == QuestionType.PRONUNCIATION
+                    || data.getQuestionType() == QuestionType.AUDIO_CHOICE) {
+                AudioUploadResponseDTO response = uploadServiceClients.upLoadText(data.getTargetWordNative());
+                question.setAudioUrl(response.getUrlAudio());
+            }
+        }
+        if (!Objects.equals(data.getPromptTextTemplate(), question.getPromptTextTemplate())) {
+            question.setPromptTextTemplate(data.getPromptTextTemplate());
+            updated = true;
+        }
+
+        // Chỉ update các QuestionChoice đã có id
+        if (data.getChoiceRequests() != null) {
+            for (QuestionChoiceRequest cr : data.getChoiceRequests()) {
+                if (cr.getId() != null) {
+                    questionChoiceService.updateQuestionChoice(cr.getId(), cr, imageFilesMap);
+                }
+            }
+        }
+
+        // Lưu LessonQuestion nếu có thay đổi
+        if (updated) {
+            question = lessonQuestionRepository.save(question);
+        }
+
+        // Map sang response
+        return lessonQuestionMapper.mapQuestionResponse(question);
     }
 
     @Override
