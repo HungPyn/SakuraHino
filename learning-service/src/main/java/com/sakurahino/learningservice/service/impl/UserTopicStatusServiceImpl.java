@@ -18,14 +18,13 @@ import com.sakurahino.learningservice.enums.ResultStatus;
 import com.sakurahino.learningservice.repository.*;
 import com.sakurahino.learningservice.service.UserLessonStatusService;
 import com.sakurahino.learningservice.service.UserTopicStatusService;
-import com.sakurahino.learningservice.utils.TimeUtils;
+import com.sakurahino.common.util.TimeUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -138,6 +137,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
         // Kiểm tra tất cả lesson thật đã pass chưa
         boolean allLessonsPassed = userStatusLessonRepository.areAllLessonsPassed(userId, topicWithStatusDTO.getTopicCode());
         boolean checkPractice = practiceResultRepository.existsPassedPractice(userId, topicWithStatusDTO.getTopicCode(), ResultStatus.PASSED);
+        log.info("Check practice passed for user {} topic {} = {}", userId, topicWithStatusDTO.getTopicCode(), checkPractice);
 
         int lastPosition = topicWithStatusDTO.getListLesson().stream()
                 .mapToInt(LessonWithStatusDTO::getPosition)

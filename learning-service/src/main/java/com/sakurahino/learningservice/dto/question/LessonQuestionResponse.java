@@ -23,17 +23,11 @@ public class LessonQuestionResponse {
 
     private String promptTextTemplate;
 
-
     private String targetWordNative;
-
 
     private String targetLanguageCode;
 
-
-    private String optionsLanguageCode;
-
-
-    private String audioUrlQuestions;
+    private String audioUrl;
 
     private List<QuestionChoiceResponse> choices;
 }

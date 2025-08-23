@@ -12,13 +12,12 @@ import com.sakurahino.learningservice.repository.LessonRepository;
 import com.sakurahino.learningservice.repository.UserStatusLessonRepository;
 import com.sakurahino.learningservice.repository.UserTopicStatusRepository;
 import com.sakurahino.learningservice.service.UserLessonStatusService;
-import com.sakurahino.learningservice.utils.TimeUtils;
+import com.sakurahino.common.util.TimeUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

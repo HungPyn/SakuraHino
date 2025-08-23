@@ -14,7 +14,7 @@ import com.sakurahino.learningservice.repository.LessonRepository;
 import com.sakurahino.learningservice.repository.TopicRepository;
 import com.sakurahino.learningservice.service.LessonService;
 import com.sakurahino.learningservice.service.UserLessonStatusService;
-import com.sakurahino.learningservice.utils.TimeUtils;
+import com.sakurahino.common.util.TimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.data.domain.Page;

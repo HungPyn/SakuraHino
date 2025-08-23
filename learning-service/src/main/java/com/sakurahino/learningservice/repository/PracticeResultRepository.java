@@ -25,9 +25,10 @@ public interface PracticeResultRepository extends JpaRepository<PracticeResult, 
                                  @Param("topicCode") String topicCode,
                                  @Param("status") ResultStatus status);
 
-    @Query("SELECT MAX(p.correctCount) FROM PracticeResult p WHERE p.userId = :userId AND p.topic.id = :topicId")
+    @Query("SELECT MAX(p.correctCount) FROM PracticeResult p WHERE p.userId = :userId AND p.topic.id = :topicId and p.status =:status")
     Optional<Integer> findMaxCorrectCountByUserIdAndTopicId(@Param("userId") String userId,
-                                                            @Param("topicId") Integer topicId);
+                                                            @Param("topicId") Integer topicId,
+                                                            @Param("status") ResultStatus status);
 
     @Query("""
            SELECT COUNT(pr) > 0
@@ -36,7 +37,7 @@ public interface PracticeResultRepository extends JpaRepository<PracticeResult, 
              AND pr.status = :status
               AND pr.completedAt BETWEEN :startOfDay AND :currentTime
            """)
-    boolean existsByUserIdAndStatusAfter(@Param("userId") String userId,
+    boolean existsByUserIdAndStatusBetween(@Param("userId") String userId,
                                          @Param("status") ResultStatus status,
                                          @Param("startOfDay") Instant startOfDay,
                                          @Param("currentTime") Instant currentTime);

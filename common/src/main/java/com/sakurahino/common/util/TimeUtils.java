@@ -1,4 +1,4 @@
-package com.sakurahino.learningservice.utils;
+package com.sakurahino.common.util;
 
 import java.time.Instant;
 import java.time.ZoneId;

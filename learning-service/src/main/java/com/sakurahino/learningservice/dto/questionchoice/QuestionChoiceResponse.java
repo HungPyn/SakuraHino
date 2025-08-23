@@ -10,18 +10,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class QuestionChoiceResponse {
+
     private Integer id;
+
     private Integer lessonQuestionId;
+
     private String textForeign;
+
     private String textRomaji;
 
     private String imageUrl;
 
     private String audioUrlForeign;
 
-    private Boolean isCorrect = false;
-
-    private String textBlock;
+    private Boolean isCorrect;
 
     private String meaning;
 }

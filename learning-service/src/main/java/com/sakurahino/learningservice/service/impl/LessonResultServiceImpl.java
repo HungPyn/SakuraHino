@@ -21,15 +21,12 @@ import com.sakurahino.learningservice.repository.PracticeResultRepository;
 import com.sakurahino.learningservice.repository.UserStatusLessonRepository;
 import com.sakurahino.learningservice.service.LessonResultService;
 import com.sakurahino.learningservice.service.UserLessonStatusService;
-import com.sakurahino.learningservice.utils.TimeUtils;
+import com.sakurahino.common.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 
 @Service
 @Slf4j
@@ -53,7 +50,7 @@ public class LessonResultServiceImpl implements LessonResultService {
         if (lesson == null) {
             throw new AppException(ExceptionCode.LESSON_KHONG_TON_TAI);
         }
-        if (lesson.getStatus() != LearningStatus.PUBLISHED){
+        if (lesson.getStatus() != LearningStatus.PUBLISHED) {
             throw new AppException(ExceptionCode.LESSON_STATUS_DONT_PUBLISHED);
         }
         String userId = authHelper.getUserId();
@@ -63,23 +60,25 @@ public class LessonResultServiceImpl implements LessonResultService {
 
         // Xác định điểm cao nhất trước đó
         Integer bestCorrectBefore = lessonResultRepository
-                .findMaxCorrectCountByUserIdAndLessonId(userId, lesson.getId())
+                .findMaxCorrectCountByUserIdAndLessonIdAndStatus(userId, lesson.getId(),ResultStatus.PASSED)
                 .orElse(0);
 
         LessonResult lessonResult = buildLessonResult(dto, lesson);
-
-        // ===== Tính XP =====
-        int currentCorrect = lessonResult.getCorrectCount();
-        int xpAmount = Math.max(0, (currentCorrect - bestCorrectBefore) * XP_PER_CORRECT);
-
+        int xpAmount = 0;
+        int streakIncrement = 0;
         // ===== Tính streak =====
         log.info("Checking first lesson today for user {}", userId);
-        int streakIncrement = isFirstLessonToday(userId,lessonResult.getCompletedAt()) ? 1 : 0;
+        streakIncrement = isFirstPassedToday(userId, lessonResult.getCompletedAt()) ? 1 : 0;
         log.info("streakIncrement={}", streakIncrement);
 
         lessonResultRepository.save(lessonResult);
 
         if (lessonResult.getStatus() == ResultStatus.PASSED) {
+            // ===== Tính XP =====
+            int currentCorrect = lessonResult.getCorrectCount();
+             xpAmount = Math.max(0, (currentCorrect - bestCorrectBefore) * XP_PER_CORRECT);
+
+
             userLessonStatusService.updateLessonStatusAndUnlockNext(
                     userId,
                     lesson,
@@ -92,7 +91,7 @@ public class LessonResultServiceImpl implements LessonResultService {
                     userId,
                     xpAmount,
                     streakIncrement,
-                    Instant.now()
+                    TimeUtils.nowInstant()
             );
 
             rabbitMQProducer.publish(
@@ -124,23 +123,20 @@ public class LessonResultServiceImpl implements LessonResultService {
     }
 
     // Kiểm tra lần đầu làm bài trong ngày (trước thời điểm hiện tại)
-    protected boolean isFirstLessonToday(String userId, Instant currentTime) {
-        // 00:00 giờ VN hôm nay
-        Instant startOfDay = TimeUtils.startOfDayInstant(); // phương thức trả về 00:00 giờ VN hôm nay
+    protected boolean isFirstPassedToday(String userId, Instant currentTime) {
+        Instant startOfDay = TimeUtils.startOfDayInstant(); // 00:00 giờ VN hôm nay
 
-        boolean lessonExists = lessonResultRepository.existsByUserIdAndStatusBetween(
+        boolean lessonPassed = lessonResultRepository.existsByUserIdAndStatusBetween(
                 userId, ResultStatus.PASSED, startOfDay, currentTime
         );
 
-        boolean practiceExists = practiceResultRepository.existsByUserIdAndStatusAfter(
+        boolean practicePassed = practiceResultRepository.existsByUserIdAndStatusBetween(
                 userId, ResultStatus.PASSED, startOfDay, currentTime
         );
 
-        log.info("User {} đã làm bài hôm nay? Lesson: {}, Practice: {}",
-                userId, lessonExists, practiceExists);
+        log.info("User {} đã có PASSED hôm nay? Lesson: {}, Practice: {}", userId, lessonPassed, practicePassed);
         log.debug("StartOfDay (VN): {}, CurrentTime: {}", startOfDay, currentTime);
 
-        // Nếu chưa có lesson hoặc practice nào → là lần đầu
-        return !(lessonExists || practiceExists);
+        return !(lessonPassed || practicePassed);
     }
 }

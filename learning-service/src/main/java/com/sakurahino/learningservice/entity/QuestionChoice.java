@@ -39,10 +39,8 @@ public class QuestionChoice {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "lesson_question_id", nullable = false)
     private LessonQuestion lessonQuestion;
-
 
     @Lob
     @Column(name = "text_foreign")
@@ -60,13 +58,8 @@ public class QuestionChoice {
     @Column(name = "audio_url_foreign")
     private String audioUrlForeign;
 
-    @NotNull
-    @Column(name = "is_correct", nullable = false)
-    private Boolean isCorrect = false;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "text_block",columnDefinition = "json")
-    private String textBlock;
+    @Column(name = "is_correct")
+    private Boolean isCorrect;
 
     @Size(max = 255)
     @Column(name = "meaning", nullable = false)

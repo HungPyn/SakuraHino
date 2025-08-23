@@ -1,6 +1,7 @@
 package com.sakurahino.learningservice.repository;
 
 import com.sakurahino.learningservice.entity.LessonResult;
+import com.sakurahino.learningservice.enums.ProgressStatus;
 import com.sakurahino.learningservice.enums.ResultStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,7 +27,15 @@ public interface LessonResultRepository  extends JpaRepository<LessonResult, Int
                                            @Param("startOfDay") Instant startOfDay,
                                            @Param("currentTime") Instant currentTime);
 
-    @Query("SELECT MAX(lr.correctCount) FROM LessonResult lr WHERE lr.userId = :userId AND lr.lesson.id = :lessonId")
-    Optional<Integer> findMaxCorrectCountByUserIdAndLessonId(String userId, Integer lessonId);
+    @Query("""
+    SELECT MAX(lr.correctCount)
+    FROM LessonResult lr
+    WHERE lr.userId = :userId
+      AND lr.lesson.id = :lessonId
+      AND lr.status = :status
+    """)
+    Optional<Integer> findMaxCorrectCountByUserIdAndLessonIdAndStatus(String userId,
+                                                                      Integer lessonId,
+                                                                      ResultStatus status);
 
 }

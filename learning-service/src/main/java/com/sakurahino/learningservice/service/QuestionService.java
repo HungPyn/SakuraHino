@@ -1,10 +1,13 @@
 package com.sakurahino.learningservice.service;
 
+import com.sakurahino.common.dto.PaginatedResponse;
 import com.sakurahino.learningservice.dto.question.LessonQuestionRequest;
 import com.sakurahino.learningservice.dto.question.LessonQuestionResponse;
+import com.sakurahino.learningservice.dto.topic.TopicResponseDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 public interface QuestionService {
 
@@ -14,14 +17,11 @@ public interface QuestionService {
     List<LessonQuestionResponse> getQuestionsTestForUser();
 
 
-    List<LessonQuestionResponse> getQuestionsByLessonIdAdmin(Integer topicId);
-    LessonQuestionResponse getQuestionById(Integer id);
-
-    void deleteQuestion(Integer id);
-
-    void createQuestion(LessonQuestionRequest lessonQuestionRequest);
-    void updateQuestion(Integer id, LessonQuestionRequest lessonQuestionRequest);
-
-    void importQuestionFromeExcel (Integer lessonId, MultipartFile excelFile);
+    // sử dụng cho admin
+    PaginatedResponse<LessonQuestionResponse> getAllForAdmin(Integer lessonId,int page, int size);
+    LessonQuestionResponse getQuestionById(Integer questionId);
+    LessonQuestionResponse create(LessonQuestionRequest data, Map<String, MultipartFile> imageFilesMap);
+    LessonQuestionResponse update(Integer questionId,LessonQuestionRequest data, Map<String, MultipartFile> imageFilesMap);
+    void delete(Integer questionId);
 
 }

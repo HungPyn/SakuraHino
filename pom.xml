@@ -99,6 +99,14 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- Google Cloud Libraries BOM -->
+            <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>libraries-bom</artifactId>
+                <version>26.66.0</version> <!-- kiểm tra version mới nhất trên Maven Central -->
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

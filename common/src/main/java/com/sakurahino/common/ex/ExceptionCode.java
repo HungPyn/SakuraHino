@@ -32,10 +32,13 @@ public enum ExceptionCode {
     MAX_PUBLIC_LESSON_REACHED(2004,"Số lượng bài học xuất bản đã tối ta"),
     LESSON_KHONG_TON_TAI(2005,"Bài học không tồn tại"),
     TOPIC_NAME_FOUND(2009,"Tên chủ đề đã tồn tại"),
+    QUESTION_NOT_FOUND(2010,"Câu hỏi không ồn tại"),
+    MAX_PUBLIC_QUESTION_REACHED(20011,"Số lượng câu hỏi xuất bản đã tối ta"),
     // dùng bên status
     USER_LESSON_STATUS_NOT_FOUND(2006,"trạng thái bài học của user không tồn tại"),
     USER_TOPIC_STATUS_NOT_FOUND(2007,"trạng thái chu de của user không tồn tại"),
     LESSON_STATUS_DONT_PUBLISHED(2008, "Bài học chưa được xuất bản"),
+    CHOICE_NOT_FOUND(2012,"Lựa chọn không tồn tại"),
 
     //Upload-serivce
     FILE_NOT_NULL(3001,"Ảnh không được trống"),
