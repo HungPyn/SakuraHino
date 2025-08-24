@@ -35,6 +35,13 @@ spring:
           filters:
             - RewritePath=/api/learning/(?<remaining>.*),/learning/${remaining}
 
+        - id: aphabet-service
+          uri: lb://aphabet-service
+          predicates:
+            - Path=/api/alphabets/**
+          filters:
+            - RewritePath=/api/alphabets(?<remaining>.*),/alphabets/${remaining}
+
 jwt:
   secret: ${JWT_SECRET}
 
