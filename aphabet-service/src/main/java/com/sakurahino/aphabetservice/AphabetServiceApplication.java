@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
 @SpringBootApplication(scanBasePackages = {
-        "com.sakurahino.learningservice",
+        "com.sakurahino.aphabetservice",
         "com.sakurahino.common",
         "com.sakurahino.clients.feign",
         "com.sakurahino.ampqclient"

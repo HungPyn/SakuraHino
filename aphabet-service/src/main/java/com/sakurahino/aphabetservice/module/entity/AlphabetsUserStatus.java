@@ -12,7 +12,8 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
-@Entity(name = "alphabets_user_status")
+@Entity
+@Table(name = "alphabets_user_status")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

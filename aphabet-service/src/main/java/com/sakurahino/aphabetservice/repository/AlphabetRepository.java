@@ -2,9 +2,9 @@ package com.sakurahino.aphabetservice.repository;
 
 import com.sakurahino.aphabetservice.enums.CharacterType;
 import com.sakurahino.aphabetservice.module.entity.Alphabet;
-import feign.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,16 +15,15 @@ public interface AlphabetRepository extends JpaRepository<Alphabet, Long> {
     public List<Alphabet> findAllByJapaneseCharacter(String japaneseCharacter);
 
     @Query(value = """
-        SELECT a.* 
-        FROM alphabets a
-        JOIN alphabets_user_status aus 
-          ON a.id = aus.alphabet_id
-        WHERE aus.user_id = :userId
-          AND aus.status = 'NOT_LEARNED'
-        ORDER BY RAND()
-        LIMIT 5
-        """, nativeQuery = true)
-    List<Alphabet> findRandomNewAlphabets(@Param("userId") Long userId);
+    SELECT a.* 
+    FROM alphabets a
+    LEFT JOIN alphabets_user_status aus 
+      ON a.id = aus.alphabet_id AND aus.user_id = :userId
+    WHERE aus.id IS NULL 
+       OR aus.progress_status = 'NOT_LEARNED'
+    LIMIT 5
+    """, nativeQuery = true)
+    List<Alphabet> findRandomNewAlphabets(@Param("userId") String userId);
 
     @Query(value = """
     SELECT a.* 
@@ -32,13 +31,12 @@ public interface AlphabetRepository extends JpaRepository<Alphabet, Long> {
     JOIN alphabets_user_status aus 
       ON a.id = aus.alphabet_id
     WHERE aus.user_id = :userId
-      AND aus.status = 'LEARNED'
-      AND aus.next_dual_date IS NOT NULL
-      AND DATE(aus.next_dual_date) = CURDATE()
-    ORDER BY RAND()
+      AND aus.progress_status = 'LEARNED'
+      AND aus.next_due_date IS NOT NULL
+      AND DATE(aus.next_due_date) = CURDATE()
     LIMIT 10
     """, nativeQuery = true)
-    List<Alphabet> findAllDueToday(@Param("userId") Long userId);
+    List<Alphabet> findAllDueToday(@Param("userId") String userId);
 
 
 

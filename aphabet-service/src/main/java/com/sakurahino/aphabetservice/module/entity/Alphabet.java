@@ -15,7 +15,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity(name = "alphabets")
+@Entity
+@Table(name = "alphabets")
 public class Alphabet {
     @Id
     @Column(name = "id",nullable = false)
@@ -48,4 +49,6 @@ public class Alphabet {
     @OneToMany(mappedBy = "alphabet",fetch = FetchType.LAZY)
     private List<AlphabetsUserStatus> userStatuses;
 
+    @Column(name = "meaning")
+    private String meaning;
 }

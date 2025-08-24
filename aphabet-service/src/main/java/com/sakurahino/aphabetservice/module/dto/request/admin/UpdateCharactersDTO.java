@@ -10,4 +10,5 @@ public class UpdateCharactersDTO {
     private Long id;
     private String japaneseCharacter;
     private AlphabetsStatus alphabetsStatus;
+    private String meaning;
 }

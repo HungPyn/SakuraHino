@@ -1,7 +1,6 @@
 package com.sakurahino.aphabetservice.repository;
 
 import com.sakurahino.aphabetservice.module.entity.AlphabetsUserStatus;
-import com.sakurahino.aphabetservice.service.impl.AlphabetUserStatusServiceImpl;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +12,6 @@ public interface AlphabetsUserStatusRepository extends JpaRepository<AlphabetsUs
     List<AlphabetsUserStatus> findByNextDueDateBefore(LocalDate date);
 
     AlphabetsUserStatus findByAlphabetIdAndUserId(Long alphabetId, String userId);
+
+    AlphabetsUserStatus findByAlphabetId(Long alphabetId);
 }

@@ -77,6 +77,7 @@ public class AlphabetServiceImpl implements AlphabetService {
                 .japaneseCharacter(addNewRequestDTO.getJapaneseCharacter())
                 .characterType(addNewRequestDTO.getCharacterType())
                 .status(addNewRequestDTO.getStatus())
+                .meaning(addNewRequestDTO.getMeaning())
                 .createdAt(createdAt)
                 .build();
         alphabetRepository.save(alphabet);
@@ -101,6 +102,7 @@ public class AlphabetServiceImpl implements AlphabetService {
                             .japaneseCharacter(addNewRequestDTO.getJapaneseCharacter())
                             .characterType(addListByTypeRequestDTO.getCharacterType())
                             .status(addNewRequestDTO.getStatus())
+                            .meaning(addNewRequestDTO.getMeaning())
                             .createdAt(createdAt)
                             .build();
                     return alphabetRepository.save(alphabet);
@@ -131,6 +133,7 @@ public class AlphabetServiceImpl implements AlphabetService {
             alphabetUpdate.setModifyAt(modifyAt);
             alphabetUpdate.setJapaneseCharacter(updateCharaterDTO.getJapaneseCharacter());
             alphabetUpdate.setCharacterType(updateCharaterDTO.getCharacterType());
+            alphabetUpdate.setMeaning(updateCharaterDTO.getMeaning());
             alphabetRepository.save(alphabetUpdate);
             return ResponseEntity.ok(BaseResponeDTO.<Alphabet>builder()
                     .statusCode("200")
@@ -160,7 +163,7 @@ public class AlphabetServiceImpl implements AlphabetService {
                     alphabet.setCharacterType(updateListCharacterRequestDTO.getCharacterType());
                     alphabet.setStatus(dto.getAlphabetsStatus());
                     alphabet.setModifyAt(modifyAt);
-
+                    alphabet.setMeaning(dto.getMeaning());
                     return alphabetRepository.save(alphabet);
                 })
                 .toList();

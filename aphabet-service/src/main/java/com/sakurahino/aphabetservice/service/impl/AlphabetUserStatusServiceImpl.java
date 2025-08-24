@@ -1,7 +1,9 @@
 package com.sakurahino.aphabetservice.service.impl;
 
+import com.sakurahino.aphabetservice.enums.ProgressStatus;
 import com.sakurahino.aphabetservice.module.dto.BaseResponeDTO;
 import com.sakurahino.aphabetservice.module.dto.response.user.GetByUserResponseDTO;
+import com.sakurahino.aphabetservice.module.dto.response.user.GetByUserResponseListDTO;
 import com.sakurahino.aphabetservice.module.entity.AlphabetsUserStatus;
 import com.sakurahino.aphabetservice.module.entity.Alphabet;
 import com.sakurahino.aphabetservice.repository.AlphabetRepository;
@@ -10,6 +12,8 @@ import com.sakurahino.aphabetservice.service.AlphabetsUserStatusService;
 import com.sakurahino.common.security.AuthHelper;
 import com.sakurahino.common.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +25,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService {
 
     private final AlphabetRepository alphabetRepository;
@@ -28,20 +33,27 @@ public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService
     private final AuthHelper authHelper;
 
     @Override
-    public ResponseEntity<BaseResponeDTO<List<GetByUserResponseDTO>>> getAllCharacterByUserId() {
+    public ResponseEntity<BaseResponeDTO<GetByUserResponseListDTO>> getAllCharacterByUserId() {
         String userId = authHelper.getUserId();
-        List<GetByUserResponseDTO> responseList = new ArrayList<>();
 
-        alphabetRepository.findRandomNewAlphabets(Long.parseLong(userId))
-                .forEach(alphabet -> responseList.add(mapToDTO(alphabet)));
+        List<GetByUserResponseDTO> newCharacters = new ArrayList<>();
+        List<GetByUserResponseDTO> oldCharacters = new ArrayList<>();
 
-        alphabetRepository.findAllDueToday(Long.parseLong(userId))
-                .forEach(alphabet -> responseList.add(mapToDTO(alphabet)));
+        alphabetRepository.findRandomNewAlphabets(userId)
+                .forEach(alphabet -> newCharacters.add(mapToDTO(alphabet)));
 
-        BaseResponeDTO<List<GetByUserResponseDTO>> response = BaseResponeDTO.<List<GetByUserResponseDTO>>builder()
+        alphabetRepository.findAllDueToday(userId)
+                .forEach(alphabet -> oldCharacters.add(mapToDTO(alphabet)));
+
+        GetByUserResponseListDTO dto = GetByUserResponseListDTO.builder()
+                .listNewCharacter(newCharacters)
+                .listOldCharacter(oldCharacters)
+                .build();
+
+        BaseResponeDTO<GetByUserResponseListDTO> response = BaseResponeDTO.<GetByUserResponseListDTO>builder()
                 .statusCode("200")
                 .errorMessage("Get success")
-                .Data(responseList)
+                .Data(dto)
                 .build();
 
         return ResponseEntity.ok(response);
@@ -49,16 +61,74 @@ public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService
 
     @Override
     public ResponseEntity<BaseResponeDTO<String>> updateResult(Long alphabetId) {
+        try {
+            String userId = authHelper.getUserId();
+
+            // Lấy alphabet
+            Optional<Alphabet> alphabetOpt = alphabetRepository.findById(alphabetId);
+            if (alphabetOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(BaseResponeDTO.<String>builder()
+                                .statusCode("404")
+                                .errorMessage("Alphabet not found with id=" + alphabetId)
+                                .Data(null)
+                                .build());
+            }
+            AlphabetsUserStatus status = alphabetsUserStatusRepository.findByAlphabetIdAndUserId(alphabetId, userId);
+
+            Instant completeAt = TimeUtils.nowInstant();
+
+            if (status == null) {
+                status = new AlphabetsUserStatus();
+                status.setAlphabet(alphabetOpt.get());
+                status.setUserId(userId);
+                status.setRepetiton(1);
+                status.setProgressStatus(ProgressStatus.LEARNED);
+                status.setCompleteAt(completeAt);
+                status.setNextDueDate(completeAt.plus(1, ChronoUnit.DAYS));
+            }else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(BaseResponeDTO.<String>builder()
+                                .statusCode("500")
+                                .errorMessage("Alphabet Character "+status.getAlphabet().getJapaneseCharacter()+" has been completed")
+                                .Data(null)
+                                .build());
+            }
+
+            alphabetsUserStatusRepository.save(status);
+
+            return ResponseEntity.ok(BaseResponeDTO.<String>builder()
+                    .statusCode("200")
+                    .errorMessage(null)
+                    .Data("Success")
+                    .build());
+
+        } catch (Exception e) {
+            log.error("Error updating alphabet result", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(BaseResponeDTO.<String>builder()
+                            .statusCode("500")
+                            .errorMessage(e.getMessage())
+                            .Data(null)
+                            .build());
+        }
+    }
+
+
+    @Override
+    public ResponseEntity<BaseResponeDTO<String>> updateOldResult(Long alphabetId) {
         String userId = authHelper.getUserId();
 
         AlphabetsUserStatus status = Optional.ofNullable(
-                alphabetsUserStatusRepository.findByAlphabetIdAndUserId(alphabetId, userId)
+                alphabetsUserStatusRepository.findByAlphabetIdAndUserId(alphabetId,userId)
         ).orElseThrow(() -> new IllegalArgumentException("Alphabet status not found"));
 
         Instant completeAt = TimeUtils.nowInstant();
         status.setCompleteAt(completeAt);
-        Integer current = status.getRepetiton();
-        if (current == null) current =0;
+        status.setProgressStatus(ProgressStatus.LEARNED);
+
+        Integer current = Optional.ofNullable(status.getRepetiton()).orElse(0);
+
         Integer next = switch (current) {
             case 0 -> 1;
             case 1 -> 2;
@@ -69,8 +139,10 @@ public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService
             case 30 -> null;
             default -> null;
         };
+
         status.setRepetiton(next);
-        status.setNextDueDate(completeAt.plus(current == 0 ? 1 : current, ChronoUnit.DAYS));
+        status.setNextDueDate(next == null ? null : completeAt.plus(next, ChronoUnit.DAYS));
+
         alphabetsUserStatusRepository.save(status);
 
         return ResponseEntity.ok(BaseResponeDTO.<String>builder()
@@ -79,6 +151,7 @@ public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService
                 .Data("Success")
                 .build());
     }
+
 
 
     private GetByUserResponseDTO mapToDTO(Alphabet alphabet) {

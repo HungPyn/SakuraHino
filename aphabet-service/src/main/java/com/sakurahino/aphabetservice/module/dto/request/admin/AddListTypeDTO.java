@@ -7,4 +7,5 @@ import lombok.Data;
 public class AddListTypeDTO {
     private String japaneseCharacter;
     private AlphabetsStatus status;
+    private String meaning;
 }

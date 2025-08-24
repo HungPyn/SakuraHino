@@ -9,4 +9,5 @@ public class AddNewRequestDTO {
     private CharacterType characterType;
     private String japaneseCharacter;
     private AlphabetsStatus status;
+    private String meaning;
 }
