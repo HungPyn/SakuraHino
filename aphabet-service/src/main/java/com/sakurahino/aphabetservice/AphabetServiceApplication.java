@@ -5,7 +5,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {
+        "com.sakurahino.learningservice",
+        "com.sakurahino.common",
+        "com.sakurahino.clients.feign",
+        "com.sakurahino.ampqclient"
+})
 public class AphabetServiceApplication {
 
     public static void main(String[] args) {

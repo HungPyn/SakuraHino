@@ -32,7 +32,7 @@ public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService
         String userId = authHelper.getUserId();
         List<GetByUserResponseDTO> responseList = new ArrayList<>();
 
-        alphabetRepository.findRandomAlphabetsWithoutNextDualDate(Long.parseLong(userId))
+        alphabetRepository.findRandomNewAlphabets(Long.parseLong(userId))
                 .forEach(alphabet -> responseList.add(mapToDTO(alphabet)));
 
         alphabetRepository.findAllDueToday(Long.parseLong(userId))
@@ -61,12 +61,12 @@ public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService
         if (current == null) current =0;
         Integer next = switch (current) {
             case 0 -> 1;
-            case 1 -> 3;
-            case 3 -> 5;
-            case 5 -> 7;
-            case 7 -> 9;
-            case 9 -> 11;
-            case 11 -> null;
+            case 1 -> 2;
+            case 2 -> 4;
+            case 4 -> 7;
+            case 7 -> 15;
+            case 15 -> 30;
+            case 30 -> null;
             default -> null;
         };
         status.setRepetiton(next);

@@ -15,16 +15,16 @@ public interface AlphabetRepository extends JpaRepository<Alphabet, Long> {
     public List<Alphabet> findAllByJapaneseCharacter(String japaneseCharacter);
 
     @Query(value = """
-            SELECT a.* 
-            FROM alphabets a
-            JOIN alphabets_user_status aus 
-              ON a.id = aus.alphabet_id
-            WHERE aus.user_id = :userId
-               AND DATE(aus.next_dual_date) = IS NULL
-            ORDER BY RAND()
-            LIMIT 10
-            """, nativeQuery = true)
-    List<Alphabet> findRandomAlphabetsWithoutNextDualDate(@Param("userId") Long userId);
+        SELECT a.* 
+        FROM alphabets a
+        JOIN alphabets_user_status aus 
+          ON a.id = aus.alphabet_id
+        WHERE aus.user_id = :userId
+          AND aus.status = 'NOT_LEARNED'
+        ORDER BY RAND()
+        LIMIT 5
+        """, nativeQuery = true)
+    List<Alphabet> findRandomNewAlphabets(@Param("userId") Long userId);
 
     @Query(value = """
     SELECT a.* 
@@ -32,9 +32,14 @@ public interface AlphabetRepository extends JpaRepository<Alphabet, Long> {
     JOIN alphabets_user_status aus 
       ON a.id = aus.alphabet_id
     WHERE aus.user_id = :userId
-      AND DATE(aus.next_dual_date) = CURRENT_DATE
+      AND aus.status = 'LEARNED'
+      AND aus.next_dual_date IS NOT NULL
+      AND DATE(aus.next_dual_date) = CURDATE()
+    ORDER BY RAND()
+    LIMIT 10
     """, nativeQuery = true)
     List<Alphabet> findAllDueToday(@Param("userId") Long userId);
+
 
 
     @Query(value = """

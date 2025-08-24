@@ -1,9 +1,11 @@
 package com.sakurahino.common.util;
 
+import org.springframework.stereotype.Component;
+
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-
+@Component
 public class TimeUtils {
 
 
