@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,6 +26,8 @@ public class QuestionChoiceResponse {
     private String audioUrlForeign;
 
     private Boolean isCorrect;
+
+    private List<String> items;
 
     private String meaning;
 }

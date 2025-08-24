@@ -9,21 +9,20 @@ import com.sakurahino.learningservice.dto.question.LessonQuestionRequest;
 import com.sakurahino.learningservice.dto.question.LessonQuestionResponse;
 import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceRequest;
 import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceResponse;
-import com.sakurahino.learningservice.dto.topic.TopicResponseDTO;
 import com.sakurahino.learningservice.entity.Lesson;
 import com.sakurahino.learningservice.entity.LessonQuestion;
 import com.sakurahino.learningservice.entity.Topic;
 import com.sakurahino.learningservice.enums.LearningStatus;
 import com.sakurahino.learningservice.enums.QuestionType;
-import com.sakurahino.learningservice.mapper.ChoiceMapper;
 import com.sakurahino.learningservice.mapper.LessonQuestionMapper;
 import com.sakurahino.learningservice.repository.LessonQuestionRepository;
 import com.sakurahino.learningservice.repository.LessonRepository;
-import com.sakurahino.learningservice.repository.QuestionChoiceRepository;
 import com.sakurahino.learningservice.repository.TopicRepository;
 import com.sakurahino.learningservice.service.QuestionChoiceService;
 import com.sakurahino.learningservice.service.QuestionService;
+import com.sakurahino.learningservice.utils.language.JapaneseTokenizerUtil;
 import com.sakurahino.learningservice.utils.language.LanguageUtil;
+import com.sakurahino.learningservice.utils.language.VietnameseTokenizerUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,22 +49,62 @@ public class QuestionServiceImpl implements QuestionService {
 
     // Phần này dùng cho user để lấy câu hỏi ra
     private List<LessonQuestionResponse> mapAndShuffleQuestions(List<LessonQuestion> questions) {
-        // Shuffle tổng thể câu hỏi
+        // Shuffle danh sách câu hỏi trước
         Collections.shuffle(questions);
 
-        // Map sang DTO và shuffle vị trí đáp án
         return questions.stream()
                 .map(question -> {
                     LessonQuestionResponse response = lessonQuestionMapper.mapQuestionResponse(question);
 
+                    // Copy và shuffle đáp án
                     List<QuestionChoiceResponse> choices = new ArrayList<>(response.getChoices());
+
+                    // Xử lý riêng với câu hỏi dạng WORD_ORDER
+                    if (question.getQuestionType() == QuestionType.WORD_ORDER) {
+                        handleWordOrderQuestion(question, choices);
+                    }
+
                     Collections.shuffle(choices);
                     response.setChoices(choices);
-
                     return response;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
+
+    private void handleWordOrderQuestion(LessonQuestion question, List<QuestionChoiceResponse> choices) {
+        if (question.getChoices() == null || question.getChoices().isEmpty()) return;
+        if (choices == null || choices.isEmpty()) return;
+
+        String sentence = null;
+        String targetLang = question.getTargetLanguageCode();
+
+        if ("ja".equalsIgnoreCase(targetLang)) {
+            // Học tiếng Việt -> dùng câu tiếng Việt (meaning)
+            sentence = question.getChoices().get(0).getMeaning();
+        } else if ("vi".equalsIgnoreCase(targetLang)) {
+            // Học tiếng Nhật -> dùng câu tiếng Nhật (textForeign)
+            sentence = question.getChoices().get(0).getTextForeign();
+        }
+
+        if (sentence == null || sentence.isBlank()) return;
+
+        List<String> tokens;
+        if ("ja".equalsIgnoreCase(targetLang)) {
+            // Tokenizer tiếng Việt
+            tokens = VietnameseTokenizerUtil.tokenize(sentence,true);
+        } else if ("vi".equalsIgnoreCase(targetLang)) {
+            // Tokenizer tiếng Nhật
+            tokens = JapaneseTokenizerUtil.tokenize(sentence);
+        } else {
+            return; // Không hỗ trợ ngôn ngữ khác
+        }
+
+        // Gán token cho đáp án đầu tiên một cách an toàn
+        choices.stream().findFirst().ifPresent(c -> c.setItems(tokens));
+    }
+
+
+
 
     @Override
     public List<LessonQuestionResponse> getQuestionsForUser(String code) {

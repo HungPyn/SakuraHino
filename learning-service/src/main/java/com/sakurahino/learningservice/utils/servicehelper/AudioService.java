@@ -6,6 +6,7 @@ import com.sakurahino.learningservice.entity.LessonQuestion;
 import com.sakurahino.learningservice.entity.QuestionChoice;
 import com.sakurahino.learningservice.repository.QuestionChoiceRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AudioService {
 
     private final UploadServiceClients uploadServiceClients;
@@ -61,10 +63,15 @@ public class AudioService {
         }
 
         // 5. Upload mới
-        AudioUploadResponseDTO response = uploadServiceClients.upLoadText(textForeign);
-        String url = response.getUrlAudio();
-        audioCache.put(textForeign, url);
-        return url;
+        try {
+            AudioUploadResponseDTO response = uploadServiceClients.upLoadText(textForeign);
+            String url = response.getUrlAudio();
+            audioCache.put(textForeign, url);
+            return url;
+        } catch (Exception e) {
+            log.error("Failed to upload audio for text: {}", textForeign, e);
+            return null; // hoặc trả về giá trị fallback
+        }
     }
 
     /** Clear cache nếu cần (ví dụ sau khi create/update xong) */

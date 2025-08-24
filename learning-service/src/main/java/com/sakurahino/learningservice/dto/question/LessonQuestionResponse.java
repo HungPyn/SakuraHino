@@ -21,6 +21,7 @@ public class LessonQuestionResponse {
     private Integer lessonId;
 
     private QuestionType questionType;
+
     private LearningStatus status;
 
     private String promptTextTemplate;
