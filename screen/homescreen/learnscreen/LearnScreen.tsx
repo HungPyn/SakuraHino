@@ -100,24 +100,24 @@ export interface Choice {
   id: number;
   lessonQuestionId: number | null;
   textForeign: string;
-  textRomaji: string | null;
-  imageUrl: string | null;
-  audioUrlForeign: string | null;
+  textRomaji?: string | null;
+  imageUrl?: string | null;
+  audioUrlForeign?: string | null;
   isCorrect: boolean;
-  textBlock: string | null;
-  meaning: string | null;
+  meaning?: string | null;
+  items?: string[]; // Thêm thuộc tính 'items' với kiểu là một mảng chuỗi
 }
 
 export interface Question {
   id: number;
   lessonId: number;
   questionType: QuestionType;
+  status: "PUBLISHED" | "PENDING" | "DELETED";
   promptTextTemplate: string;
   targetWordNative: string;
-  targetLanguageCode: string;
-  optionsLanguageCode: string;
-  audioUrlQuestions: string | null;
-  choices: Choice[];
+  targetLanguageCode: string; // "vi", "ja-JP", "en-US", ...
+  audioUrl?: string | null;
+  choices?: Choice[];
 }
 
 export const playCorrectSound = async (filePath: any) => {
@@ -167,7 +167,9 @@ const Lesson = () => {
     useState<number>(0); // chỉ 1 số thôi
 
   //lưu câu đúng cho thông báo sai
-  const [correctAnswerText, setCorrectAnswerText] = useState("");
+  const [correctAnswerText, setCorrectAnswerText] = useState<Choice | null>(
+    null
+  );
   //luu cau sai
   const [questionIncorrect, setQuestionIncorrect] = useState<Question[]>([]);
   const { lessonCode, topicCode, practice } = route.params;
@@ -213,7 +215,7 @@ const Lesson = () => {
     setCorrectAnswerShown(true);
     setIsAnswerChecked(false);
     setSelectedAnswers([]);
-    setCorrectAnswerText("");
+    setCorrectAnswerText(null);
 
     if (currentQuestionIndex === questions.length - 1) {
       if (!isRetryingIncorrect && questionIncorrect.length > 0) {
@@ -359,7 +361,7 @@ const Lesson = () => {
       : null;
 
   // Tìm đáp án đúng từ dữ liệu API mới
-  const correctAnswer = currentQuestion.choices.find(
+  const correctAnswer = currentQuestion.choices?.find(
     (choice) => choice.isCorrect
   );
   // So sánh đáp án được chọn với đáp án đúng
@@ -397,28 +399,47 @@ const Lesson = () => {
         if (!isRetryingIncorrect) {
           setIncorrectAnswerCount((x) => x + 1);
         }
-
-        const correctText =
-          currentQuestion.choices.find((choice) => choice.isCorrect)
-            ?.textForeign || "";
-        const correctRomaji =
-          currentQuestion.choices.find((choice) => choice.isCorrect)
-            ?.textRomaji || "";
-        setCorrectAnswerText(correctText + "\n" + correctRomaji);
       }
     }
     // check cho câu hỏi sắp xếp
     if (currentQuestion.questionType === QuestionType.WORD_ORDER) {
-      console.log("Word để so sánh là:", currentQuestion.targetWordNative);
+      function isJapanese(text: string) {
+        // Biểu thức chính quy cho phép Hiragana, Katakana, Kanji, dấu cách và các dấu câu thông thường
+        return /^[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}\s\p{P}ー]+$/u.test(
+          text
+        );
+      }
+      const findCorrectAnswerChoice = () => {
+        if (!currentQuestion.choices || currentQuestion.choices.length === 0) {
+          return null;
+        }
+
+        if (currentQuestion.choices.length === 1) {
+          return currentQuestion.choices[0];
+        }
+
+        const foundChoice = currentQuestion.choices.find(
+          (choice) => choice.isCorrect
+        );
+
+        return foundChoice ?? null;
+      };
+
+      const correctChoice = findCorrectAnswerChoice();
+      let tuSoSanh = "";
+      if (isJapanese(selectedWords.join(""))) {
+        tuSoSanh = correctChoice?.textForeign || "";
+      } else {
+        tuSoSanh = correctChoice?.meaning || "";
+      }
+
+      console.log("Word để so sánh là:", tuSoSanh);
       console.log("Selected Words là:", selectedWords);
       const selectedSequence: string = selectedWords
         .join("")
         .replace(/\s+/g, "");
 
-      const targetSequence: string = currentQuestion.targetWordNative.replace(
-        /\s+/g,
-        ""
-      );
+      const targetSequence: string = tuSoSanh.replace(/\s+/g, "");
 
       // So sánh thứ tự các chữ (bỏ khoảng trắng)
       const isCorrect: boolean = targetSequence === selectedSequence;
@@ -451,21 +472,28 @@ const Lesson = () => {
         }
       }
     }
+    //check câu viết
     if (currentQuestion.questionType === QuestionType.WRITING) {
-      const target = currentQuestion.targetWordNative;
-      const input = selectedWords[0] || ""; // luôn có giá trị mới nhất
+      // BƯỚC 1: CHUẨN HÓA VÀ LÀM SẠCH CHUỖI ĐẦU VÀO
+      const target = currentQuestion.targetWordNative?.trim().normalize("NFC");
+      const input = (selectedWords[0] || "")?.trim().normalize("NFC");
 
-      // So sánh chữ giống ≥ 80%
+      // BƯỚC 2: SO SÁNH TRỰC TIẾP TRƯỚC TIÊN
       const isCorrect = (() => {
         if (!target || !input) return false;
 
+        // So sánh trực tiếp để xử lý trường hợp đúng 100%
+        if (target === input) {
+          return true;
+        }
+
+        // Nếu không khớp hoàn toàn, sử dụng thuật toán Levenshtein distance
         const longer = target.length > input.length ? target : input;
         const shorter = target.length > input.length ? input : target;
         const longerLength = longer.length;
 
-        const matrix: number[][] = Array.from(
-          { length: shorter.length + 1 },
-          (_, i) => Array(longer.length + 1).fill(0)
+        const matrix = Array.from({ length: shorter.length + 1 }, (_, i) =>
+          Array(longer.length + 1).fill(0)
         );
         for (let i = 0; i <= shorter.length; i++) matrix[i][0] = i;
         for (let j = 0; j <= longer.length; j++) matrix[0][j] = j;
@@ -577,7 +605,30 @@ const Lesson = () => {
         }
       }
     }
+    //tìm choice đúng để luuw vào thong báo ket qua
+    const findCorrectAnswerChoice = () => {
+      // Trả về null nếu không có choices
+      if (!currentQuestion.choices || currentQuestion.choices.length === 0) {
+        return null;
+      }
 
+      // Trường hợp chỉ có 1 lựa chọn
+      if (currentQuestion.choices.length === 1) {
+        return currentQuestion.choices[0];
+      }
+
+      // Trường hợp có nhiều lựa chọn, tìm cái đúng
+      // `.find()` có thể trả về `undefined` nên chúng ta phải xử lý
+      const foundChoice = currentQuestion.choices.find(
+        (choice) => choice.isCorrect
+      );
+
+      // Nếu tìm thấy thì trả về đối tượng, ngược lại trả về null
+      return foundChoice ?? null;
+    };
+
+    const correctChoice = findCorrectAnswerChoice();
+    setCorrectAnswerText(correctChoice); // Dòng này giờ đã không còn lỗi nữa!
     // if (isAnswerCorrect) {
     //   setCorrectAnswerCount((x) => x + 1);
     // } else {
@@ -689,7 +740,7 @@ const Lesson = () => {
           <View>
             {isAnswerChecked && (
               <CheckAnswer
-                correctAnswer={selectedAnswer?.textForeign || ""}
+                correctAnswer={correctAnswerText}
                 correctAnswerShown={isAnswerChecked}
                 isAnswerCorrect={isCorrectAnswer}
                 questionType={currentQuestion.questionType}
@@ -821,7 +872,7 @@ const Lesson = () => {
           <View>
             {isAnswerChecked && (
               <CheckAnswer
-                correctAnswer={currentQuestion.targetWordNative || ""}
+                correctAnswer={correctAnswerText}
                 correctAnswerShown={isAnswerChecked}
                 isAnswerCorrect={isCorrectAnswer}
                 questionType={currentQuestion.questionType}
@@ -1043,7 +1094,7 @@ const CheckAnswer = ({
 }: {
   isAnswerCorrect: boolean;
   correctAnswerShown: boolean;
-  correctAnswer: string;
+  correctAnswer: Choice | string | null;
   questionType: QuestionType;
   onCheckAnswer: () => void; // Khai báo type
   onFinish: () => void;
@@ -1063,32 +1114,64 @@ const CheckAnswer = ({
       >
         <View style={styles.correctAnswerContent}>
           {isAnswerCorrect ? (
-            <View style={styles.correctAnswerMessage}>
-              <View style={styles.doneIconContainer}>
-                <DoneSvg />
-              </View>
-              <Text style={styles.correctAnswerText}>Good job!</Text>
-            </View>
-          ) : (
-            <View style={styles.correctAnswerMessage}>
-              <View style={styles.closeIconContainer}>
-                <BigCloseSvg />
-              </View>
-
-              {questionType === QuestionType.MULTIPLE_CHOICE_TEXT_ONLY ||
-              questionType === QuestionType.AUDIO_CHOICE ||
-              questionType === QuestionType.WORD_ORDER ? (
-                // Nếu là các loại câu hỏi trên, hiển thị đáp án đúng
-                <View style={styles.correctAnswerSolution}>
-                  <Text style={styles.correctAnswerText}>
-                    Correct solution:
-                  </Text>
-                  <Text style={styles.correctAnswerSolutionText}>
-                    {correctAnswer}
-                  </Text>
+            <>
+              {questionType === QuestionType.PRONUNCIATION ||
+              questionType === QuestionType.WRITING ? (
+                // Nếu là câu Viết hoặc Nói và đúng, chỉ hiện "Good job!"
+                <View style={styles.correctAnswerMessage}>
+                  <View style={styles.doneIconContainer}>
+                    <DoneSvg />
+                  </View>
+                  <Text style={styles.correctAnswerText}>Good job!</Text>
                 </View>
               ) : (
-                <Text style={styles.correctAnswerText}>Incorrect</Text>
+                // Nếu là các câu khác và đúng, chỉ hiện giải pháp
+                <View style={styles.correctAnswerMessage}>
+                  <View style={styles.doneIconContainer}>
+                    <DoneSvg />
+                  </View>
+                  <View style={styles.correctAnswerSolution}>
+                    <Text style={styles.correctAnswerText}>Good job!</Text>
+                    <Text style={styles.correctAnswerSolutionText}>
+                      {typeof correctAnswer === "object" &&
+                      correctAnswer !== null
+                        ? `${correctAnswer.textForeign}\n(${correctAnswer.textRomaji})\n${correctAnswer.meaning}`
+                        : correctAnswer}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </>
+          ) : (
+            // Kết thúc logic khi trả lời đúng
+            <View style={styles.correctAnswerMessage}>
+              {questionType === QuestionType.PRONUNCIATION ||
+              questionType === QuestionType.WRITING ? (
+                <>
+                  {/* Nếu là câu Viết hoặc Nói, chỉ hiện thông báo Incorrect */}
+                  <View style={styles.closeIconContainer}>
+                    <BigCloseSvg />
+                  </View>
+                  <Text style={styles.correctAnswerText}>Incorrect</Text>
+                </>
+              ) : (
+                <>
+                  {/* Nếu là các loại câu hỏi khác, chỉ hiện đáp án đúng */}
+                  <View style={styles.closeIconContainer}>
+                    <BigCloseSvg />
+                  </View>
+                  <View style={styles.correctAnswerSolution}>
+                    <Text style={styles.correctAnswerText}>
+                      Correct solution:
+                    </Text>
+                    <Text style={styles.correctAnswerSolutionText}>
+                      {typeof correctAnswer === "object" &&
+                      correctAnswer !== null
+                        ? `${correctAnswer.textForeign}\n(${correctAnswer.textRomaji})\n${correctAnswer.meaning}`
+                        : correctAnswer}
+                    </Text>
+                  </View>
+                </>
               )}
             </View>
           )}

@@ -19,28 +19,28 @@ import Voice, {
   SpeechStartEvent,
   SpeechEndEvent,
 } from "@react-native-voice/voice";
-
+import { QuestionType } from "./Writing";
 export interface Choice {
   id: number;
   lessonQuestionId: number | null;
   textForeign: string;
-  textRomaji: string | null;
-  imageUrl: string | null;
-  audioUrlForeign: string | null;
+  textRomaji?: string | null;
+  imageUrl?: string | null;
+  audioUrlForeign?: string | null;
   isCorrect: boolean;
-  textBlock: string | null;
-  meaning: string | null;
+  meaning?: string | null;
 }
-
 export interface Question {
   id: number;
   lessonId: number;
+  questionType: QuestionType;
+  status: "PUBLISHED" | "PENDING" | "DELETED";
   promptTextTemplate: string;
   targetWordNative: string;
-  targetLanguageCode: string; // "ja-JP", "en-US", ...
-  audioUrlQuestions: string | null;
+  targetLanguageCode: string; // "vi", "ja-JP", "en-US", ...
+  audioUrl?: string | null;
+  choices?: Choice[];
 }
-
 interface PronunciationProps {
   question: Question;
   onNextQuestion: () => void;
@@ -210,7 +210,7 @@ const Pronunciation: React.FC<PronunciationProps> = ({
   };
 
   const handlePlayAudio = async () => {
-    if (!question.audioUrlQuestions) return;
+    if (!question.audioUrl) return;
     try {
       if (soundRef.current) {
         await soundRef.current.stopAsync();
@@ -218,7 +218,7 @@ const Pronunciation: React.FC<PronunciationProps> = ({
         soundRef.current = null;
       }
       const { sound } = await Audio.Sound.createAsync(
-        { uri: question.audioUrlQuestions },
+        { uri: question.audioUrl },
         { shouldPlay: true }
       );
       soundRef.current = sound;
@@ -239,8 +239,15 @@ const Pronunciation: React.FC<PronunciationProps> = ({
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.prompt}>
-        {question.promptTextTemplate}{" "}
-        <Text style={styles.highlight}>{question.targetWordNative}</Text>
+        {question.promptTextTemplate}
+        <Text style={styles.highlight}>
+          {"\n" +
+            question.targetWordNative +
+            "  " +
+            question.choices?.[0]?.textRomaji +
+            "\n" +
+            question.choices?.[0]?.meaning}
+        </Text>
       </Text>
 
       <TouchableOpacity

@@ -604,9 +604,9 @@ const LearningPathScreen = () => {
           <UnitSection key={topic.topicCode} topic={topic} />
         ))}
       </ScrollView>
-      <TouchableOpacity style={styles.practiceButton} onPress={() => {}}>
+      {/* <TouchableOpacity style={styles.practiceButton} onPress={() => {}}>
         <PracticeExerciseSvg />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {scrollY > 200 && (
         <TouchableOpacity

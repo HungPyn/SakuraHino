@@ -1,10 +1,13 @@
 import React from "react";
 import {
+  Linking,
+  Button,
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomBar } from "../../components/custombar/BottomBar";
@@ -16,6 +19,7 @@ interface Exam {
   time: string;
   level: string;
   plays: number;
+  link: string;
 }
 
 const COLORS = {
@@ -26,6 +30,25 @@ const COLORS = {
   badgeColor: "#3b82f6",
   buttonColor: "#ff7043",
   white: "#FFFFFF",
+};
+const handleOpenLink = async (url: string) => {
+  try {
+    // Dùng Linking.canOpenURL() để kiểm tra tính khả dụng của link
+    const supported = await Linking.canOpenURL(url);
+
+    if (supported) {
+      // Nếu link có thể mở, tiến hành mở nó
+      await Linking.openURL(url);
+    } else {
+      // Nếu không thể mở, hiển thị thông báo lỗi
+      Alert.alert(
+        "Lỗi",
+        `Không thể mở đường link này: ${url}. Vui lòng kiểm tra lại.`
+      );
+    }
+  } catch (error: any) {
+    Alert.alert("Lỗi", `Đã xảy ra lỗi: ${error.message}`);
+  }
 };
 
 const ExamItem = ({ exam }: { exam: Exam }) => (
@@ -42,7 +65,7 @@ const ExamItem = ({ exam }: { exam: Exam }) => (
     <Text style={examStyles.stats}>Thời gian: {exam.time}</Text>
     <TouchableOpacity
       style={examStyles.button}
-      onPress={() => console.log(`Bắt đầu thi ${exam.level}`)}
+      onPress={() => handleOpenLink(exam.link)}
     >
       <Text style={examStyles.buttonText}>▶️ Vào thi ngay</Text>
     </TouchableOpacity>
@@ -65,6 +88,7 @@ const ExamScreen = () => {
       time: "105 phút",
       level: "N5",
       plays: 8725,
+      link: "https://jlpt-public-web.vercel.app/",
     },
     {
       id: 2,
@@ -72,6 +96,7 @@ const ExamScreen = () => {
       time: "120 phút",
       level: "N4",
       plays: 6543,
+      link: "https://jlpt-public-web.vercel.app/",
     },
     {
       id: 3,
@@ -79,6 +104,7 @@ const ExamScreen = () => {
       time: "140 phút",
       level: "N3",
       plays: 5210,
+      link: "https://jlpt-public-web.vercel.app/",
     },
     {
       id: 4,
@@ -86,6 +112,7 @@ const ExamScreen = () => {
       time: "144 phút",
       level: "N2",
       plays: 4717,
+      link: "https://jlpt-public-web.vercel.app/",
     },
     {
       id: 5,
@@ -93,6 +120,7 @@ const ExamScreen = () => {
       time: "170 phút",
       level: "N1",
       plays: 2222,
+      link: "https://jlpt-public-web.vercel.app/",
     },
   ];
 

@@ -10,17 +10,28 @@ import {
   SafeAreaView,
   ScrollView,
 } from "react-native";
-
 export interface Choice {
   id: number;
   lessonQuestionId: number | null;
   textForeign: string;
-  textRomaji: string | null;
-  imageUrl: string | null;
-  audioUrlForeign: string | null;
+  textRomaji?: string | null;
+  imageUrl?: string | null;
+  audioUrlForeign?: string | null;
   isCorrect: boolean;
-  textBlock: string | null;
-  meaning: string | null;
+  meaning?: string | null;
+  items?: string[]; // Thêm thuộc tính 'items' với kiểu là một mảng chuỗi
+}
+
+export interface Question {
+  id: number;
+  lessonId: number;
+  questionType: QuestionType;
+  status: "PUBLISHED" | "PENDING" | "DELETED";
+  promptTextTemplate: string;
+  targetWordNative: string;
+  targetLanguageCode: string; // "vi", "ja-JP", "en-US", ...
+  audioUrl?: string | null;
+  choices?: Choice[];
 }
 
 export enum QuestionType {
@@ -30,18 +41,6 @@ export enum QuestionType {
   WORD_ORDER = "WORD_ORDER",
   PRONUNCIATION = "PRONUNCIATION",
   WRITING = "WRITING",
-}
-
-export interface Question {
-  id: number;
-  lessonId: number;
-  questionType: QuestionType;
-  promptTextTemplate: string;
-  targetWordNative: string;
-  targetLanguageCode: string;
-  optionsLanguageCode: string;
-  audioUrlQuestions: string | null;
-  choices: Choice[];
 }
 
 interface WordOrderProps {
@@ -65,11 +64,9 @@ const WordOrder: React.FC<WordOrderProps> = ({
   onSelectedWords,
   onCheckAnswer,
 }) => {
-  const textBlock: string[] = question.choices[0]?.textBlock
-    ? JSON.parse(question.choices[0].textBlock)
-    : [];
-
-  const [availableWords, setAvailableWords] = useState<string[]>(textBlock);
+  const availableWordsList: string[] = question.choices?.[0]?.items ?? [];
+  const [availableWords, setAvailableWords] =
+    useState<string[]>(availableWordsList);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
 
   const selectWord = (word: string) => {
@@ -91,6 +88,12 @@ const WordOrder: React.FC<WordOrderProps> = ({
     setAvailableWords(newAvailable);
     onSelectedWords(newSelected);
   };
+  function isJapanese(text: string) {
+    // Biểu thức chính quy cho phép Hiragana, Katakana, Kanji, dấu cách và các dấu câu thông thường
+    return /^[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}\s\p{P}ー]+$/u.test(
+      text
+    );
+  }
 
   const handleSubmit = () => {
     onCheckAnswer();
@@ -102,8 +105,16 @@ const WordOrder: React.FC<WordOrderProps> = ({
       <Text style={styles.prompt}>
         {question.promptTextTemplate + "\n"}
         <Text style={styles.promptHighlight}>
-          {question.choices[0]?.meaning}
+          {question.targetWordNative + "\n"}
         </Text>
+        {isJapanese(question.targetWordNative) &&
+          question.choices &&
+          question.choices[0] &&
+          question.choices[0].textRomaji && (
+            <Text style={styles.promptHighlight}>
+              ({question.choices[0].textRomaji})
+            </Text>
+          )}
       </Text>
 
       {/* Word lists trong ScrollView để cuộn khi dài */}

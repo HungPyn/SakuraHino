@@ -18,31 +18,28 @@ export enum QuestionType {
   PRONUNCIATION = "PRONUNCIATION",
   WRITING = "WRITING",
 }
-
 export interface Choice {
   id: number;
   lessonQuestionId: number | null;
   textForeign: string;
-  textRomaji: string | null;
-  imageUrl: string | null;
-  audioUrlForeign: string | null;
+  textRomaji?: string | null;
+  imageUrl?: string | null;
+  audioUrlForeign?: string | null;
   isCorrect: boolean;
-  textBlock: string | null;
-  meaning: string | null;
+  meaning?: string | null;
 }
 
 export interface Question {
   id: number;
   lessonId: number;
   questionType: QuestionType;
+  status: "PUBLISHED" | "PENDING" | "DELETED";
   promptTextTemplate: string;
-  targetWordNative: string; // ví dụ: "あ"
-  targetLanguageCode: string;
-  optionsLanguageCode: string;
-  audioUrlQuestions: string | null;
-  choices: Choice[];
+  targetWordNative: string;
+  targetLanguageCode: string; // "vi", "ja-JP", "en-US", ...
+  audioUrl?: string | null;
+  choices?: Choice[];
 }
-
 interface WritingProps {
   question: Question;
   onCheckAnswer: () => void;
@@ -119,6 +116,11 @@ const Writing: React.FC<WritingProps> = ({
     <SafeAreaView style={styles.container}>
       <Text style={styles.prompt}>{question.promptTextTemplate}</Text>
       <Text style={styles.bigTargetWord}>{question.targetWordNative}</Text>
+      <Text style={styles.RomajiWord}>
+        {question.choices?.[0]?.textRomaji +
+          "\n" +
+          question.choices?.[0]?.meaning}
+      </Text>
       <View style={styles.signatureBox}>
         <SignatureCanvas
           ref={signatureRef}
@@ -169,6 +171,14 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#1EBE5B",
     textAlign: "center",
+    marginBottom: 0,
+    letterSpacing: 2,
+  },
+  RomajiWord: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#1EBE5B",
+    textAlign: "center",
     marginBottom: 20,
     letterSpacing: 2,
   },
@@ -176,7 +186,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     textAlign: "center",
-    marginBottom: 15,
+    marginBottom: 5,
     color: "#333",
   },
   buttonContainer: {

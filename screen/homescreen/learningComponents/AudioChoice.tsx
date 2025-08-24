@@ -9,19 +9,30 @@ import {
 } from "react-native";
 import { Audio } from "expo-av";
 import Icon from "react-native-vector-icons/FontAwesome";
+import { QUnitType } from "dayjs";
 
 export interface Choice {
   id: number;
   lessonQuestionId: number | null;
   textForeign: string;
-  textRomaji: string | null;
-  imageUrl: string | null;
-  audioUrlForeign: string | null;
+  textRomaji?: string | null;
+  imageUrl?: string | null;
+  audioUrlForeign?: string | null;
   isCorrect: boolean;
-  textBlock: string | null;
-  meaning: string | null;
+  meaning?: string | null;
 }
 
+export interface Question {
+  id: number;
+  lessonId: number;
+  questionType: QuestionType;
+  status: "PUBLISHED" | "PENDING" | "DELETED";
+  promptTextTemplate: string;
+  targetWordNative: string;
+  targetLanguageCode: string; // "vi", "ja-JP", "en-US", ...
+  audioUrl?: string | null;
+  choices?: Choice[];
+}
 export enum QuestionType {
   MULTIPLE_CHOICE_VOCAB_IMAGE = "MULTIPLE_CHOICE_VOCAB_IMAGE",
   MULTIPLE_CHOICE_TEXT_ONLY = "MULTIPLE_CHOICE_TEXT_ONLY",
@@ -29,18 +40,6 @@ export enum QuestionType {
   WORD_ORDER = "WORD_ORDER",
   PRONUNCIATION = "PRONUNCIATION",
   WRITING = "WRITING",
-}
-
-export interface Question {
-  id: number;
-  lessonId: number;
-  questionType: QuestionType;
-  promptTextTemplate: string;
-  targetWordNative: string;
-  targetLanguageCode: string;
-  optionsLanguageCode: string;
-  audioUrlQuestions: string | null;
-  choices: Choice[];
 }
 
 interface AudioChoiceProps {
@@ -78,37 +77,10 @@ const AudioChoice: React.FC<AudioChoiceProps> = ({
 
     setSelectedChoice(choice);
     onSelectAnswer(choice);
-
-    // Phát âm thanh của choice nếu có
-    if (choice.audioUrlForeign) {
-      try {
-        // Dừng và unload âm thanh cũ nếu đang phát
-        if (soundRef.current) {
-          await soundRef.current.stopAsync();
-          await soundRef.current.unloadAsync();
-        }
-
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: choice.audioUrlForeign },
-          { shouldPlay: true }
-        );
-
-        soundRef.current = sound;
-
-        sound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded && status.didJustFinish) {
-            sound.unloadAsync();
-            soundRef.current = null;
-          }
-        });
-      } catch (error) {
-        console.log("Lỗi phát âm thanh:", error);
-      }
-    }
   };
 
   const handlePlayAudio = async () => {
-    if (!question.audioUrlQuestions) return;
+    if (!question.audioUrl) return;
 
     try {
       if (soundRef.current) {
@@ -117,7 +89,7 @@ const AudioChoice: React.FC<AudioChoiceProps> = ({
       }
 
       const { sound } = await Audio.Sound.createAsync(
-        { uri: question.audioUrlQuestions },
+        { uri: question.audioUrl },
         { shouldPlay: true }
       );
 
@@ -151,7 +123,12 @@ const AudioChoice: React.FC<AudioChoiceProps> = ({
               isSelected && { fontWeight: "700", color: "#00796B" },
             ]}
           >
-            {item.textForeign + "  " + item.textRomaji}
+            {item.textForeign +
+              "  " +
+              item.textRomaji +
+              " (" +
+              item.meaning +
+              ")"}
           </Text>
         </Animated.View>
       </TouchableOpacity>

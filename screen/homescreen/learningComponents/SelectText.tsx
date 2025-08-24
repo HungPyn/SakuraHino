@@ -8,17 +8,28 @@ import {
   Animated,
 } from "react-native";
 import { Audio } from "expo-av";
-
 export interface Choice {
   id: number;
   lessonQuestionId: number | null;
   textForeign: string;
-  textRomaji: string | null;
-  imageUrl: string | null;
-  audioUrlForeign: string | null;
+  textRomaji?: string | null;
+  imageUrl?: string | null;
+  audioUrlForeign?: string | null;
   isCorrect: boolean;
-  textBlock: string | null;
-  meaning: string | null;
+  textBlock?: string | null;
+  meaning?: string | null;
+}
+
+export interface Question {
+  id: number;
+  lessonId: number;
+  questionType: QuestionType;
+  status: "PUBLISHED" | "PENDING" | "DELETED"; // Cập nhật enum status
+  promptTextTemplate: string;
+  targetWordNative: string;
+  targetLanguageCode: string; // "vi", "ja-JP", "en-US", ...
+  audioUrl?: string | null;
+  choices?: Choice[];
 }
 
 export enum QuestionType {
@@ -28,18 +39,6 @@ export enum QuestionType {
   WORD_ORDER = "WORD_ORDER",
   PRONUNCIATION = "PRONUNCIATION",
   WRITING = "WRITING",
-}
-
-export interface Question {
-  id: number;
-  lessonId: number;
-  questionType: QuestionType;
-  promptTextTemplate: string;
-  targetWordNative: string;
-  targetLanguageCode: string;
-  optionsLanguageCode: string;
-  audioUrlQuestions: string | null;
-  choices: Choice[];
 }
 
 interface SelectTextProps {

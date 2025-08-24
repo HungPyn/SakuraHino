@@ -88,7 +88,7 @@ const ShopScreen = () => {
             <View style={shopStyles.itemContainer}>
               <DuoPlushieSvg style={shopStyles.merchIcon} />
               <View style={shopStyles.itemContent}>
-                <Text style={shopStyles.itemTitle}>Duo Plushie</Text>
+                <Text style={shopStyles.itemTitle}> Plushie</Text>
                 <Text style={shopStyles.itemDescription}>
                   Celebrate Duolingo's 10 year anniversary with a new exclusive
                   Duo plushie!
