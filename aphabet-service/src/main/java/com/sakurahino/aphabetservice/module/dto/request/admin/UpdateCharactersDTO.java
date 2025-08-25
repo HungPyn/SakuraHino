@@ -11,4 +11,5 @@ public class UpdateCharactersDTO {
     private String japaneseCharacter;
     private AlphabetsStatus alphabetsStatus;
     private String meaning;
+    private String audioURL;
 }

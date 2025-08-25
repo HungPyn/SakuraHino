@@ -156,8 +156,11 @@ public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService
 
     private GetByUserResponseDTO mapToDTO(Alphabet alphabet) {
         return GetByUserResponseDTO.builder()
+                .id(alphabet.getId())
                 .japaneseCharacter(alphabet.getJapaneseCharacter())
                 .characterType(alphabet.getCharacterType())
+                .meaning(alphabet.getMeaning())
+                .audioURL(alphabet.getAudioURL())
                 .build();
     }
 }

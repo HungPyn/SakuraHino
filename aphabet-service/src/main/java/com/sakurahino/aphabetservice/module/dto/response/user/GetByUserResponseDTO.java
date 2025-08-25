@@ -11,4 +11,7 @@ public class GetByUserResponseDTO {
     private String japaneseCharacter;
     private AlphabetsStatus alphabetsStatus;
     private CharacterType characterType;
+    private String meaning;
+    private String audioURL;
+    private Long id;
 }

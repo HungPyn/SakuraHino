@@ -8,4 +8,5 @@ public class AddListTypeDTO {
     private String japaneseCharacter;
     private AlphabetsStatus status;
     private String meaning;
+    private String audioURL;
 }

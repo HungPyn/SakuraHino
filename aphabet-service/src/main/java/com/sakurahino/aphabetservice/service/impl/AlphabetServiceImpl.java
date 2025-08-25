@@ -78,6 +78,7 @@ public class AlphabetServiceImpl implements AlphabetService {
                 .characterType(addNewRequestDTO.getCharacterType())
                 .status(addNewRequestDTO.getStatus())
                 .meaning(addNewRequestDTO.getMeaning())
+                .audioURL(addNewRequestDTO.getAudioURL())
                 .createdAt(createdAt)
                 .build();
         alphabetRepository.save(alphabet);
@@ -103,6 +104,7 @@ public class AlphabetServiceImpl implements AlphabetService {
                             .characterType(addListByTypeRequestDTO.getCharacterType())
                             .status(addNewRequestDTO.getStatus())
                             .meaning(addNewRequestDTO.getMeaning())
+                            .audioURL(addNewRequestDTO.getAudioURL())
                             .createdAt(createdAt)
                             .build();
                     return alphabetRepository.save(alphabet);
@@ -134,6 +136,7 @@ public class AlphabetServiceImpl implements AlphabetService {
             alphabetUpdate.setJapaneseCharacter(updateCharaterDTO.getJapaneseCharacter());
             alphabetUpdate.setCharacterType(updateCharaterDTO.getCharacterType());
             alphabetUpdate.setMeaning(updateCharaterDTO.getMeaning());
+            alphabetUpdate.setAudioURL(updateCharaterDTO.getAudioURL());
             alphabetRepository.save(alphabetUpdate);
             return ResponseEntity.ok(BaseResponeDTO.<Alphabet>builder()
                     .statusCode("200")
@@ -158,7 +161,7 @@ public class AlphabetServiceImpl implements AlphabetService {
                 .map(dto -> {
                     Alphabet alphabet = alphabetRepository.findById(dto.getId())
                             .orElseThrow(() -> new IllegalArgumentException("Alphabet not found with id: " + dto.getId()));
-
+                    alphabet.setAudioURL(dto.getAudioURL());
                     alphabet.setJapaneseCharacter(dto.getJapaneseCharacter());
                     alphabet.setCharacterType(updateListCharacterRequestDTO.getCharacterType());
                     alphabet.setStatus(dto.getAlphabetsStatus());
