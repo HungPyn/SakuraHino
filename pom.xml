@@ -34,6 +34,7 @@
         <module>notification-service</module>
         <module>upload-service</module>
         <module>aphabet-service</module>
+        <module>JLPT-service</module>
     </modules>
 
     <!-- Dependencies managed for all modules -->
