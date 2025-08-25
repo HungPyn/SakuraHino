@@ -81,6 +81,21 @@ const routes = [
         name: "lesson",
         component: () => import("@/components/admin/LessonView.vue"),
       },
+      {
+        path: "learningHistory",
+        name: "LearningHistory",
+        component: () => import("@/components/admin/LearningHistoryAdminPage.vue"),
+      },
+        {
+        path: "review",
+        name: "Review",
+        component: () => import("@/components/admin/ReviewAdminPage.vue"),
+      },
+         {
+        path: "exam",
+        name: "Exam",
+        component: () => import("@/components/admin/ExamAdminPage.vue"),
+      },
     ],
   },
 ];

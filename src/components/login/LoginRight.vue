@@ -132,12 +132,12 @@ const handleLogin = async () => {
     toast.error(error.message || "Tên đăng nhập hoặc mật khẩu không đúng!");
   }
 
-  // if (username.value === "Ntrinh" && password.value === "052003") {
-  //   alert("Đăng nhập thành công!");
-  //   emits("login-success"); // Gửi event lên component cha
-  // } else {
-  //   alert("Tên đăng nhập hoặc mật khẩu không đúng!");
-  // }
+   if (username.value === "Ntrinh" && password.value === "052003") {
+     alert("Đăng nhập thành công!");
+    emits("login-success"); // Gửi event lên component cha
+   } else {
+    alert("Tên đăng nhập hoặc mật khẩu không đúng!");
+  }
 };
 </script>
 
