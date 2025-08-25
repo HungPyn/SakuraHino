@@ -257,7 +257,17 @@ public class QuestionServiceImpl implements QuestionService {
                 throw new AppException(ExceptionCode.DUPLICATE_CHOICE_IN_REQUEST);
             }
         }
-
+        // Validate đáp án đúng
+        boolean hasCorrectChoice = false;
+        for (QuestionChoiceRequest cr : data.getChoiceRequests()) {
+            if (cr.getIsCorrect()) {
+                hasCorrectChoice = true;
+                // Nếu dạng question yêu cầu match với targetWordNative thì check luôn
+                if (!cr.getTextForeign().equalsIgnoreCase(data.getTargetWordNative())) {
+                    throw new AppException(ExceptionCode.CORRECT_ANSWER_NOT_MATCH_TARGET);
+                }
+            }
+        }
        LessonQuestion lq = new LessonQuestion();
        lq.setLesson(l);
        lq.setStatus(data.getStatus());
