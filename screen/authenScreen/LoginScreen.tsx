@@ -9,7 +9,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Modal,
   Linking,
   Platform,
 } from "react-native";
@@ -20,11 +19,7 @@ import {
 } from "@react-navigation/native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useBoundStore } from "../../hooks/useBoundStore";
-import {
-  CloseSvg,
-  FacebookLogoSvg,
-  GoogleLogoSvg,
-} from "../../components/Svgs";
+import { GoogleLogoSvg } from "../../components/Svgs";
 import type { RootStackParamList } from "../../types/navigatorType";
 
 import {
@@ -34,18 +29,15 @@ import {
 import axios from "axios";
 import { baseAuthApi } from "../../services/baseAPI";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  changePassword,
-  getCode, // Thêm getCode nếu bạn dùng nó
-} from "../../services/authService";
+import { changePassword, getCode } from "../../services/authService";
 import Toast from "react-native-toast-message";
-// Cập nhật kiểu LoginScreenState để thêm trạng thái "CHANGE_PASSWORD"
+
+// Cập nhật kiểu LoginScreenState để loại bỏ trạng thái "HIDDEN"
 export type LoginScreenState =
-  | "HIDDEN"
   | "LOGIN"
   | "SIGNUP"
   | "FORGOT_PASSWORD"
-  | "CHANGE_PASSWORD"; // Thêm trạng thái mới này
+  | "CHANGE_PASSWORD";
 
 type LoginScreenRouteProp = NativeStackScreenProps<
   RootStackParamList,
@@ -63,11 +55,15 @@ GoogleSignin.configure({
 
 export const useLoginScreen = () => {
   const route = useRoute<LoginScreenRouteProp>();
-  const navigation = useNavigation<LoginScreenNavigationProp>();
   const loggedIn = useBoundStore((x) => x.loggedIn);
 
+  // Logic hiển thị ban đầu
   const queryState: LoginScreenState = (() => {
-    if (loggedIn) return "LOGIN";
+    // Nếu người dùng đã đăng nhập, đẩy họ về màn hình chính
+    if (loggedIn) {
+      // Vì đây là logic để chuyển hướng, chúng ta không cần state 'HIDDEN' nữa
+      // Logic này sẽ được xử lý ở navigation chính
+    }
     if (route.params?.login) return "LOGIN";
     if (route.params?.["sign-up"]) return "SIGNUP";
     return "LOGIN";
@@ -76,15 +72,15 @@ export const useLoginScreen = () => {
   const [loginScreenState, setLoginScreenState] =
     useState<LoginScreenState>(queryState);
 
+  // useEffect để cập nhật trạng thái khi params thay đổi
   useEffect(() => {
-    setLoginScreenState(queryState);
-  }, [queryState]);
-
-  useEffect(() => {
-    if (loginScreenState !== "HIDDEN" && loggedIn) {
-      setLoginScreenState("HIDDEN");
+    if (route.params?.login) {
+      setLoginScreenState("LOGIN");
     }
-  }, [loginScreenState, loggedIn, setLoginScreenState, navigation]);
+    if (route.params?.["sign-up"]) {
+      setLoginScreenState("SIGNUP");
+    }
+  }, [route.params]);
 
   return { loginScreenState, setLoginScreenState };
 };
@@ -97,14 +93,12 @@ export const LoginScreen = () => {
   const setUsername1 = useBoundStore((x) => x.setUsername);
   const setName = useBoundStore((x) => x.setName);
 
-  const [ageTooltipShown, setAgeTooltipShown] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setNameInput] = useState("");
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
 
-  // Bổ sung state mới cho màn hình CHANGE_PASSWORD
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
@@ -146,7 +140,6 @@ export const LoginScreen = () => {
       const userInfo = await GoogleSignin.signIn();
       console.log("Google user info:", userInfo);
 
-      // Gửi idToken đến backend để xác thực
       if (userInfo.data && userInfo.data.idToken) {
         sendGoogleTokenToBackend(userInfo.data.idToken);
       } else {
@@ -269,7 +262,6 @@ export const LoginScreen = () => {
       });
 
       setLoginScreenState("LOGIN");
-      // Xóa các state đã nhập
       setForgotPasswordEmail("");
       setNewPassword("");
       setConfirmPassword("");
@@ -308,336 +300,311 @@ export const LoginScreen = () => {
     setVerificationCode("");
   };
 
+  // Thay thế Modal bằng View và áp dụng style FullScreen
   return (
-    <Modal
-      visible={loginScreenState !== "HIDDEN"}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setLoginScreenState("HIDDEN")}
-    >
-      <View
-        style={[
-          styles.overlay,
-          loginScreenState === "HIDDEN" && styles.hiddenOverlay,
-        ]}
-      >
-        <View style={styles.container}>
-          <View style={styles.contentArea}>
-            <View style={styles.formContainer}>
-              <Text style={styles.title}>
-                {loginScreenState === "LOGIN"
-                  ? "Log in"
-                  : loginScreenState === "SIGNUP"
-                  ? "Create your profile"
-                  : loginScreenState === "FORGOT_PASSWORD"
-                  ? "Quên mật khẩu?"
-                  : "Đổi mật khẩu"}
+    <View style={styles.fullScreenContainer}>
+      <View style={styles.contentArea}>
+        <View style={styles.formContainer}>
+          <Text style={styles.title}>
+            {loginScreenState === "LOGIN"
+              ? "Log in"
+              : loginScreenState === "SIGNUP"
+              ? "Create your profile"
+              : loginScreenState === "FORGOT_PASSWORD"
+              ? "Quên mật khẩu?"
+              : "Đổi mật khẩu"}
+          </Text>
+
+          {loginScreenState === "LOGIN" && (
+            <>
+              <View style={styles.inputGroup}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Username"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={emailOrUsername}
+                  onChangeText={setEmailOrUsername}
+                />
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Password"
+                    secureTextEntry={true}
+                    value={password}
+                    onChangeText={setPassword}
+                  />
+                  <TouchableOpacity
+                    style={styles.forgotPasswordButton}
+                    onPress={() => setLoginScreenState("FORGOT_PASSWORD")}
+                  >
+                    <Text style={styles.forgotPasswordText}>Forgot?</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={handleLogin}
+              >
+                <Text style={styles.primaryButtonText}>Log in</Text>
+              </TouchableOpacity>
+
+              <View style={styles.dividerContainer}>
+                <View style={styles.dividerLine}></View>
+                <Text style={styles.dividerText}>or</Text>
+                <View style={styles.dividerLine}></View>
+              </View>
+
+              <View style={styles.socialButtonsContainer}>
+                <TouchableOpacity
+                  style={styles.socialButton}
+                  onPress={handleGoogleSignIn}
+                >
+                  <GoogleLogoSvg
+                    width={20}
+                    height={20}
+                    style={styles.socialIcon}
+                  />
+                  <Text style={styles.socialButtonText}>Google</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+
+          {loginScreenState === "SIGNUP" && (
+            <>
+              <View style={styles.inputGroup}>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Username (required)"
+                    value={emailOrUsername}
+                    onChangeText={setEmailOrUsername}
+                  />
+                </View>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Name (required)"
+                  value={name}
+                  onChangeText={setNameInput}
+                />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Email (required)"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Password (required)"
+                  secureTextEntry={true}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={handleRegister}
+              >
+                <Text style={styles.primaryButtonText}>Create account</Text>
+              </TouchableOpacity>
+
+              <View style={styles.dividerContainer}>
+                <View style={styles.dividerLine}></View>
+                <Text style={styles.dividerText}>or</Text>
+                <View style={styles.dividerLine}></View>
+              </View>
+
+              <View style={styles.socialButtonsContainer}>
+                <TouchableOpacity
+                  style={styles.socialButton}
+                  onPress={handleGoogleSignIn}
+                >
+                  <GoogleLogoSvg
+                    width={20}
+                    height={20}
+                    style={styles.socialIcon}
+                  />
+                  <Text style={styles.socialButtonText}>Google</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+
+          {loginScreenState === "FORGOT_PASSWORD" && (
+            <>
+              <Text style={styles.infoText}>
+                Nhập username để lấy mã xác nhận về email
               </Text>
+              <View style={styles.inputGroup}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Username"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={forgotPasswordEmail}
+                  onChangeText={setForgotPasswordEmail}
+                />
+              </View>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={handleForgotPasswordSubmit}
+              >
+                <Text style={styles.primaryButtonText}>Lấy mã</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={navigateToLogin}
+              >
+                <Text style={styles.secondaryButtonText}>Trở về đăng nhập</Text>
+              </TouchableOpacity>
+            </>
+          )}
 
-              {loginScreenState === "LOGIN" && (
-                <>
-                  <View style={styles.inputGroup}>
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Email or username (optional)"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      value={emailOrUsername}
-                      onChangeText={setEmailOrUsername}
-                    />
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        style={styles.textInput}
-                        placeholder="Password (optional)"
-                        secureTextEntry={true}
-                        value={password}
-                        onChangeText={setPassword}
-                      />
-                      <TouchableOpacity
-                        style={styles.forgotPasswordButton}
-                        onPress={() => setLoginScreenState("FORGOT_PASSWORD")}
-                      >
-                        <Text style={styles.forgotPasswordText}>Forgot?</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
+          {loginScreenState === "CHANGE_PASSWORD" && (
+            <>
+              <Text style={styles.infoText}>
+                Vui lòng nhập mã xác nhận và mật khẩu mới để tiếp tục.
+              </Text>
+              <View style={styles.inputGroup}>
+                <TextInput
+                  style={[styles.textInput, styles.disabledInput]}
+                  placeholder="Username"
+                  value={forgotPasswordEmail}
+                  editable={false}
+                />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Mã xác nhận (Code)"
+                  keyboardType="numeric"
+                  value={verificationCode}
+                  onChangeText={setVerificationCode}
+                />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Mật khẩu mới"
+                  secureTextEntry={true}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Xác nhận mật khẩu mới"
+                  secureTextEntry={true}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+              </View>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={handleChangePassword}
+              >
+                <Text style={styles.primaryButtonText}>Đổi mật khẩu</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={navigateToLogin}
+              >
+                <Text style={styles.secondaryButtonText}>Trở về đăng nhập</Text>
+              </TouchableOpacity>
+            </>
+          )}
 
-                  <TouchableOpacity
-                    style={styles.primaryButton}
-                    onPress={handleLogin}
-                  >
-                    <Text style={styles.primaryButtonText}>Log in</Text>
-                  </TouchableOpacity>
+          {(loginScreenState === "LOGIN" || loginScreenState === "SIGNUP") && (
+            <>
+              <Text style={styles.termsText}>
+                By signing in to Duolingo, you agree to our{" "}
+                <Text
+                  style={styles.linkTextBold}
+                  onPress={() =>
+                    Linking.openURL(
+                      "https://www.duolingo.com/terms?wantsPlainInfo=1"
+                    )
+                  }
+                >
+                  Terms
+                </Text>{" "}
+                and{" "}
+                <Text
+                  style={styles.linkTextBold}
+                  onPress={() =>
+                    Linking.openURL(
+                      "https://www.duolingo.com/privacy?wantsPlainInfo=1"
+                    )
+                  }
+                >
+                  Privacy Policy
+                </Text>
+                .
+              </Text>
+              <Text style={styles.termsText}>
+                This site is protected by reCAPTCHA Enterprise and the Google{" "}
+                <Text
+                  style={styles.linkTextBold}
+                  onPress={() =>
+                    Linking.openURL("https://policies.google.com/privacy")
+                  }
+                >
+                  Privacy Policy
+                </Text>{" "}
+                and{" "}
+                <Text
+                  style={styles.linkTextBold}
+                  onPress={() =>
+                    Linking.openURL("https://policies.google.com/terms")
+                  }
+                >
+                  Terms of Service
+                </Text>{" "}
+                apply.
+              </Text>
+            </>
+          )}
 
-                  <View style={styles.dividerContainer}>
-                    <View style={styles.dividerLine}></View>
-                    <Text style={styles.dividerText}>or</Text>
-                    <View style={styles.dividerLine}></View>
-                  </View>
-
-                  <View style={styles.socialButtonsContainer}>
-                    <TouchableOpacity
-                      style={styles.socialButton}
-                      onPress={handleGoogleSignIn}
-                    >
-                      <GoogleLogoSvg
-                        width={20}
-                        height={20}
-                        style={styles.socialIcon}
-                      />
-                      <Text style={styles.socialButtonText}>Google</Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
-
-              {loginScreenState === "SIGNUP" && (
-                <>
-                  <View style={styles.inputGroup}>
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        style={styles.textInput}
-                        placeholder="Username (required)"
-                        value={emailOrUsername}
-                        onChangeText={setEmailOrUsername}
-                      />
-                    </View>
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Name (required)"
-                      value={name}
-                      onChangeText={setNameInput}
-                    />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Email (required)"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      value={email}
-                      onChangeText={setEmail}
-                    />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Password (required)"
-                      secureTextEntry={true}
-                      value={password}
-                      onChangeText={setPassword}
-                    />
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.primaryButton}
-                    onPress={handleRegister}
-                  >
-                    <Text style={styles.primaryButtonText}>Create account</Text>
-                  </TouchableOpacity>
-
-                  <View style={styles.dividerContainer}>
-                    <View style={styles.dividerLine}></View>
-                    <Text style={styles.dividerText}>or</Text>
-                    <View style={styles.dividerLine}></View>
-                  </View>
-
-                  <View style={styles.socialButtonsContainer}>
-                    <TouchableOpacity
-                      style={styles.socialButton}
-                      onPress={handleGoogleSignIn}
-                    >
-                      <GoogleLogoSvg
-                        width={20}
-                        height={20}
-                        style={styles.socialIcon}
-                      />
-                      <Text style={styles.socialButtonText}>Google</Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
-
-              {loginScreenState === "FORGOT_PASSWORD" && (
-                <>
-                  <Text style={styles.infoText}>
-                    Nhập username để lấy mã xác nhận về email
+          {loginScreenState !== "FORGOT_PASSWORD" &&
+            loginScreenState !== "CHANGE_PASSWORD" && (
+              <View style={styles.mobileToggleAuthText}>
+                <Text style={styles.mobileToggleAuthQuestion}>
+                  {loginScreenState === "LOGIN"
+                    ? "Don't have an account? "
+                    : "Have an account? "}
+                </Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    setLoginScreenState((x) =>
+                      x === "LOGIN" ? "SIGNUP" : "LOGIN"
+                    )
+                  }
+                >
+                  <Text style={styles.mobileToggleAuthButtonText}>
+                    {loginScreenState === "LOGIN" ? "sign up" : "log in"}
                   </Text>
-                  <View style={styles.inputGroup}>
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Username"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      value={forgotPasswordEmail}
-                      onChangeText={setForgotPasswordEmail}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={styles.primaryButton}
-                    onPress={handleForgotPasswordSubmit}
-                  >
-                    <Text style={styles.primaryButtonText}>Lấy mã</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={navigateToLogin}
-                  >
-                    <Text style={styles.secondaryButtonText}>
-                      Trở về đăng nhập
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
-
-              {/* MÀN HÌNH MỚI: ĐỔI MẬT KHẨU */}
-              {loginScreenState === "CHANGE_PASSWORD" && (
-                <>
-                  <Text style={styles.infoText}>
-                    Vui lòng nhập mã xác nhận và mật khẩu mới để tiếp tục.
-                  </Text>
-                  <View style={styles.inputGroup}>
-                    <TextInput
-                      style={[styles.textInput, styles.disabledInput]}
-                      placeholder="Username"
-                      value={forgotPasswordEmail}
-                      editable={false}
-                    />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Mã xác nhận (Code)"
-                      keyboardType="numeric"
-                      value={verificationCode}
-                      onChangeText={setVerificationCode}
-                    />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Mật khẩu mới"
-                      secureTextEntry={true}
-                      value={newPassword}
-                      onChangeText={setNewPassword}
-                    />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Xác nhận mật khẩu mới"
-                      secureTextEntry={true}
-                      value={confirmPassword}
-                      onChangeText={setConfirmPassword}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={styles.primaryButton}
-                    onPress={handleChangePassword}
-                  >
-                    <Text style={styles.primaryButtonText}>Đổi mật khẩu</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={navigateToLogin}
-                  >
-                    <Text style={styles.secondaryButtonText}>
-                      Trở về đăng nhập
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
-
-              {(loginScreenState === "LOGIN" ||
-                loginScreenState === "SIGNUP") && (
-                <>
-                  <Text style={styles.termsText}>
-                    By signing in to Duolingo, you agree to our{" "}
-                    <Text
-                      style={styles.linkTextBold}
-                      onPress={() =>
-                        Linking.openURL(
-                          "https://www.duolingo.com/terms?wantsPlainInfo=1"
-                        )
-                      }
-                    >
-                      Terms
-                    </Text>{" "}
-                    and{" "}
-                    <Text
-                      style={styles.linkTextBold}
-                      onPress={() =>
-                        Linking.openURL(
-                          "https://www.duolingo.com/privacy?wantsPlainInfo=1"
-                        )
-                      }
-                    >
-                      Privacy Policy
-                    </Text>
-                    .
-                  </Text>
-                  <Text style={styles.termsText}>
-                    This site is protected by reCAPTCHA Enterprise and the
-                    Google{" "}
-                    <Text
-                      style={styles.linkTextBold}
-                      onPress={() =>
-                        Linking.openURL("https://policies.google.com/privacy")
-                      }
-                    >
-                      Privacy Policy
-                    </Text>{" "}
-                    and{" "}
-                    <Text
-                      style={styles.linkTextBold}
-                      onPress={() =>
-                        Linking.openURL("https://policies.google.com/terms")
-                      }
-                    >
-                      Terms of Service
-                    </Text>{" "}
-                    apply.
-                  </Text>
-                </>
-              )}
-
-              {loginScreenState !== "FORGOT_PASSWORD" &&
-                loginScreenState !== "CHANGE_PASSWORD" && (
-                  <View style={styles.mobileToggleAuthText}>
-                    <Text style={styles.mobileToggleAuthQuestion}>
-                      {loginScreenState === "LOGIN"
-                        ? "Don't have an account? "
-                        : "Have an account? "}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() =>
-                        setLoginScreenState((x) =>
-                          x === "LOGIN" ? "SIGNUP" : "LOGIN"
-                        )
-                      }
-                    >
-                      <Text style={styles.mobileToggleAuthButtonText}>
-                        {loginScreenState === "LOGIN" ? "sign up" : "log in"}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-            </View>
-          </View>
+                </TouchableOpacity>
+              </View>
+            )}
         </View>
       </View>
-    </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  // ... (Các style hiện có)
-  disabledInput: {
-    backgroundColor: "#E5E7EB",
-    color: "#9CA3AF",
-  },
-  overlay: {
+  // Thêm style mới để chiếm toàn màn hình
+  fullScreenContainer: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "#FFFFFF",
+    padding: 20,
     justifyContent: "center",
     alignItems: "center",
   },
-  hiddenOverlay: {
-    display: "none",
-  },
+  // Chỉnh sửa style container cũ để phù hợp với màn hình mới
   container: {
-    width: "90%",
-    maxWidth: 400,
+    width: "100%", // Chiếm toàn bộ chiều rộng có thể
+    maxWidth: 400, // Vẫn giữ giới hạn chiều rộng
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 20,
@@ -648,44 +615,16 @@ const styles = StyleSheet.create({
     elevation: 10,
     maxHeight: "90%",
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  closeButton: {
-    padding: 5,
-    color: "#9CA3AF",
-  },
-  srOnly: {
-    position: "absolute",
-    width: 1,
-    height: 1,
-    overflow: "hidden",
-  },
-  toggleAuthButton: {
-    borderRadius: 16,
-    borderWidth: 2,
-    borderBottomWidth: 4,
-    borderColor: "#E5E7EB",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  toggleAuthButtonText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    textTransform: "uppercase",
-    color: "#60A5FA",
-  },
   contentArea: {
     flexGrow: 1,
     justifyContent: "center",
+    width: "100%", // Đảm bảo nội dung chiếm toàn bộ chiều rộng
   },
   formContainer: {
     width: "100%",
     flexDirection: "column",
     gap: 20,
+    color: "#000000",
   },
   title: {
     textAlign: "center",
@@ -713,48 +652,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     color: "#333",
-  },
-  tooltipIconContainer: {
-    position: "absolute",
-    right: 10,
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingRight: 10,
-    zIndex: 1,
-  },
-  tooltipIcon: {
-    height: 24,
-    width: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-  },
-  tooltipIconText: {
-    color: "#9CA3AF",
-    fontWeight: "bold",
-  },
-  ageTooltip: {
-    position: "absolute",
-    right: -50,
-    top: "100%",
-    zIndex: 10,
-    width: 288,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    textAlign: "center",
-  },
-  ageTooltipText: {
-    fontSize: 10,
-    lineHeight: 18,
-    color: "#4B5563",
-    textAlign: "center",
   },
   forgotPasswordButton: {
     position: "absolute",
@@ -827,9 +724,6 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     marginBottom: 5,
   },
-  linkText: {
-    color: "#1D4ED8",
-  },
   linkTextBold: {
     fontWeight: "bold",
   },
@@ -868,6 +762,10 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: "#60A5FA",
     fontSize: 16,
+  },
+  disabledInput: {
+    backgroundColor: "#E5E7EB",
+    color: "#9CA3AF",
   },
 });
 

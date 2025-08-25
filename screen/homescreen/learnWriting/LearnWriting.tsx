@@ -38,6 +38,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { RootStackParamList } from "../../../types/navigatorType";
 import topicService from "../../../services/topicService";
 import alphabet from "../../../services/alphabet";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // --- Constants ---
 const COLORS = {
@@ -60,7 +61,7 @@ interface Word {
   id: number;
   japaneseCharacter: string;
   alphabetsStatus: string;
-  audioUrl: string;
+  audioURL: string;
   characterType: string;
   meaning: string;
 }
@@ -438,7 +439,7 @@ const WordSection = ({
               id: selectedWord.id,
               word: selectedWord.japaneseCharacter,
               romaji: selectedWord.meaning,
-              audioUrl: selectedWord.audioUrl,
+              audioUrl: selectedWord.audioURL,
               furigana: "",
               meaning: "",
             });
@@ -487,12 +488,30 @@ const LearningPathScreen = () => {
 
   useEffect(() => {
     (async () => {
-      const response = await alphabet.getAllWord();
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const lastCallDate = await AsyncStorage.getItem("lastApiCallDate");
+      const cachedData = await AsyncStorage.getItem("cachedApiData");
+
+      let response;
+
+      if (lastCallDate === today && cachedData) {
+        // Cùng ngày → dùng cache
+        console.log("Dùng cache");
+        response = JSON.parse(cachedData);
+      } else {
+        // Gọi API mới
+        console.log("Gọi API mới");
+        response = await alphabet.getAllWord();
+        if (response) {
+          await AsyncStorage.setItem("lastApiCallDate", today);
+          await AsyncStorage.setItem("cachedApiData", JSON.stringify(response));
+        }
+      }
+
       if (response) {
         setNewWords(response.listNewCharacter);
         setOldWords(response.listOldCharacter);
-        // Hiển thị danh sách "Chữ mới" mặc định ban đầu
-        setDisplayWords(response.listNewCharacter);
+        setDisplayWords(response.listNewCharacter); // mặc định
       }
     })();
   }, []);

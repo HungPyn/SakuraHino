@@ -135,6 +135,7 @@ const WritingPractice = () => {
           (async () => {
             if (isNewWord) {
               const response = await alphabet.resultNewWord(id);
+
               if (response) {
                 navigation.navigate("LearnWriting");
               }

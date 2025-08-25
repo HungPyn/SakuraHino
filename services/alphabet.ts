@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { baseTopicApi } from "./baseAPI";
+import { Alert } from "react-native";
 
 export interface Vocabulary {
   id: string;
@@ -22,7 +23,7 @@ interface Word {
   id: number;
   japaneseCharacter: string;
   alphabetsStatus: string;
-  audioUrl: string;
+  audioURL: string;
   characterType: string;
   meaning: string;
 }
@@ -74,10 +75,15 @@ const resultNewWord = async (id: string) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        validateStatus: (status) => status >= 200 && status < 500,
       }
     );
 
     if (response.data.data === "Success") {
+      return true;
+    }
+    if (response.data.statusCode === "500" && response.data.data == null) {
+      Alert.alert("Từ này hôm nay đã viết", "vui lòng chọn từ mới");
       return true;
     }
   } catch (error) {
