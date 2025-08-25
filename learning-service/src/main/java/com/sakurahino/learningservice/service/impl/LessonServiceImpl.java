@@ -139,13 +139,7 @@ public class LessonServiceImpl implements LessonService {
         log.info("Bài học mới đã được tạo thành công với id = {}, name = {}", lesson.getId(), lesson.getLessonName());
             // Nếu bài học mới được tạo ở trạng thái PUBLISHED, gọi unlock cho user
         if (lesson.getStatus() == LearningStatus.PUBLISHED) {
-            // Kiểm tra xem có bài học PUBLISHED nào khác trong topic không
-            boolean hasOtherPublished = lessonRepository.existsOtherPublishedLesson(
-                    topic.getId(), lesson.getId()
-            );
 
-            // Chỉ unlock nếu chưa có bài PUBLISHED nào trước đó
-            if (!hasOtherPublished) {
                 log.info("Bài học [{} - {}] là bài PUBLISHED đầu tiên. Bắt đầu mở khóa cho người dùng.",
                         lesson.getId(), lesson.getLessonName());
                 userLessonStatusService.unlockNewlyPublishedLessonForUsers(lesson);
@@ -153,7 +147,6 @@ public class LessonServiceImpl implements LessonService {
             } else {
                 log.info("Bài học [{} - {}] không phải bài PUBLISHED đầu tiên, không mở khóa tự động.",
                         lesson.getId(), lesson.getLessonName());
-            }
         }
         return lessonMapper.mapToLessonResponse(lesson);
     }

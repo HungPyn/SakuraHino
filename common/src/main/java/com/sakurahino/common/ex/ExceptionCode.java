@@ -33,7 +33,10 @@ public enum ExceptionCode {
     LESSON_KHONG_TON_TAI(2005,"Bài học không tồn tại"),
     TOPIC_NAME_FOUND(2009,"Tên chủ đề đã tồn tại"),
     QUESTION_NOT_FOUND(2010,"Câu hỏi không ồn tại"),
-    MAX_PUBLIC_QUESTION_REACHED(20011,"Số lượng câu hỏi xuất bản đã tối ta"),
+    MAX_PUBLIC_QUESTION_REACHED(2011,"Số lượng câu hỏi xuất bản đã tối ta"),
+    QUESTION_ALREADY_EXISTS(2013,"Câu hỏi đã tồn tại trong bài học"),
+    DUPLICATE_CHOICE_IN_REQUEST(2014,"Câu hỏi có đáp án giống nhau"),
+    CORRECT_ANSWER_NOT_MATCH_TARGET(2015,"Đáp án đúng phải giống với đáp án câu hỏi"),
     // dùng bên status
     USER_LESSON_STATUS_NOT_FOUND(2006,"trạng thái bài học của user không tồn tại"),
     USER_TOPIC_STATUS_NOT_FOUND(2007,"trạng thái chu de của user không tồn tại"),

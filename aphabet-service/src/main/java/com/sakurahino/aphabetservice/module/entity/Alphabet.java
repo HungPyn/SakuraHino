@@ -51,4 +51,7 @@ public class Alphabet {
 
     @Column(name = "meaning")
     private String meaning;
+
+    @Column(name = "audio_url")
+    private String audioURL;
 }

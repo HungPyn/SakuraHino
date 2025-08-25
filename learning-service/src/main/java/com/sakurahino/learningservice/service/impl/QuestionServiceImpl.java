@@ -48,67 +48,73 @@ public class QuestionServiceImpl implements QuestionService {
     private final LessonRepository lessonRepository;
 
     // Phần này dùng cho user để lấy câu hỏi ra
+
+    // ================= map & shuffle questions =================
     private List<LessonQuestionResponse> mapAndShuffleQuestions(List<LessonQuestion> questions) {
+        if (questions == null || questions.isEmpty()) return Collections.emptyList();
+
         // Shuffle danh sách câu hỏi trước
         Collections.shuffle(questions);
 
-        return questions.stream()
-                .map(question -> {
-                    LessonQuestionResponse response = lessonQuestionMapper.mapQuestionResponse(question);
+        List<LessonQuestionResponse> responses = new ArrayList<>();
+        for (LessonQuestion question : questions) {
+            LessonQuestionResponse response = lessonQuestionMapper.mapQuestionResponse(question);
 
-                    // Copy và shuffle đáp án
-                    List<QuestionChoiceResponse> choices = new ArrayList<>(response.getChoices());
+            // Copy đáp án để shuffle mà không ảnh hưởng gốc
+            List<QuestionChoiceResponse> choices = new ArrayList<>(response.getChoices());
 
-                    // Xử lý riêng với câu hỏi dạng WORD_ORDER
-                    if (question.getQuestionType() == QuestionType.WORD_ORDER) {
-                        handleWordOrderQuestion(question, choices);
-                    }
+            if (question.getQuestionType() == QuestionType.WORD_ORDER) {
+                handleWordOrderQuestion(question, choices);
+            } else {
+                Collections.shuffle(choices);
+            }
 
-                    Collections.shuffle(choices);
-                    response.setChoices(choices);
-                    return response;
-                })
-                .toList();
+            response.setChoices(choices);
+            responses.add(response);
+        }
+
+        return responses;
     }
 
-    private void handleWordOrderQuestion(LessonQuestion question, List<QuestionChoiceResponse> choices) {
-        if (question.getChoices() == null || question.getChoices().isEmpty()) return;
-        if (choices == null || choices.isEmpty()) return;
+    // ================= Helper tokenize =================
+    private List<String> tokenizeSentenceForWordOrder(LessonQuestion question) {
+        if (question.getChoices() == null || question.getChoices().isEmpty()) return Collections.emptyList();
 
         String sentence = null;
         String targetLang = question.getTargetLanguageCode();
 
         if ("ja".equalsIgnoreCase(targetLang)) {
-            // Học tiếng Việt -> dùng câu tiếng Việt (meaning)
+            // Học tiếng Việt -> dùng meaning
             sentence = question.getChoices().get(0).getMeaning();
         } else if ("vi".equalsIgnoreCase(targetLang)) {
-            // Học tiếng Nhật -> dùng câu tiếng Nhật (textForeign)
+            // Học tiếng Nhật -> dùng textForeign
             sentence = question.getChoices().get(0).getTextForeign();
         }
 
-        if (sentence == null || sentence.isBlank()) return;
+        if (sentence == null || sentence.isBlank()) return Collections.emptyList();
 
-        List<String> tokens;
         if ("ja".equalsIgnoreCase(targetLang)) {
-            // Tokenizer tiếng Việt
-            tokens = VietnameseTokenizerUtil.tokenize(sentence,true);
+            return VietnameseTokenizerUtil.tokenize(sentence, true);
         } else if ("vi".equalsIgnoreCase(targetLang)) {
-            // Tokenizer tiếng Nhật
-            tokens = JapaneseTokenizerUtil.tokenize(sentence);
+            return JapaneseTokenizerUtil.tokenize(sentence);
         } else {
-            return; // Không hỗ trợ ngôn ngữ khác
+            return Collections.emptyList();
         }
+    }
+
+    // ================= WORD_ORDER handler =================
+    private void handleWordOrderQuestion(LessonQuestion question, List<QuestionChoiceResponse> choices) {
+        if (choices == null || choices.isEmpty()) return;
+
+        List<String> tokens = tokenizeSentenceForWordOrder(question);
 
         // Gán token cho đáp án đầu tiên một cách an toàn
         choices.stream().findFirst().ifPresent(c -> c.setItems(tokens));
     }
 
-
-
-
     @Override
     public List<LessonQuestionResponse> getQuestionsForUser(String code) {
-        List<LessonQuestion> listQuestions = lessonQuestionRepository.findLessonQuestionByLesson_Code(code);
+        List<LessonQuestion> listQuestions = lessonQuestionRepository.findLessonQuestionByLesson_CodeAndStatus(code,LearningStatus.PUBLISHED);
 
         return mapAndShuffleQuestions(listQuestions);
     }
@@ -129,6 +135,7 @@ public class QuestionServiceImpl implements QuestionService {
         for (List<LessonQuestion> questions : questionsByLesson.values()) {
             int randomIndex = random.nextInt(questions.size());
             pickedQuestions.add(questions.get(randomIndex));
+
         }
 
         // Nếu chưa đủ limit → random thêm từ pool còn lại
@@ -139,6 +146,7 @@ public class QuestionServiceImpl implements QuestionService {
         for (LessonQuestion q : allQuestions) {
             if (pickedQuestions.size() >= limit) break;
             pickedQuestions.add(q);
+
         }
         return mapAndShuffleQuestions(pickedQuestions);
     }
@@ -150,16 +158,13 @@ public class QuestionServiceImpl implements QuestionService {
                 LearningStatus.PUBLISHED,
                 PageRequest.of(0, 2)
         );
-
-        if (topics.isEmpty()) {
-            return Collections.emptyList();
-        }
+        if (topics.isEmpty()) return Collections.emptyList();
 
         int totalQuestionsNeeded = 8;
         int questionsPerTopic = (int) Math.ceil((double) totalQuestionsNeeded / topics.size());
 
-        // Lấy câu hỏi lần 1
-        List<LessonQuestionResponse> questions = topics.stream()
+        // Lấy câu hỏi lần 1 từ DB (LessonQuestion)
+        List<LessonQuestion> questions = topics.stream()
                 .flatMap(topic -> lessonQuestionRepository
                         .findRandomPublishedQuestionsByTopic(
                                 topic.getId(),
@@ -167,38 +172,34 @@ public class QuestionServiceImpl implements QuestionService {
                                 LearningStatus.PUBLISHED.toString()
                         ).stream()
                 )
-                .map(lessonQuestionMapper::mapQuestionResponse)
                 .collect(Collectors.toList());
 
-        // Nếu vẫn thiếu → lấy bù từ các topic đã chọn
-        if (questions.size() < totalQuestionsNeeded) {
-            int missing = totalQuestionsNeeded - questions.size();
-
-            // Random bù từ các topic đã có
-            List<LessonQuestionResponse> extra = topics.stream()
+        // Nếu thiếu → lấy bù
+        int missing = totalQuestionsNeeded - questions.size();
+        if (missing > 0) {
+            List<LessonQuestion> extra = topics.stream()
                     .flatMap(topic -> lessonQuestionRepository
                             .findRandomPublishedQuestionsByTopic(
                                     topic.getId(),
-                                    missing, // tăng limit để có thể lấy bù
+                                    missing,
                                     LearningStatus.PUBLISHED.toString()
                             ).stream()
                     )
-                    .map(lessonQuestionMapper::mapQuestionResponse)
-                    .toList();
-
-            // Tránh trùng câu hỏi
-            Set<Integer> existingIds = questions.stream()
-                    .map(LessonQuestionResponse::getId)
-                    .collect(Collectors.toSet());
-
-            extra.stream()
-                    .filter(q -> !existingIds.contains(q.getId()))
+                    .filter(q -> questions.stream().noneMatch(e -> e.getId().equals(q.getId())))
                     .limit(missing)
-                    .forEach(questions::add);
+                    .toList();
+            questions.addAll(extra);
         }
-        System.out.println(questions.size() +"-> số câu hỏi được random ra");
-        return questions.stream().limit(totalQuestionsNeeded).toList();
+
+        System.out.println(questions.size() + " -> số câu hỏi được random ra");
+
+        // Map & shuffle đáp án, WORD_ORDER mới tách chuỗi
+        return mapAndShuffleQuestions(questions)
+                .stream()
+                .limit(totalQuestionsNeeded)
+                .toList();
     }
+
 
 
     // admin
@@ -241,6 +242,32 @@ public class QuestionServiceImpl implements QuestionService {
         if (l.getMaxQuestions()<= publishedCount && data.getStatus()== LearningStatus.PUBLISHED) {
             throw new AppException(ExceptionCode.MAX_PUBLIC_QUESTION_REACHED);
         }
+        boolean questionExists = lessonQuestionRepository
+                .existsByLessonIdAndTargetWordNative(data.getLessonId(), data.getTargetWordNative());
+
+        if (questionExists) {
+            throw new AppException(ExceptionCode.QUESTION_ALREADY_EXISTS);
+        }
+
+        // Check duplicate trong choiceRequests
+        Set<String> seen = new HashSet<>();
+        for (QuestionChoiceRequest cr : data.getChoiceRequests()) {
+            String key = cr.getTextForeign() + "||" + cr.getMeaning();
+            if (!seen.add(key)) {
+                throw new AppException(ExceptionCode.DUPLICATE_CHOICE_IN_REQUEST);
+            }
+        }
+        // Validate đáp án đúng
+        boolean hasCorrectChoice = false;
+        for (QuestionChoiceRequest cr : data.getChoiceRequests()) {
+            if (cr.getIsCorrect()) {
+                hasCorrectChoice = true;
+                // Nếu dạng question yêu cầu match với targetWordNative thì check luôn
+                if (!cr.getTextForeign().equalsIgnoreCase(data.getTargetWordNative())) {
+                    throw new AppException(ExceptionCode.CORRECT_ANSWER_NOT_MATCH_TARGET);
+                }
+            }
+        }
        LessonQuestion lq = new LessonQuestion();
        lq.setLesson(l);
        lq.setStatus(data.getStatus());
@@ -274,7 +301,16 @@ public class QuestionServiceImpl implements QuestionService {
         // Lấy LessonQuestion hiện tại
         LessonQuestion question = lessonQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new AppException(ExceptionCode.QUESTION_NOT_FOUND));
-
+        // 2️⃣ Check duplicate choice trong request (textForeign + meaning)
+        if (data.getChoiceRequests() != null) {
+            Set<String> seen = new HashSet<>();
+            for (QuestionChoiceRequest cr : data.getChoiceRequests()) {
+                String key = cr.getTextForeign() + "||" + cr.getMeaning();
+                if (!seen.add(key)) {
+                    throw new AppException(ExceptionCode.DUPLICATE_CHOICE_IN_REQUEST);
+                }
+            }
+        }
         boolean updated = false;
 
         // Cập nhật các field cơ bản của LessonQuestion nếu có thay đổi
@@ -283,15 +319,29 @@ public class QuestionServiceImpl implements QuestionService {
             updated = true;
         }
         if (!Objects.equals(data.getTargetWordNative(), question.getTargetWordNative())) {
+            // 1️⃣ Check duplicate question trong DB (bỏ qua chính câu hỏi đang update)
+            boolean duplicateQuestion = lessonQuestionRepository
+                    .existsByLessonIdAndTargetWordNativeAndIdNot(
+                            question.getLesson().getId(),
+                            data.getTargetWordNative(),
+                            question.getId()
+                    );
+            if (duplicateQuestion) {
+                throw new AppException(ExceptionCode.QUESTION_ALREADY_EXISTS);
+            }
+
+            // 2️⃣ Update targetWordNative
             question.setTargetWordNative(data.getTargetWordNative());
             updated = true;
-            // Nếu là câu hỏi có audio, update audio URL
+
+            // 3️⃣ Nếu là câu hỏi có audio, update audio URL
             if (data.getQuestionType() == QuestionType.PRONUNCIATION
                     || data.getQuestionType() == QuestionType.AUDIO_CHOICE) {
                 AudioUploadResponseDTO response = uploadServiceClients.upLoadText(data.getTargetWordNative());
                 question.setAudioUrl(response.getUrlAudio());
             }
         }
+
         if (!Objects.equals(data.getPromptTextTemplate(), question.getPromptTextTemplate())) {
             question.setPromptTextTemplate(data.getPromptTextTemplate());
             updated = true;

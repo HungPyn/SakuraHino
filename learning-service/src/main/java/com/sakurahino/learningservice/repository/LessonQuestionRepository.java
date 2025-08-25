@@ -15,8 +15,7 @@ import java.util.List;
 @Repository
 public interface LessonQuestionRepository extends JpaRepository<LessonQuestion, Integer> {
 
-    //user
-    List<LessonQuestion> findLessonQuestionByLesson_Code(String lessonCode);
+    List<LessonQuestion> findLessonQuestionByLesson_CodeAndStatus(String lessonCode, LearningStatus status);
 
     @Query("""
     SELECT DISTINCT q FROM LessonQuestion q
@@ -25,25 +24,28 @@ public interface LessonQuestionRepository extends JpaRepository<LessonQuestion, 
     JOIN l.topic t
     WHERE t.code = :topicCode
       AND l.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
+      AND q.status = com.sakurahino.learningservice.enums.LearningStatus.PUBLISHED
 """)
     List<LessonQuestion> findAllByTopicCodeWithChoicesPublished(@Param("topicCode") String topicCode);
 
 // Lấy random câu hỏi từ topic, chỉ từ lesson published
-    @Query(value = """
-    SELECT q.* FROM lesson_questions q
+@Query(value = """
+    SELECT q.* 
+    FROM lesson_questions q
     JOIN lessons l ON q.lesson_id = l.id
     JOIN topics t ON l.topic_id = t.topic_id
-    WHERE t.status = :status
+    WHERE q.status = :status
       AND l.status = :status
+      AND t.status = :status
       AND t.topic_id = :topicId
     ORDER BY RAND()
     LIMIT :limit
     """, nativeQuery = true)
-    List<LessonQuestion> findRandomPublishedQuestionsByTopic(
-            @Param("topicId") Integer topicId,
-            @Param("limit") int limit,
-            @Param("status") String status
-    );
+List<LessonQuestion> findRandomPublishedQuestionsByTopic(
+        @Param("topicId") Integer topicId,
+        @Param("limit") int limit,
+        @Param("status") String status
+);
 
     //admin
     // Lấy tất cả LessonQuestion của một Lesson theo thứ tự tạo mới nhất
@@ -53,4 +55,9 @@ public interface LessonQuestionRepository extends JpaRepository<LessonQuestion, 
     @Query("SELECT COUNT(q) FROM LessonQuestion q WHERE q.lesson.id = :lessonId AND q.status = :status")
     int countQuestions(@Param("lessonId") Integer lessonId, @Param("status") LearningStatus status);
 
+
+    //check xem câu hỏi đã tồn tại chưa
+    boolean existsByLessonIdAndTargetWordNative(Integer lessonId, String targetNativeWord);
+
+     boolean existsByLessonIdAndTargetWordNativeAndIdNot(Integer lessonId, String targetNativeWord, Integer currentQuestionId);
 }

@@ -10,4 +10,5 @@ public class AddNewRequestDTO {
     private String japaneseCharacter;
     private AlphabetsStatus status;
     private String meaning;
+    private String audioURL;
 }

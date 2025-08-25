@@ -31,7 +31,6 @@ public class QuestionChoiceServiceImpl implements QuestionChoiceService {
     public void addQuestionChoice(LessonQuestion lessonQuestion,
                                   List<QuestionChoiceRequest> choiceRequests,
                                   Map<String, MultipartFile> imageFilesMap) {
-
         switch (lessonQuestion.getQuestionType()) {
             case MULTIPLE_CHOICE_TEXT_ONLY:
             case  AUDIO_CHOICE:

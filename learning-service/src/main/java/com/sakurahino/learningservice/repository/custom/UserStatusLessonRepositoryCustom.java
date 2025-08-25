@@ -10,7 +10,10 @@ import java.util.List;
 public interface UserStatusLessonRepositoryCustom {
 
     List<Integer> findExistingLessonIdsForUser(@Param("userId") String userId, @Param("lessonIds") List<Integer> lessonIds);
-    List<String> findUserIdToUnlockLesson(@Param("position")int currentPosition, @Param("lessonId")int lessonId);
+    List<String> findUserIdToUnlockLesson(@Param("position")int currentPosition, @Param("lessonId")int lessonId, @Param("topicId")int topicId);
+
+    List<String> findUserIdsToUnlockLessonByPassedPreviousLesson( @Param("lessonId")Integer newLessonId);
+
     void batchInsertUserStatusLesson(List<UserLessonStatus> userLessonStatuses, int batchSize);
 
     //user

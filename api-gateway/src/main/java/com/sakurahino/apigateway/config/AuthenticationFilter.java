@@ -81,7 +81,7 @@ public class AuthenticationFilter implements WebFilter {
                 .header("X-User-Id", userId.toString())
                 .header("X-Role", role)
                 .build();
-
+        System.out.println(mutatedRequest);
         return chain.filter(exchange.mutate().request(mutatedRequest).build());
     }
 

@@ -16,7 +16,9 @@ import com.sakurahino.authservice.service.AuthService;
 import com.sakurahino.clients.commons.RabbitKey;
 import com.sakurahino.clients.rabitmqModel.user.RegisterSuccessDTO;
 import com.sakurahino.clients.rabitmqModel.SendResetCodeMessage;
+import com.sakurahino.common.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -146,7 +148,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public boolean checkCode(ResetPasswordDTO.VerifyCodeRequest dto) {
-        ResetPassword resetPassword = passwordRepository.findByUsername(dto.getUsername())
+        ResetPassword resetPassword = passwordRepository.findTopByUsernameOrderByCreatedAtDesc(dto.getUsername())
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
 
         if (resetPassword.isUsed()) {
@@ -179,7 +181,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Lấy ResetPassword chưa dùng và hợp lệ
-        ResetPassword resetPassword = passwordRepository.findByUsername(dto.getUsername())
+        ResetPassword resetPassword = passwordRepository.findTopByUsernameOrderByCreatedAtDesc(dto.getUsername())
                 .filter(r -> !r.isUsed())
                 .filter(r -> r.getExpiresAt().isAfter(Instant.now()))
                 .orElseThrow(() -> new AppException(ExceptionCode.MA_XAC_NHAN_KHONG_HOP_LE));
@@ -193,4 +195,12 @@ public class AuthServiceImpl implements AuthService {
         passwordRepository.save(resetPassword);
     }
 
+
+    // Chạy mỗi 1 giờ theo giờ VN
+    @Scheduled(cron = "0 0 * * * *", zone = "Asia/Ho_Chi_Minh")
+    public void cleanupExpiredCodes() {
+        Instant now = TimeUtils.nowInstant();
+        int deleted = passwordRepository.deleteByUsedTrueOrExpiresAtBefore(now);
+        System.out.println("Đã xóa " + deleted + " mã OTP hết hạn hoặc đã dùng.");
+    }
 }

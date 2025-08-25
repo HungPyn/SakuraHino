@@ -30,25 +30,58 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
                 .setParameter("lessonIds", lessonIds)
                 .getResultList();
     }
+
     @Override
-    public List<String> findUserIdToUnlockLesson(int currentPosition, int lessonId) {
+    public List<String> findUserIdToUnlockLesson(int currentPosition, int lessonId, int topicId) {
         String jpql = """
-                    SELECT DISTINCT uls.userId
-                    FROM UserLessonStatus uls
-                    JOIN uls.lesson l
-                    WHERE l.position > :position
-                      AND uls.progressStatus = :status
-                      AND uls.userId NOT IN (
-                          SELECT uls2.userId
-                          FROM UserLessonStatus uls2
-                          WHERE uls2.lesson.id = :lessonId
-                      )
-                """;
+        SELECT DISTINCT uls.userId
+        FROM UserLessonStatus uls
+        JOIN uls.lesson l
+        WHERE l.position > :position
+          AND l.topic.id = :topicId
+          AND uls.progressStatus = :status
+          AND uls.userId NOT IN (
+              SELECT uls2.userId
+              FROM UserLessonStatus uls2
+              WHERE uls2.lesson.id = :lessonId
+          )
+    """;
 
         return em.createQuery(jpql, String.class)
                 .setParameter("position", currentPosition)
+                .setParameter("topicId", topicId)
                 .setParameter("status", ProgressStatus.UNLOCKED)
                 .setParameter("lessonId", lessonId)
+                .getResultList();
+    }
+
+    @Override
+    public List<String> findUserIdsToUnlockLessonByPassedPreviousLesson(Integer newLessonId) {
+
+        String jpql = """
+        SELECT DISTINCT uls.userId
+        FROM UserLessonStatus uls
+        JOIN uls.lesson l
+        WHERE uls.progressStatus = :passedStatus
+          AND l.position = (
+              SELECT MAX(l2.position)
+              FROM UserLessonStatus uls2
+              JOIN uls2.lesson l2
+              WHERE uls2.userId = uls.userId
+                AND uls2.progressStatus = :passedStatus
+                AND l2.topic.id = l.topic.id
+          )
+          AND uls.userId NOT IN (
+              SELECT uls3.userId
+              FROM UserLessonStatus uls3
+              JOIN uls3.lesson l3
+              WHERE l3.id = :newLessonId
+          )
+    """;
+
+        return em.createQuery(jpql, String.class)
+                .setParameter("newLessonId", newLessonId)
+                .setParameter("passedStatus", ProgressStatus.PASSED)
                 .getResultList();
     }
 
