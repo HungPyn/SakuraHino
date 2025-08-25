@@ -1,3 +1,7 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { baseTopicApi } from "./baseAPI";
+
 export interface Vocabulary {
   id: string;
   word: string;
@@ -16,677 +20,99 @@ export interface Kana {
 //cho luyện chữ
 interface Word {
   id: number;
-  word: string;
-  romaji: string;
+  japaneseCharacter: string;
+  alphabetsStatus: string;
   audioUrl: string;
-  status: "LOCKED" | "UNLOCKED" | "PASSED";
+  characterType: string;
+  meaning: string;
 }
 
-export const alphabetData: Word[] = [
-  // Hàng A
-  {
-    id: 1,
-    word: "ア",
-    romaji: "a",
-    audioUrl: "URL_AUDIO_CỦA_ア",
-    status: "PASSED",
-  },
-  {
-    id: 2,
-    word: "あ",
-    romaji: "a",
-    audioUrl: "URL_AUDIO_CỦA_あ",
-    status: "UNLOCKED",
-  },
-  {
-    id: 3,
-    word: "イ",
-    romaji: "i",
-    audioUrl: "URL_AUDIO_CỦA_イ",
-    status: "LOCKED",
-  },
-  {
-    id: 4,
-    word: "い",
-    romaji: "i",
-    audioUrl: "URL_AUDIO_CỦA_い",
-    status: "LOCKED",
-  },
-  {
-    id: 5,
-    word: "ウ",
-    romaji: "u",
-    audioUrl: "URL_AUDIO_CỦA_ウ",
-    status: "LOCKED",
-  },
-  {
-    id: 6,
-    word: "う",
-    romaji: "u",
-    audioUrl: "URL_AUDIO_CỦA_う",
-    status: "LOCKED",
-  },
-  {
-    id: 7,
-    word: "エ",
-    romaji: "e",
-    audioUrl: "URL_AUDIO_CỦA_エ",
-    status: "LOCKED",
-  },
-  {
-    id: 8,
-    word: "え",
-    romaji: "e",
-    audioUrl: "URL_AUDIO_CỦA_え",
-    status: "LOCKED",
-  },
-  // {
-  //   id: 9,
-  //   word: "オ",
-  //   romaji: "o",
-  //   audioUrl: "URL_AUDIO_CỦA_オ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 10,
-  //   word: "お",
-  //   romaji: "o",
-  //   audioUrl: "URL_AUDIO_CỦA_お",
-  //   status: "UNLOCKED",
-  // },
+interface AllWord {
+  listNewCharacter: Word[];
+  listOldCharacter: Word[];
+}
+//lấy chữ cái
+const getAllWord = async () => {
+  const token = await AsyncStorage.getItem("token");
+  console.log("Token retrieved from AsyncStorage:", token);
+  if (!token) {
+    console.error("Token not found in AsyncStorage");
+    return [];
+  }
+  try {
+    const response = await axios.get(`${baseTopicApi}/api/alphabets/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    // console.log(
+    //   "Response from alphabets:",
+    //   JSON.stringify(response.data, null, 2)
+    // );
 
-  // // Hàng KA
-  // {
-  //   id: 11,
-  //   word: "カ",
-  //   romaji: "ka",
-  //   audioUrl: "URL_AUDIO_CỦA_カ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 12,
-  //   word: "か",
-  //   romaji: "ka",
-  //   audioUrl: "URL_AUDIO_CỦA_か",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 13,
-  //   word: "キ",
-  //   romaji: "ki",
-  //   audioUrl: "URL_AUDIO_CỦA_キ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 14,
-  //   word: "き",
-  //   romaji: "ki",
-  //   audioUrl: "URL_AUDIO_CỦA_き",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 15,
-  //   word: "ク",
-  //   romaji: "ku",
-  //   audioUrl: "URL_AUDIO_CỦA_ク",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 16,
-  //   word: "く",
-  //   romaji: "ku",
-  //   audioUrl: "URL_AUDIO_CỦA_く",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 17,
-  //   word: "ケ",
-  //   romaji: "ke",
-  //   audioUrl: "URL_AUDIO_CỦA_ケ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 18,
-  //   word: "け",
-  //   romaji: "ke",
-  //   audioUrl: "URL_AUDIO_CỦA_け",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 19,
-  //   word: "コ",
-  //   romaji: "ko",
-  //   audioUrl: "URL_AUDIO_CỦA_コ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 20,
-  //   word: "こ",
-  //   romaji: "ko",
-  //   audioUrl: "URL_AUDIO_CỦA_こ",
-  //   status: "UNLOCKED",
-  // },
+    return response.data.data || [];
+  } catch (error) {
+    console.error("Lỗi khi gọi api lấy alphabets:", error);
+    return [];
+  }
+};
 
-  // // Hàng SA
-  // {
-  //   id: 21,
-  //   word: "サ",
-  //   romaji: "sa",
-  //   audioUrl: "URL_AUDIO_CỦA_サ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 22,
-  //   word: "さ",
-  //   romaji: "sa",
-  //   audioUrl: "URL_AUDIO_CỦA_さ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 23,
-  //   word: "シ",
-  //   romaji: "shi",
-  //   audioUrl: "URL_AUDIO_CỦA_シ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 24,
-  //   word: "し",
-  //   romaji: "shi",
-  //   audioUrl: "URL_AUDIO_CỦA_し",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 25,
-  //   word: "ス",
-  //   romaji: "su",
-  //   audioUrl: "URL_AUDIO_CỦA_ス",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 26,
-  //   word: "す",
-  //   romaji: "su",
-  //   audioUrl: "URL_AUDIO_CỦA_す",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 27,
-  //   word: "セ",
-  //   romaji: "se",
-  //   audioUrl: "URL_AUDIO_CỦA_セ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 28,
-  //   word: "せ",
-  //   romaji: "se",
-  //   audioUrl: "URL_AUDIO_CỦA_せ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 29,
-  //   word: "ソ",
-  //   romaji: "so",
-  //   audioUrl: "URL_AUDIO_CỦA_ソ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 30,
-  //   word: "そ",
-  //   romaji: "so",
-  //   audioUrl: "URL_AUDIO_CỦA_そ",
-  //   status: "UNLOCKED",
-  // },
+const resultNewWord = async (id: string) => {
+  const token = await AsyncStorage.getItem("token");
+  console.log("Token retrieved from AsyncStorage:", token);
 
-  // // Hàng TA
-  // {
-  //   id: 31,
-  //   word: "タ",
-  //   romaji: "ta",
-  //   audioUrl: "URL_AUDIO_CỦA_タ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 32,
-  //   word: "た",
-  //   romaji: "ta",
-  //   audioUrl: "URL_AUDIO_CỦA_た",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 33,
-  //   word: "チ",
-  //   romaji: "chi",
-  //   audioUrl: "URL_AUDIO_CỦA_チ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 34,
-  //   word: "ち",
-  //   romaji: "chi",
-  //   audioUrl: "URL_AUDIO_CỦA_ち",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 35,
-  //   word: "ツ",
-  //   romaji: "tsu",
-  //   audioUrl: "URL_AUDIO_CỦA_ツ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 36,
-  //   word: "つ",
-  //   romaji: "tsu",
-  //   audioUrl: "URL_AUDIO_CỦA_つ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 37,
-  //   word: "テ",
-  //   romaji: "te",
-  //   audioUrl: "URL_AUDIO_CỦA_テ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 38,
-  //   word: "て",
-  //   romaji: "te",
-  //   audioUrl: "URL_AUDIO_CỦA_て",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 39,
-  //   word: "ト",
-  //   romaji: "to",
-  //   audioUrl: "URL_AUDIO_CỦA_ト",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 40,
-  //   word: "と",
-  //   romaji: "to",
-  //   audioUrl: "URL_AUDIO_CỦA_と",
-  //   status: "UNLOCKED",
-  // },
+  if (!token) {
+    console.error("Token not found in AsyncStorage");
+    return [];
+  }
+  try {
+    const response = await axios.post(
+      `${baseTopicApi}/api/alphabets/user/new`,
+      id,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-  // // Hàng NA
-  // {
-  //   id: 41,
-  //   word: "ナ",
-  //   romaji: "na",
-  //   audioUrl: "URL_AUDIO_CỦA_ナ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 42,
-  //   word: "な",
-  //   romaji: "na",
-  //   audioUrl: "URL_AUDIO_CỦA_な",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 43,
-  //   word: "ニ",
-  //   romaji: "ni",
-  //   audioUrl: "URL_AUDIO_CỦA_ニ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 44,
-  //   word: "に",
-  //   romaji: "ni",
-  //   audioUrl: "URL_AUDIO_CỦA_に",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 45,
-  //   word: "ヌ",
-  //   romaji: "nu",
-  //   audioUrl: "URL_AUDIO_CỦA_ヌ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 46,
-  //   word: "ぬ",
-  //   romaji: "nu",
-  //   audioUrl: "URL_AUDIO_CỦA_ぬ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 47,
-  //   word: "ネ",
-  //   romaji: "ne",
-  //   audioUrl: "URL_AUDIO_CỦA_ネ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 48,
-  //   word: "ね",
-  //   romaji: "ne",
-  //   audioUrl: "URL_AUDIO_CỦA_ね",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 49,
-  //   word: "ノ",
-  //   romaji: "no",
-  //   audioUrl: "URL_AUDIO_CỦA_ノ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 50,
-  //   word: "の",
-  //   romaji: "no",
-  //   audioUrl: "URL_AUDIO_CỦA_の",
-  //   status: "UNLOCKED",
-  // },
+    if (response.data.data === "Success") {
+      return true;
+    }
+  } catch (error) {
+    console.error("Lỗi khi thêm result:", error);
+    return false;
+  }
+};
+const resultOldWord = async (id: string) => {
+  const token = await AsyncStorage.getItem("token");
+  console.log("Token retrieved from AsyncStorage:", token);
 
-  // // Hàng HA
-  // {
-  //   id: 51,
-  //   word: "ハ",
-  //   romaji: "ha",
-  //   audioUrl: "URL_AUDIO_CỦA_ハ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 52,
-  //   word: "は",
-  //   romaji: "ha",
-  //   audioUrl: "URL_AUDIO_CỦA_は",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 53,
-  //   word: "ヒ",
-  //   romaji: "hi",
-  //   audioUrl: "URL_AUDIO_CỦA_ヒ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 54,
-  //   word: "ひ",
-  //   romaji: "hi",
-  //   audioUrl: "URL_AUDIO_CỦA_ひ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 55,
-  //   word: "フ",
-  //   romaji: "fu",
-  //   audioUrl: "URL_AUDIO_CỦA_フ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 56,
-  //   word: "ふ",
-  //   romaji: "fu",
-  //   audioUrl: "URL_AUDIO_CỦA_ふ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 57,
-  //   word: "ヘ",
-  //   romaji: "he",
-  //   audioUrl: "URL_AUDIO_CỦA_ヘ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 58,
-  //   word: "へ",
-  //   romaji: "he",
-  //   audioUrl: "URL_AUDIO_CỦA_へ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 59,
-  //   word: "ホ",
-  //   romaji: "ho",
-  //   audioUrl: "URL_AUDIO_CỦA_ホ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 60,
-  //   word: "ほ",
-  //   romaji: "ho",
-  //   audioUrl: "URL_AUDIO_CỦA_ほ",
-  //   status: "UNLOCKED",
-  // },
+  if (!token) {
+    console.error("Token not found in AsyncStorage");
+    return [];
+  }
+  try {
+    const response = await axios.post(
+      `${baseTopicApi}/api/alphabets/user/old`,
+      id,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-  // // Hàng MA
-  // {
-  //   id: 61,
-  //   word: "マ",
-  //   romaji: "ma",
-  //   audioUrl: "URL_AUDIO_CỦA_マ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 62,
-  //   word: "ま",
-  //   romaji: "ma",
-  //   audioUrl: "URL_AUDIO_CỦA_ま",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 63,
-  //   word: "ミ",
-  //   romaji: "mi",
-  //   audioUrl: "URL_AUDIO_CỦA_ミ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 64,
-  //   word: "み",
-  //   romaji: "mi",
-  //   audioUrl: "URL_AUDIO_CỦA_み",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 65,
-  //   word: "ム",
-  //   romaji: "mu",
-  //   audioUrl: "URL_AUDIO_CỦA_ム",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 66,
-  //   word: "む",
-  //   romaji: "mu",
-  //   audioUrl: "URL_AUDIO_CỦA_む",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 67,
-  //   word: "メ",
-  //   romaji: "me",
-  //   audioUrl: "URL_AUDIO_CỦA_メ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 68,
-  //   word: "め",
-  //   romaji: "me",
-  //   audioUrl: "URL_AUDIO_CỦA_め",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 69,
-  //   word: "モ",
-  //   romaji: "mo",
-  //   audioUrl: "URL_AUDIO_CỦA_モ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 70,
-  //   word: "も",
-  //   romaji: "mo",
-  //   audioUrl: "URL_AUDIO_CỦA_も",
-  //   status: "UNLOCKED",
-  // },
-
-  // // Hàng YA
-  // {
-  //   id: 71,
-  //   word: "ヤ",
-  //   romaji: "ya",
-  //   audioUrl: "URL_AUDIO_CỦA_ヤ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 72,
-  //   word: "や",
-  //   romaji: "ya",
-  //   audioUrl: "URL_AUDIO_CỦA_や",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 73,
-  //   word: "ユ",
-  //   romaji: "yu",
-  //   audioUrl: "URL_AUDIO_CỦA_ユ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 74,
-  //   word: "ゆ",
-  //   romaji: "yu",
-  //   audioUrl: "URL_AUDIO_CỦA_ゆ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 75,
-  //   word: "ヨ",
-  //   romaji: "yo",
-  //   audioUrl: "URL_AUDIO_CỦA_ヨ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 76,
-  //   word: "よ",
-  //   romaji: "yo",
-  //   audioUrl: "URL_AUDIO_CỦA_よ",
-  //   status: "UNLOCKED",
-  // },
-
-  // // Hàng RA
-  // {
-  //   id: 77,
-  //   word: "ラ",
-  //   romaji: "ra",
-  //   audioUrl: "URL_AUDIO_CỦA_ラ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 78,
-  //   word: "ら",
-  //   romaji: "ra",
-  //   audioUrl: "URL_AUDIO_CỦA_ら",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 79,
-  //   word: "リ",
-  //   romaji: "ri",
-  //   audioUrl: "URL_AUDIO_CỦA_リ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 80,
-  //   word: "り",
-  //   romaji: "ri",
-  //   audioUrl: "URL_AUDIO_CỦA_り",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 81,
-  //   word: "ル",
-  //   romaji: "ru",
-  //   audioUrl: "URL_AUDIO_CỦA_ル",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 82,
-  //   word: "る",
-  //   romaji: "ru",
-  //   audioUrl: "URL_AUDIO_CỦA_る",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 83,
-  //   word: "レ",
-  //   romaji: "re",
-  //   audioUrl: "URL_AUDIO_CỦA_レ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 84,
-  //   word: "れ",
-  //   romaji: "re",
-  //   audioUrl: "URL_AUDIO_CỦA_れ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 85,
-  //   word: "ロ",
-  //   romaji: "ro",
-  //   audioUrl: "URL_AUDIO_CỦA_ロ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 86,
-  //   word: "ろ",
-  //   romaji: "ro",
-  //   audioUrl: "URL_AUDIO_CỦA_ろ",
-  //   status: "UNLOCKED",
-  // },
-
-  // // Hàng WA
-  // {
-  //   id: 87,
-  //   word: "ワ",
-  //   romaji: "wa",
-  //   audioUrl: "URL_AUDIO_CỦA_ワ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 88,
-  //   word: "わ",
-  //   romaji: "wa",
-  //   audioUrl: "URL_AUDIO_CỦA_わ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 89,
-  //   word: "ヲ",
-  //   romaji: "wo",
-  //   audioUrl: "URL_AUDIO_CỦA_ヲ",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 90,
-  //   word: "を",
-  //   romaji: "wo",
-  //   audioUrl: "URL_AUDIO_CỦA_を",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 91,
-  //   word: "ン",
-  //   romaji: "n",
-  //   audioUrl: "URL_AUDIO_CỦA_ン",
-  //   status: "UNLOCKED",
-  // },
-  // {
-  //   id: 92,
-  //   word: "ん",
-  //   romaji: "n",
-  //   audioUrl: "URL_AUDIO_CỦA_ん",
-  //   status: "UNLOCKED",
-  // },
-];
+    if (response.data.data === "Success") {
+      return true;
+    }
+  } catch (error) {
+    console.error("Lỗi khi thêm result old:", error);
+    return false;
+  }
+};
 
 export const kana: Kana[] = [
   // HIRAGANA VÀ KATAKANA HÀNG A, I, U, E, O
@@ -1982,5 +1408,7 @@ export const Kanji: Vocabulary[] = [
 export default {
   kana,
   Kanji,
-  alphabetData,
+  getAllWord,
+  resultNewWord,
+  resultOldWord,
 };

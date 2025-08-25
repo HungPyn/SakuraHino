@@ -18,7 +18,7 @@ interface Exam {
   name: string;
   time: string;
   level: string;
-  plays: number;
+
   link: string;
 }
 
@@ -59,9 +59,7 @@ const ExamItem = ({ exam }: { exam: Exam }) => (
         <Text style={examStyles.badgeText}>{exam.level}</Text>
       </View>
     </View>
-    {exam.plays && (
-      <Text style={examStyles.stats}>+ {exam.plays} lượt làm bài</Text>
-    )}
+
     <Text style={examStyles.stats}>Thời gian: {exam.time}</Text>
     <TouchableOpacity
       style={examStyles.button}
@@ -87,7 +85,7 @@ const ExamScreen = () => {
       name: "2019年7月 日本語能力試験 N5",
       time: "105 phút",
       level: "N5",
-      plays: 8725,
+
       link: "https://jlpt-public-web.vercel.app/",
     },
     {
@@ -95,7 +93,7 @@ const ExamScreen = () => {
       name: "2019年7月 日本語能力試験 N4",
       time: "120 phút",
       level: "N4",
-      plays: 6543,
+
       link: "https://jlpt-public-web.vercel.app/",
     },
     {
@@ -103,7 +101,7 @@ const ExamScreen = () => {
       name: "2019年7月 日本語能力試験 N3",
       time: "140 phút",
       level: "N3",
-      plays: 5210,
+
       link: "https://jlpt-public-web.vercel.app/",
     },
     {
@@ -111,7 +109,7 @@ const ExamScreen = () => {
       name: "2019年7月 日本語能力試験 N2",
       time: "144 phút",
       level: "N2",
-      plays: 4717,
+
       link: "https://jlpt-public-web.vercel.app/",
     },
     {
@@ -119,7 +117,7 @@ const ExamScreen = () => {
       name: "2019年7月 日本語能力試験 N1",
       time: "170 phút",
       level: "N1",
-      plays: 2222,
+
       link: "https://jlpt-public-web.vercel.app/",
     },
   ];

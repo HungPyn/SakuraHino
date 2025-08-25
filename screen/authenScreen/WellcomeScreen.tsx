@@ -19,55 +19,36 @@ type Props = NativeStackScreenProps<RootStackParamList, "Welcome">;
 export default function WelcomeScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true);
 
+  // Chỉ dùng một useEffect duy nhất
   useEffect(() => {
     const checkUserStatus = async () => {
-      await AsyncStorage.removeItem("hasOpenedApp");
-      await AsyncStorage.removeItem("isLoggedIn");
+      // 1. Lấy trạng thái từ AsyncStorage
       const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
       const hasOpened = await AsyncStorage.getItem("hasOpenedApp");
 
+      console.log("isLoggedIn:", isLoggedIn, ", hasOpened:", hasOpened);
+
+      // 2. Kiểm tra các trường hợp
       if (isLoggedIn === "true") {
-        console.log("mở đang nhập");
-        navigation.replace("Login");
+        // Nếu đã đăng nhập, chuyển thẳng đến màn hình chính
+        // navigation.replace("MainTabs"); // Ví dụ: màn hình chính
+        navigation.replace("Login"); // Vì bạn đang dùng Login làm màn hình đầu tiên
       } else if (hasOpened === "true") {
+        // Đã mở ứng dụng trước đó, chuyển ngay đến màn hình đăng nhập
         navigation.navigate("Login", { login: true });
       } else {
+        // Lần đầu mở ứng dụng, đợi 1.5 giây rồi chuyển
         await AsyncStorage.setItem("hasOpenedApp", "true");
         setTimeout(() => {
           navigation.navigate("Login", { login: true });
-        }, 3000);
+        }, 1500);
       }
 
       setLoading(false);
     };
 
     checkUserStatus();
-  }, []);
-
-  useEffect(() => {
-    const checkUserStatus = async () => {
-      await AsyncStorage.removeItem("hasOpenedApp");
-      await AsyncStorage.removeItem("isLoggedIn");
-      const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
-      const hasOpened = await AsyncStorage.getItem("hasOpenedApp");
-
-      if (isLoggedIn === "true") {
-        console.log("mở đang nhập");
-        navigation.replace("Login");
-      } else if (hasOpened === "true") {
-        navigation.navigate("Login", { login: true });
-      } else {
-        await AsyncStorage.setItem("hasOpenedApp", "true");
-        setTimeout(() => {
-          navigation.navigate("Login", { login: true });
-        }, 3000);
-      }
-
-      setLoading(false);
-    };
-
-    checkUserStatus();
-  }, []);
+  }, []); // [] đảm bảo effect chỉ chạy một lần khi component được mount
 
   return (
     <View style={styles.container}>

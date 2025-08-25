@@ -69,6 +69,7 @@ const AlphabetCard = ({ kanaItem }: { kanaItem: Kana }) => {
   const goToWriteScreen = () => {
     navigation.navigate("WritingPractice", {
       isLearning: false,
+      isNewWord: false,
       isKanji: false,
       id: 0,
       word: kanaItem.hira,

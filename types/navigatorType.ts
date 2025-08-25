@@ -30,6 +30,7 @@ export type RootStackParamList = {
   LearnWriting: undefined;
   WritingPractice: {
     isLearning: boolean;
+    isNewWord: boolean;
     isKanji: boolean;
     id: number;
     word: string;

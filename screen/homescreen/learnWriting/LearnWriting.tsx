@@ -37,7 +37,7 @@ import { BottomBar } from "../../../components/custombar/BottomBar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { RootStackParamList } from "../../../types/navigatorType";
 import topicService from "../../../services/topicService";
-import { alphabetData } from "../../../services/alphabet";
+import alphabet from "../../../services/alphabet";
 
 // --- Constants ---
 const COLORS = {
@@ -58,10 +58,11 @@ const COLORS = {
 
 interface Word {
   id: number;
-  word: string;
-  romaji: string;
+  japaneseCharacter: string;
+  alphabetsStatus: string;
   audioUrl: string;
-  status: "LOCKED" | "UNLOCKED" | "PASSED";
+  characterType: string;
+  meaning: string;
 }
 
 interface Lesson {
@@ -317,7 +318,13 @@ const TileTooltip = ({
 };
 
 // Đổi tên component UnitSection thành WordSection và nhận wordsData làm props
-const WordSection = ({ wordsData }: { wordsData: Word[] }) => {
+const WordSection = ({
+  wordsData,
+  selectedTab,
+}: {
+  wordsData: Word[];
+  selectedTab: "learnNew" | "learnOld" | "PracticeAlphabet";
+}) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [selectedWordIndex, setSelectedWordIndex] = useState<null | number>(
@@ -351,18 +358,31 @@ const WordSection = ({ wordsData }: { wordsData: Word[] }) => {
     <View style={styles.unitSection}>
       <View style={styles.tilesContainer}>
         {wordsData.map((word, i: number) => {
-          const status = word.status;
+          // Luôn đặt trạng thái là "UNLOCKED" để mở khóa tất cả
+          const status = "UNLOCKED" as ProgressStatus;
           const tileStatus = getTileStatus(status);
-          const colors =
-            status === "UNLOCKED"
-              ? {
-                  bg: COLOR_PALETTES[i % COLOR_PALETTES.length].backgroundColor,
-                  border: COLOR_PALETTES[i % COLOR_PALETTES.length].borderColor,
-                }
-              : status === "PASSED"
-              ? { bg: COLORS.green500, border: COLORS.green500 }
-              : { bg: COLORS.gray200, border: COLORS.gray400 };
+          let colors;
 
+          if (selectedTab === "learnOld") {
+            // Logic mới: gán màu cố định cho chữ cũ (tab "Viết lại")
+            colors = {
+              bg: "#4aa92aff", // Màu xám nhạt
+              border: "#A9A9A9", // Màu viền xám đậm hơn
+            };
+          } else {
+            // Logic cũ: giữ nguyên màu ngẫu nhiên cho chữ mới (tab "Chữ mới")
+            colors =
+              status === "UNLOCKED"
+                ? {
+                    bg: COLOR_PALETTES[i % COLOR_PALETTES.length]
+                      .backgroundColor,
+                    border:
+                      COLOR_PALETTES[i % COLOR_PALETTES.length].borderColor,
+                  }
+                : status === "PASSED"
+                ? { bg: COLORS.green500, border: COLORS.green500 }
+                : { bg: COLORS.gray200, border: COLORS.gray400 };
+          }
           return (
             <View
               key={i}
@@ -384,7 +404,7 @@ const WordSection = ({ wordsData }: { wordsData: Word[] }) => {
                 onPress={() => handleWordPress(word, i, status)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.tileText}>{word.word}</Text>
+                <Text style={styles.tileText}>{word.japaneseCharacter}</Text>
               </TouchableOpacity>
             </View>
           );
@@ -394,8 +414,10 @@ const WordSection = ({ wordsData }: { wordsData: Word[] }) => {
         <TileTooltip
           isVisible={selectedWordIndex !== null}
           closeTooltip={() => setSelectedWordIndex(null)}
-          status={getTileStatus(selectedWord.status)}
-          description={selectedWord.word + " (" + selectedWord.romaji + ")"}
+          status={getTileStatus("UNLOCKED")}
+          description={
+            selectedWord.japaneseCharacter + " (" + selectedWord.meaning + ")"
+          }
           backgroundColor={
             COLOR_PALETTES[(selectedWordIndex ?? 0) % COLOR_PALETTES.length]
               .backgroundColor
@@ -411,10 +433,11 @@ const WordSection = ({ wordsData }: { wordsData: Word[] }) => {
           onStart={() => {
             navigation.navigate("WritingPractice", {
               isLearning: true,
+              isNewWord: selectedTab === "learnNew",
               isKanji: false,
               id: selectedWord.id,
-              word: selectedWord.word,
-              romaji: selectedWord.romaji,
+              word: selectedWord.japaneseCharacter,
+              romaji: selectedWord.meaning,
               audioUrl: selectedWord.audioUrl,
               furigana: "",
               meaning: "",
@@ -433,10 +456,13 @@ const LearningPathScreen = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollY, setScrollY] = useState(0);
   const [selectedTab, setSelectedTab] = useState<
-    "LearningPath" | "PracticeAlphabet"
-  >("LearningPath");
+    "learnNew" | "learnOld" | "PracticeAlphabet"
+  >("learnNew");
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [words, setWords] = useState<Word[]>([]);
+  const [newWords, setNewWords] = useState<Word[]>([]);
+  const [oldWords, setOldWords] = useState<Word[]>([]);
+  const [displayWords, setDisplayWords] = useState<Word[]>([]);
+
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -460,14 +486,23 @@ const LearningPathScreen = () => {
   };
 
   useEffect(() => {
-    setWords(alphabetData);
+    (async () => {
+      const response = await alphabet.getAllWord();
+      if (response) {
+        setNewWords(response.listNewCharacter);
+        setOldWords(response.listOldCharacter);
+        // Hiển thị danh sách "Chữ mới" mặc định ban đầu
+        setDisplayWords(response.listNewCharacter);
+      }
+    })();
   }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchTopics();
-    }, [])
-  );
+  useEffect(() => {
+    if (selectedTab === "learnNew") {
+      setDisplayWords(newWords);
+    } else if (selectedTab === "learnOld") {
+      setDisplayWords(oldWords);
+    }
+  }, [selectedTab, newWords, oldWords]);
 
   const getTopBarColors = (y: number): { bg: string; border: string } => {
     const currentTopicIndex = Math.floor(y / TOPIC_HEIGHT);
@@ -488,7 +523,21 @@ const LearningPathScreen = () => {
       contentContainerStyle={styles.scrollViewContent}
       style={styles.mainScroll}
     >
-      <WordSection wordsData={words} />
+      {displayWords.length > 0 ? (
+        <>
+          {/* Thêm phần text có điều kiện ở đây */}
+          {selectedTab === "learnNew" && (
+            <Text style={styles.practiceText}>Chữ mới hôm nay!</Text>
+          )}
+          <WordSection wordsData={displayWords} selectedTab={selectedTab} />
+        </>
+      ) : (
+        <View style={styles.emptyWordsContainer}>
+          <Text style={styles.emptyWordsText}>
+            Chưa có chữ nào để luyện tập. Hãy học chữ mới trước nhé!
+          </Text>
+        </View>
+      )}
     </ScrollView>
   );
 
@@ -498,17 +547,33 @@ const LearningPathScreen = () => {
         <TouchableOpacity
           style={[
             styles.tabButton,
-            selectedTab === "LearningPath" && styles.tabButtonActive,
+            selectedTab === "learnNew" && styles.tabButtonActive,
           ]}
-          onPress={() => setSelectedTab("LearningPath")}
+          onPress={() => setSelectedTab("learnNew")}
         >
           <Text
             style={[
               styles.tabText,
-              selectedTab === "LearningPath" && styles.tabTextActive,
+              selectedTab === "learnNew" && styles.tabTextActive,
             ]}
           >
-            Luyện viết
+            Chữ mới
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            selectedTab === "learnOld" && styles.tabButtonActive,
+          ]}
+          onPress={() => setSelectedTab("learnOld")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === "learnOld" && styles.tabTextActive,
+            ]}
+          >
+            Viết lại
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -564,6 +629,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  practiceText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#5eca5eff",
+    textAlign: "center",
+    marginBottom: 0,
+  },
+  emptyWordsContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyWordsText: {
+    fontSize: 18,
+    textAlign: "center",
+    color: COLORS.gray500,
+    fontWeight: "bold",
   },
   unitHeaderTitle: {
     fontSize: 24,

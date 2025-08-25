@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -78,6 +78,9 @@ const WordOrder: React.FC<WordOrderProps> = ({
     setSelectedWords(newSelected);
     onSelectedWords(newSelected);
   };
+  useEffect(() => {
+    console.log("câu hỏi gửi qua là:", JSON.stringify(question, null, 2));
+  });
 
   const removeWord = (word: string) => {
     LayoutAnimation.easeInEaseOut();
@@ -94,6 +97,11 @@ const WordOrder: React.FC<WordOrderProps> = ({
       text
     );
   }
+  useEffect(() => {
+    const newAvailableWords = question.choices?.[0]?.items ?? [];
+    setAvailableWords(newAvailableWords);
+    setSelectedWords([]); // Reset selectedWords khi câu hỏi thay đổi
+  }, [question]);
 
   const handleSubmit = () => {
     onCheckAnswer();

@@ -14,9 +14,11 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { Audio } from "expo-av";
 
 import Icon from "react-native-vector-icons/Ionicons";
+import alphabet from "../../../services/alphabet";
 
 interface RouteParams {
   isLearning: boolean;
+  isNewWord: boolean;
   isKanji: boolean;
   id: string;
   word: string;
@@ -64,8 +66,17 @@ const PlaySoundButton = ({ audioUrl }: { audioUrl: string }) => {
 const WritingPractice = () => {
   const route = useRoute();
   const navigation = useNavigation(); // Thêm hook useNavigation
-  const { isLearning, isKanji, word, furigana, romaji, meaning, audioUrl } =
-    route.params as RouteParams;
+  const {
+    isLearning,
+    id,
+    isNewWord,
+    isKanji,
+    word,
+    furigana,
+    romaji,
+    meaning,
+    audioUrl,
+  } = route.params as RouteParams;
 
   const [recognizedText, setRecognizedText] = useState("");
   const signatureRef = useRef<any>(null);
@@ -120,6 +131,21 @@ const WritingPractice = () => {
         setRecognizedText(""); // Xóa chữ đã nhận diện sau khi kiểm tra
         playCorrectSound(require("../sound/soundCorect.mp3"));
         signatureRef.current?.clearSignature(); // Xóa chữ viết tay
+        if (isLearning) {
+          (async () => {
+            if (isNewWord) {
+              const response = await alphabet.resultNewWord(id);
+              if (response) {
+                navigation.navigate("LearnWriting");
+              }
+            } else {
+              const response = await alphabet.resultOldWord(id);
+              if (response) {
+                navigation.navigate("LearnWriting");
+              }
+            }
+          })();
+        }
       } else {
         Toast.show({
           type: "error",

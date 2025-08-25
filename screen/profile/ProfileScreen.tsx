@@ -28,6 +28,7 @@ import profileService from "../../services/profileService";
 import leaderboardService from "../../services/leaderboardService";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigatorType";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface User {
   name: string;
@@ -141,6 +142,9 @@ const ProfileTopSection = ({ user }: { user: User | null }) => {
           onPress: async () => {
             try {
               await profileService.logout();
+              await AsyncStorage.setItem("hasOpenedApp", "true");
+              await AsyncStorage.setItem("isLoggedIn", "false");
+
               navigation.replace("Welcome");
             } catch (error) {
               console.error("Lỗi khi đăng xuất:", error);

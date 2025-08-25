@@ -95,7 +95,6 @@ export enum QuestionType {
   PRONUNCIATION = "PRONUNCIATION",
   WRITING = "WRITING",
 }
-
 export interface Choice {
   id: number;
   lessonQuestionId: number | null;
@@ -119,7 +118,6 @@ export interface Question {
   audioUrl?: string | null;
   choices?: Choice[];
 }
-
 export const playCorrectSound = async (filePath: any) => {
   try {
     const { sound } = await Audio.Sound.createAsync(filePath);
@@ -258,6 +256,10 @@ const LessonTestScreen = () => {
     try {
       const questions = await questionService.getQuestionTest();
       setQuestions(questions);
+      // console.log(
+      //   "Câu hỏi nhận được từ API:",
+      //   JSON.stringify(questions, null, 2)
+      // );
       setOriginalQuestionsLength(questions.length); // Lưu lại độ dài ban đầu của mảng câu hỏi
 
       console.log("Độ dài ban đầu của mảng câu hỏi:", questions.length);

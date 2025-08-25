@@ -27,7 +27,6 @@ import {
 } from "../../components/Svgs";
 import type { RootStackParamList } from "../../types/navigatorType";
 
-// Import thư viện Google Sign-In mới
 import {
   GoogleSignin,
   statusCodes,
@@ -35,13 +34,18 @@ import {
 import axios from "axios";
 import { baseAuthApi } from "../../services/baseAPI";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-// Cập nhật kiểu LoginScreenState để thêm trạng thái "FORGOT_PASSWORD"
+import {
+  changePassword,
+  getCode, // Thêm getCode nếu bạn dùng nó
+} from "../../services/authService";
+import Toast from "react-native-toast-message";
+// Cập nhật kiểu LoginScreenState để thêm trạng thái "CHANGE_PASSWORD"
 export type LoginScreenState =
   | "HIDDEN"
   | "LOGIN"
   | "SIGNUP"
-  | "FORGOT_PASSWORD";
+  | "FORGOT_PASSWORD"
+  | "CHANGE_PASSWORD"; // Thêm trạng thái mới này
 
 type LoginScreenRouteProp = NativeStackScreenProps<
   RootStackParamList,
@@ -63,10 +67,10 @@ export const useLoginScreen = () => {
   const loggedIn = useBoundStore((x) => x.loggedIn);
 
   const queryState: LoginScreenState = (() => {
-    if (loggedIn) return "HIDDEN";
+    if (loggedIn) return "LOGIN";
     if (route.params?.login) return "LOGIN";
     if (route.params?.["sign-up"]) return "SIGNUP";
-    return "HIDDEN";
+    return "LOGIN";
   })();
 
   const [loginScreenState, setLoginScreenState] =
@@ -85,7 +89,6 @@ export const useLoginScreen = () => {
   return { loginScreenState, setLoginScreenState };
 };
 
-// --- Component LoginScreen ---
 export const LoginScreen = () => {
   const { loginScreenState, setLoginScreenState } = useLoginScreen();
   const navigation = useNavigation<LoginScreenNavigationProp>();
@@ -100,6 +103,11 @@ export const LoginScreen = () => {
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+
+  // Bổ sung state mới cho màn hình CHANGE_PASSWORD
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
 
   // Hàm xử lý khi gửi token đến backend
   const sendGoogleTokenToBackend = async (idToken: string) => {
@@ -198,11 +206,82 @@ export const LoginScreen = () => {
     }
   };
 
-  const handleForgotPasswordSubmit = () => {
-    console.log("Gửi yêu cầu đặt lại mật khẩu cho email:", forgotPasswordEmail);
-    alert("Yêu cầu đặt lại mật khẩu đã được gửi!");
-    setLoginScreenState("LOGIN");
-    setForgotPasswordEmail("");
+  // Hàm xử lý khi người dùng nhập username và nhấn "Lấy mã"
+  const handleForgotPasswordSubmit = async () => {
+    if (!forgotPasswordEmail) {
+      alert("Vui lòng nhập tên đăng nhập.");
+      return;
+    }
+    const response = await getCode(forgotPasswordEmail);
+    if (response) {
+      Toast.show({
+        type: "success",
+        text1: "Đã gửi mã!",
+        position: "top",
+        visibilityTime: 1000,
+      });
+      setLoginScreenState("CHANGE_PASSWORD");
+    }
+  };
+
+  // Hàm xử lý khi người dùng đổi mật khẩu thành công
+  const handleChangePassword = async () => {
+    if (!verificationCode || !newPassword || !confirmPassword) {
+      Toast.show({
+        type: "error",
+        text1: "Vui lòng nhập đầy đủ thông tin.",
+        position: "top",
+        visibilityTime: 1000,
+      });
+      return;
+    }
+    if (newPassword.length < 8) {
+      Toast.show({
+        type: "error",
+        text1: "Mật khẩu phải có ít nhất 8 ký tự.",
+        position: "top",
+        visibilityTime: 1000,
+      });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Toast.show({
+        type: "error",
+        text1: "Mật khẩu mới và mật khẩu xác nhận không khớp.",
+        position: "top",
+        visibilityTime: 1000,
+      });
+      return;
+    }
+
+    const response = await changePassword(
+      forgotPasswordEmail,
+      newPassword,
+      confirmPassword,
+      verificationCode
+    );
+    if (response.error === "OK" && response.data != null) {
+      Toast.show({
+        type: "success",
+        text1: "Đổi mật khẩu thành công!",
+        position: "top",
+        visibilityTime: 1000,
+      });
+
+      setLoginScreenState("LOGIN");
+      // Xóa các state đã nhập
+      setForgotPasswordEmail("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setVerificationCode("");
+    } else {
+      Toast.show({
+        type: "error",
+        text1: response.error || "Đổi mật khẩu thất bại.",
+        position: "top",
+        visibilityTime: 1000,
+      });
+    }
   };
 
   const navigateToLogin = () => {
@@ -212,6 +291,9 @@ export const LoginScreen = () => {
     setEmail("");
     setNameInput("");
     setForgotPasswordEmail("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setVerificationCode("");
   };
 
   const navigateToSignup = () => {
@@ -221,6 +303,9 @@ export const LoginScreen = () => {
     setEmail("");
     setNameInput("");
     setForgotPasswordEmail("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setVerificationCode("");
   };
 
   return (
@@ -237,34 +322,6 @@ export const LoginScreen = () => {
         ]}
       >
         <View style={styles.container}>
-          {/* <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setLoginScreenState("HIDDEN")}
-            >
-              <CloseSvg
-                width={24}
-                height={24}
-                fill={styles.closeButton.color}
-              />
-              <Text style={styles.srOnly}>Close</Text>
-            </TouchableOpacity>
-            {loginScreenState !== "FORGOT_PASSWORD" && (
-              <TouchableOpacity
-                style={styles.toggleAuthButton}
-                onPress={() =>
-                  setLoginScreenState((x) =>
-                    x === "LOGIN" ? "SIGNUP" : "LOGIN"
-                  )
-                }
-              >
-                <Text style={styles.toggleAuthButtonText}>
-                  {loginScreenState === "LOGIN" ? "Sign up" : "Login"}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View> */}
-
           <View style={styles.contentArea}>
             <View style={styles.formContainer}>
               <Text style={styles.title}>
@@ -272,7 +329,9 @@ export const LoginScreen = () => {
                   ? "Log in"
                   : loginScreenState === "SIGNUP"
                   ? "Create your profile"
-                  : "Forgot password?"}
+                  : loginScreenState === "FORGOT_PASSWORD"
+                  ? "Quên mật khẩu?"
+                  : "Đổi mật khẩu"}
               </Text>
 
               {loginScreenState === "LOGIN" && (
@@ -317,17 +376,6 @@ export const LoginScreen = () => {
                   </View>
 
                   <View style={styles.socialButtonsContainer}>
-                    {/* <TouchableOpacity
-                      style={styles.socialButton}
-                      onPress={() => alert("Tính năng Facebook chưa hỗ trợ")}
-                    >
-                      <FacebookLogoSvg
-                        width={20}
-                        height={20}
-                        style={styles.socialIcon}
-                      />
-                      <Text style={styles.socialButtonText}>Facebook</Text>
-                    </TouchableOpacity> */}
                     <TouchableOpacity
                       style={styles.socialButton}
                       onPress={handleGoogleSignIn}
@@ -391,17 +439,6 @@ export const LoginScreen = () => {
                   </View>
 
                   <View style={styles.socialButtonsContainer}>
-                    {/* <TouchableOpacity
-                      style={styles.socialButton}
-                      onPress={() => alert("Tính năng Facebook chưa hỗ trợ")}
-                    >
-                      <FacebookLogoSvg
-                        width={20}
-                        height={20}
-                        style={styles.socialIcon}
-                      />
-                      <Text style={styles.socialButtonText}>Facebook</Text>
-                    </TouchableOpacity> */}
                     <TouchableOpacity
                       style={styles.socialButton}
                       onPress={handleGoogleSignIn}
@@ -420,13 +457,12 @@ export const LoginScreen = () => {
               {loginScreenState === "FORGOT_PASSWORD" && (
                 <>
                   <Text style={styles.infoText}>
-                    Enter the email associated with your account to reset your
-                    password.
+                    Nhập username để lấy mã xác nhận về email
                   </Text>
                   <View style={styles.inputGroup}>
                     <TextInput
                       style={styles.textInput}
-                      placeholder="Email"
+                      placeholder="Username"
                       keyboardType="email-address"
                       autoCapitalize="none"
                       value={forgotPasswordEmail}
@@ -437,14 +473,66 @@ export const LoginScreen = () => {
                     style={styles.primaryButton}
                     onPress={handleForgotPasswordSubmit}
                   >
-                    <Text style={styles.primaryButtonText}>Reset Password</Text>
+                    <Text style={styles.primaryButtonText}>Lấy mã</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.secondaryButton}
                     onPress={navigateToLogin}
                   >
                     <Text style={styles.secondaryButtonText}>
-                      Back to Login
+                      Trở về đăng nhập
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {/* MÀN HÌNH MỚI: ĐỔI MẬT KHẨU */}
+              {loginScreenState === "CHANGE_PASSWORD" && (
+                <>
+                  <Text style={styles.infoText}>
+                    Vui lòng nhập mã xác nhận và mật khẩu mới để tiếp tục.
+                  </Text>
+                  <View style={styles.inputGroup}>
+                    <TextInput
+                      style={[styles.textInput, styles.disabledInput]}
+                      placeholder="Username"
+                      value={forgotPasswordEmail}
+                      editable={false}
+                    />
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Mã xác nhận (Code)"
+                      keyboardType="numeric"
+                      value={verificationCode}
+                      onChangeText={setVerificationCode}
+                    />
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Mật khẩu mới"
+                      secureTextEntry={true}
+                      value={newPassword}
+                      onChangeText={setNewPassword}
+                    />
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Xác nhận mật khẩu mới"
+                      secureTextEntry={true}
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={styles.primaryButton}
+                    onPress={handleChangePassword}
+                  >
+                    <Text style={styles.primaryButtonText}>Đổi mật khẩu</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={navigateToLogin}
+                  >
+                    <Text style={styles.secondaryButtonText}>
+                      Trở về đăng nhập
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -503,26 +591,27 @@ export const LoginScreen = () => {
                 </>
               )}
 
-              {loginScreenState !== "FORGOT_PASSWORD" && (
-                <View style={styles.mobileToggleAuthText}>
-                  <Text style={styles.mobileToggleAuthQuestion}>
-                    {loginScreenState === "LOGIN"
-                      ? "Don't have an account? "
-                      : "Have an account? "}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() =>
-                      setLoginScreenState((x) =>
-                        x === "LOGIN" ? "SIGNUP" : "LOGIN"
-                      )
-                    }
-                  >
-                    <Text style={styles.mobileToggleAuthButtonText}>
-                      {loginScreenState === "LOGIN" ? "sign up" : "log in"}
+              {loginScreenState !== "FORGOT_PASSWORD" &&
+                loginScreenState !== "CHANGE_PASSWORD" && (
+                  <View style={styles.mobileToggleAuthText}>
+                    <Text style={styles.mobileToggleAuthQuestion}>
+                      {loginScreenState === "LOGIN"
+                        ? "Don't have an account? "
+                        : "Have an account? "}
                     </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                    <TouchableOpacity
+                      onPress={() =>
+                        setLoginScreenState((x) =>
+                          x === "LOGIN" ? "SIGNUP" : "LOGIN"
+                        )
+                      }
+                    >
+                      <Text style={styles.mobileToggleAuthButtonText}>
+                        {loginScreenState === "LOGIN" ? "sign up" : "log in"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
             </View>
           </View>
         </View>
@@ -532,6 +621,11 @@ export const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  // ... (Các style hiện có)
+  disabledInput: {
+    backgroundColor: "#E5E7EB",
+    color: "#9CA3AF",
+  },
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -740,11 +834,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   mobileToggleAuthText: {
-    flexDirection: "row", // Sắp xếp các phần tử con theo chiều ngang
-    alignItems: "center", // Căn giữa theo chiều dọc
-    justifyContent: "center", // Căn giữa theo chiều ngang (nếu có khoảng trống)
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
-
   mobileToggleAuthQuestion: {
     fontSize: 14,
     fontWeight: "bold",

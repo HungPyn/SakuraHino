@@ -56,3 +56,48 @@ export const loginWithUsernamePassword = async (
     };
   }
 };
+
+export const getCode = async (username: string) => {
+  try {
+    const response = await axios.post(`${baseAuthApi}/api/auth/verify-code`, {
+      username,
+    });
+    console.log("API lấy mã trả về:", JSON.stringify(response.data, null, 2));
+    if (response.data.error === "OK" && response.data.data != null) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error?.response?.data?.message || error.message,
+    };
+  }
+};
+
+export const changePassword = async (
+  username: string,
+  newPassword: string,
+  confirmPassword: string,
+  code: string
+) => {
+  try {
+    const response = await axios.post(
+      `${baseAuthApi}/api/auth/reset-password`,
+      {
+        username,
+        newPassword,
+        confirmPassword,
+        code,
+      }
+    );
+    console.log("API lấy mã trả về:", JSON.stringify(response.data, null, 2));
+    return response.data;
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error?.response?.data?.message || error.message,
+    };
+  }
+};
