@@ -18,10 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,10 +43,13 @@ public class UserLessonStatusServiceImpl implements UserLessonStatusService {
             listUserIds = userTopicStatusRepository.findUnlockedUserIdsByTopic(currentLesson.getTopic().getId(),ProgressStatus.UNLOCKED);
         }else {
 
-            listUserIds = userStatusLessonRepository.findUserIdToUnlockLesson(position, currentLesson.getId());
+            listUserIds = userStatusLessonRepository.findUserIdToUnlockLesson(position, currentLesson.getId(),lesson.getTopic().getId());
         }
-
-        if (listUserIds.isEmpty()) {
+        List<String> listUserIdPassedPreviousLesson = userStatusLessonRepository.findUserIdsToUnlockLessonByPassedPreviousLesson(lesson.getId());
+        Set<String> userIdsToUnlockLesson = new HashSet<>();
+        userIdsToUnlockLesson.addAll(listUserIds);
+        userIdsToUnlockLesson.addAll(listUserIdPassedPreviousLesson);
+        if (userIdsToUnlockLesson.isEmpty()) {
             log.info("Không có người dùng nào cần mở khóa bài học ID={} (position={})", currentLesson.getId(), position);
             return;
         }
@@ -57,7 +57,7 @@ public class UserLessonStatusServiceImpl implements UserLessonStatusService {
         log.info("Mở khóa bài học ID={} (position={}) cho {} người dùng", currentLesson.getId(), position, listUserIds.size());
 
         List<UserLessonStatus> listInsert = new ArrayList<>();
-        for (String userId : listUserIds) {
+        for (String userId : userIdsToUnlockLesson) {
             UserLessonStatus item = new UserLessonStatus();
             item.setUserId(userId);
             item.setLesson(currentLesson);

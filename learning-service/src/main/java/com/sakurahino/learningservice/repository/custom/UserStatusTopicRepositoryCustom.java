@@ -10,7 +10,10 @@ import java.util.List;
 public interface UserStatusTopicRepositoryCustom {
 
     List<String> findUserIdsToUnlockTopic(@Param("position")int currentPosition, @Param("topicId") Integer topicId);
-    void batchInsertUserStatusTopic(List<UserTopicStatus> userStatusTopics,int batchSize);
+
+    // lấy user để cho creat topic dùng
+    List<String> findUserIdsToUnlockTopicByPassedPreviousTopic(@Param("Integer newTopicPosition") Integer newTopicPosition);
+   void batchInsertUserStatusTopic(List<UserTopicStatus> userStatusTopics,int batchSize);
 
     // user
     List<TopicWithStatusDTO> findPublishedTopicsWithStatus(@Param("userId") String userId);

@@ -138,7 +138,11 @@ public class TopicServiceImpl implements TopicService {
         topicRepository.save(topic);
         log.info("Chủ đề đã được tạo thành công với id = {}", topic.getId());
 
+        if (topic.getStatus()== LearningStatus.PUBLISHED){
+            userTopicStatusService.unlockNewlyPublishedTopicForUsers(topic.getId());
+        }
         return topicServiceMapper.mapToTopicResponse(topic);
+
     }
 
     @Override

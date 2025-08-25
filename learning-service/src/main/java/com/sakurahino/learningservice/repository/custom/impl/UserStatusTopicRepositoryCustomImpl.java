@@ -43,6 +43,35 @@ public class UserStatusTopicRepositoryCustomImpl implements UserStatusTopicRepos
                 .getResultList();
     }
 
+    @Override
+    public List<String> findUserIdsToUnlockTopicByPassedPreviousTopic(Integer newTopicPosition) {
+
+        String jpql = """
+        SELECT DISTINCT ust.userId
+        FROM UserTopicStatus ust
+        JOIN ust.topic t
+        WHERE ust.progressStatus = :passedStatus
+          AND t.position = (
+              SELECT MAX(t2.position)
+              FROM UserTopicStatus ust2
+              JOIN ust2.topic t2
+              WHERE ust2.userId = ust.userId
+                AND ust2.progressStatus = :passedStatus
+          )
+          AND ust.userId NOT IN (
+              SELECT ust3.userId
+              FROM UserTopicStatus ust3
+              JOIN ust3.topic t3
+              WHERE t3.position = :newPosition
+          )
+    """;
+
+        return em.createQuery(jpql, String.class)
+                .setParameter("newPosition", newTopicPosition)
+                .setParameter("passedStatus", ProgressStatus.PASSED)
+                .getResultList();
+    }
+
     // insert hang loat voi moi lan 1k ban ghi
     @Override
     @Transactional

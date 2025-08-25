@@ -16,6 +16,5 @@ public interface QuestionChoiceRepository extends JpaRepository<QuestionChoice, 
 
 
     // dùng ở audio
-    @Query("SELECT q FROM QuestionChoice q WHERE q.textForeign = :text AND q.audioUrlForeign IS NOT NULL")
-    Optional<QuestionChoice> findFirstByTextForeignAndAudioUrlForeignIsNotNull(@Param("text") String textForeign);
+    Optional<QuestionChoice> findTop1ByTextForeignAndAudioUrlForeignIsNotNull(String textForeign);
 }

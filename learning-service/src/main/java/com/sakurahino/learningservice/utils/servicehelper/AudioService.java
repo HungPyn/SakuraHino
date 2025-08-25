@@ -44,7 +44,7 @@ public class AudioService {
 
         // 2. Check DB: tìm choice bất kỳ đã có audio cho textForeign
         QuestionChoice existingChoice = questionChoiceRepository
-                .findFirstByTextForeignAndAudioUrlForeignIsNotNull(textForeign)
+                .findTop1ByTextForeignAndAudioUrlForeignIsNotNull(textForeign)
                 .orElse(null);
         if (existingChoice != null) {
             return existingChoice.getAudioUrlForeign();

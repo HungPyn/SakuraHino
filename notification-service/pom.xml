@@ -7,7 +7,7 @@
         <groupId>com.sakurahino</groupId>
         <artifactId>microservice-sakurahino</artifactId>
         <version>1.0.0</version>
-        <relativePath/>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>notification-service</artifactId>
     <name>notification-service</name>

@@ -26,9 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -53,21 +51,30 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
                 .orElseThrow(() -> new AppException(ExceptionCode.CHU_DE_KHONG_TON_TAI));
 
         int position = currentTopic.getPosition();
-        List<String> userIds = userTopicStatusRepository.findUserIdsToUnlockTopic(position, topicId);
-        log.info("Số lượng user sẽ được cập nhập {}", userIds.size());
+
+        // 1️⃣ User đủ điều kiện theo position nhỏ hơn
+        List<String> userIdsByPosition = userTopicStatusRepository.findUserIdsToUnlockTopic(position, topicId);
+
+        // 2️⃣ User đã pass topic trước đó (previousPosition)
+        List<String> userIdsByPassedPrevious = userTopicStatusRepository
+                .findUserIdsToUnlockTopicByPassedPreviousTopic(position);
+
+        // Gộp danh sách user
+        Set<String> userIds = new HashSet<>();
+        userIds.addAll(userIdsByPosition);
+        userIds.addAll(userIdsByPassedPrevious);
+
+        log.info("Số lượng user sẽ được cập nhật: {}", userIds.size());
         if (userIds.isEmpty()) {
             log.info("Không có user nào đủ điều kiện");
             return;
         }
 
-        // 1️ Lấy toàn bộ lesson của topic
+        // 3️⃣ Lấy toàn bộ lesson của topic
         List<Integer> lessonIds = lessonRepository.findLessonIdsByTopicId(topicId);
-        if (lessonIds.isEmpty()) {
-            log.warn("Topic {} không có lesson nào", topicId);
-            return;
-        }
         Instant now = TimeUtils.nowInstant();
-        // 2️ Insert vào user_topic_status
+
+        // 4️⃣ Insert user_topic_status
         List<UserTopicStatus> topicStatusList = userIds.stream()
                 .map(uid -> UserTopicStatus.builder()
                         .userId(uid)
@@ -78,33 +85,35 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
                 .toList();
         userTopicStatusRepository.batchInsertUserStatusTopic(topicStatusList, 1000);
 
-        // 3️ Insert toàn bộ lesson vào user_lesson_status, tránh duplicate
-        List<UserLessonStatus> lessonStatusList = new ArrayList<>();
-        for (String uid : userIds) {
-            // Lấy danh sách lesson mà user đã có
-            List<Integer> existingLessonIds = userStatusLessonRepository
-                    .findExistingLessonIdsForUser(uid, lessonIds);
+        // 5️⃣ Insert user_lesson_status nếu có lesson
+        if (!lessonIds.isEmpty()) {
+            List<UserLessonStatus> lessonStatusList = new ArrayList<>();
+            for (String uid : userIds) {
+                List<Integer> existingLessonIds = userStatusLessonRepository
+                        .findExistingLessonIdsForUser(uid, lessonIds);
 
-            for (Integer lessonId : lessonIds) {
-                if (!existingLessonIds.contains(lessonId)) { // chỉ insert nếu chưa có
-                    Lesson lesson = new Lesson();
-                    lesson.setId(lessonId);
+                for (Integer lessonId : lessonIds) {
+                    if (!existingLessonIds.contains(lessonId)) {
+                        Lesson lesson = new Lesson();
+                        lesson.setId(lessonId);
 
-                    UserLessonStatus status = UserLessonStatus.builder()
-                            .userId(uid)
-                            .lesson(lesson)
-                            .progressStatus(ProgressStatus.UNLOCKED)
-                            .completedAt(now)
-                            .build();
+                        UserLessonStatus status = UserLessonStatus.builder()
+                                .userId(uid)
+                                .lesson(lesson)
+                                .progressStatus(ProgressStatus.UNLOCKED)
+                                .completedAt(now)
+                                .build();
 
-                    lessonStatusList.add(status);
+                        lessonStatusList.add(status);
+                    }
                 }
             }
+            userStatusLessonRepository.batchInsertUserStatusLesson(lessonStatusList, 1000);
         }
-        userStatusLessonRepository.batchInsertUserStatusLesson(lessonStatusList, 1000);
 
         log.info("Đã mở khóa topic {} và {} lesson cho {} user", topicId, lessonIds.size(), userIds.size());
     }
+
 
 
     @Override
