@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Repository
@@ -20,7 +21,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Page<User> findAllByRoleOrderByDayCreationDesc(Role role, Pageable pageable);
 
-    long countByDayCreationAfter(Instant dayCreationAfter);
+    long countByDayCreationAfter(ZonedDateTime dayCreationAfter);
 
     @Query("SELECT u FROM User u " +
             "WHERE (:tuKhoa IS NULL OR u.name LIKE CONCAT('%', :tuKhoa, '%') OR u.email LIKE CONCAT('%', :tuKhoa, '%')) " +
@@ -42,7 +43,7 @@ public interface UserRepository extends JpaRepository<User, String> {
         WHERE us.freeze = false
           AND us.lastDateLogin < :yesterday
     """)
-    int resetStreakForInactiveUsers(@Param("yesterday") Instant yesterday);
+    int resetStreakForInactiveUsers(@Param("yesterday") ZonedDateTime yesterday);
 
     // Sử dụng freeze nếu có và bỏ lỡ ngày
     @Modifying
@@ -52,7 +53,7 @@ public interface UserRepository extends JpaRepository<User, String> {
         WHERE us.freeze = true
           AND us.lastDateLogin < :yesterday
     """)
-    int useFreezeForInactiveUsers(@Param("yesterday") Instant yesterday);
+    int useFreezeForInactiveUsers(@Param("yesterday") ZonedDateTime yesterday);
 
 
     // Lấy top 10 expScore cao nhất

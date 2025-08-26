@@ -97,8 +97,7 @@ public class UserStatusLessonRepositoryCustomImpl implements UserStatusLessonRep
 
             StringBuilder sql = new StringBuilder();
             sql.append("INSERT INTO user_lesson_status (user_id, lesson_id, progress_status, completed_at) VALUES ");
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
-                    .withZone(ZoneId.of("Asia/Ho_Chi_Minh")); // múi giờ VN
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
             for (int i = 0; i < batch.size(); i++) {
                 UserLessonStatus item = batch.get(i);
                 String completedAt = item.getCompletedAt() != null

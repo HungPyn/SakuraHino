@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Entity
 @AllArgsConstructor
@@ -44,10 +45,10 @@ public class LessonResult {
     private Long durationSeconds;
 
     @Column(name = "start_time")
-    private Instant startTime;
+    private ZonedDateTime startTime;
 
     @Column(name = "completed_at")
-    private Instant completedAt;
+    private ZonedDateTime completedAt;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)

@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 
 @Repository
@@ -39,6 +39,6 @@ public interface PracticeResultRepository extends JpaRepository<PracticeResult, 
            """)
     boolean existsByUserIdAndStatusBetween(@Param("userId") String userId,
                                          @Param("status") ResultStatus status,
-                                         @Param("startOfDay") Instant startOfDay,
-                                         @Param("currentTime") Instant currentTime);
+                                         @Param("startOfDay") ZonedDateTime startOfDay,
+                                         @Param("currentTime") ZonedDateTime currentTime);
 }

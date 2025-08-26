@@ -8,10 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Getter
@@ -31,7 +29,7 @@ public class Lesson {
     private String lessonName;
 
     @Column(name = "create_at")
-    private Instant createdAt;
+    private ZonedDateTime createdAt;
 
     @Column(name = "position")
     private int position;
@@ -40,7 +38,7 @@ public class Lesson {
     private Integer maxQuestions;
 
     @Column(name = "update_at")
-    private Instant updateAt;
+    private ZonedDateTime updateAt;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)

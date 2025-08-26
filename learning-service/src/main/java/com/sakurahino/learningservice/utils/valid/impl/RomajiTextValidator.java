@@ -10,6 +10,6 @@ public class RomajiTextValidator implements ConstraintValidator<RomajiText, Stri
     public boolean isValid(String value, ConstraintValidatorContext context) {
         if (value == null || value.isBlank()) return false;
         // Chỉ cho phép chữ Latin, dấu cách, dấu '-'
-        return value.matches("^[a-zA-Z\\- ]+$");
+        return value.matches("^[\\p{IsLatin}\\- ]+$");
     }
 }

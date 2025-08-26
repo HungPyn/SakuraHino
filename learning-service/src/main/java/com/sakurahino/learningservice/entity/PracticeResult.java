@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "practice_result")
@@ -44,10 +44,10 @@ public class PracticeResult {
     private Integer wrongCount;
 
     @Column(name = "start_time")
-    private Instant startTime;
+    private ZonedDateTime startTime;
 
     @Column(name = "completed_at")
-    private Instant completedAt;
+    private ZonedDateTime completedAt;
 
     @Column(name = "duration_seconds")
     private Long durationSeconds;

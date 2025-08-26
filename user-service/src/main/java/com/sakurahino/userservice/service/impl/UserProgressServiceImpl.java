@@ -3,6 +3,7 @@ package com.sakurahino.userservice.service.impl;
 import com.sakurahino.clients.rabitmqModel.learning.UserIsNewUpdateMessageDTO;
 import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
+import com.sakurahino.common.util.TimeUtils;
 import com.sakurahino.userservice.entity.User;
 import com.sakurahino.userservice.repository.UserRepository;
 import com.sakurahino.userservice.service.UserProgressService;
@@ -11,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 @Service
@@ -21,11 +20,10 @@ import java.time.ZonedDateTime;
 public class UserProgressServiceImpl implements UserProgressService {
 
     private final UserRepository userRepository;
-    private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     @Override
     @Transactional
-    public void updateExpAndStreak(String userId, int expAmount, int streakIncrement, Instant eventTime) {
+    public void updateExpAndStreak(String userId, int expAmount, int streakIncrement, ZonedDateTime eventTime) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ExceptionCode.TAI_KHOAN_KHONG_TON_TAI));
 
@@ -65,7 +63,7 @@ public class UserProgressServiceImpl implements UserProgressService {
 
         log.info("[User Is New User] Bắt đầu cập nhập trạng thái cho userId={}",
                 user.getId());
-        Instant updatedUtc = ZonedDateTime.now(VN_ZONE).toInstant();
+        ZonedDateTime updatedUtc = TimeUtils.nowVn();
         user.setUpdatedDay(updatedUtc);
         user.setIsNewUser(messageDTO.getIsNew());
         userRepository.save(user);

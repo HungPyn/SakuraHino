@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Data
 @AllArgsConstructor
@@ -26,10 +27,6 @@ public class PracticeResultRequestDTO {
     private Integer correctCount;
 
     private Integer wrongCount;
-
-    private Instant startTime;
-
-    private Instant completedAt;
 
     private Long durationSeconds;
 }

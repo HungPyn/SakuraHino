@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @RestController
 @RequestMapping("/learning/admin/topics")
@@ -40,8 +41,8 @@ public class TopicAdminController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String tuKhoa,
             @RequestParam(required = false) Integer levelId,
-            @RequestParam(required = false) Instant startDate,
-            @RequestParam(required = false) Instant endDate,
+            @RequestParam(required = false) ZonedDateTime startDate,
+            @RequestParam(required = false) ZonedDateTime endDate,
             @RequestParam(required = false) String status) {
 
         var result = topicService.findByFilters(page, size, tuKhoa, levelId, startDate, endDate, status);

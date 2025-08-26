@@ -11,6 +11,7 @@ import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.security.AuthHelper;
 import com.sakurahino.common.util.FileUtils;
+import com.sakurahino.common.util.TimeUtils;
 import com.sakurahino.userservice.dto.*;
 import com.sakurahino.userservice.entity.User;
 import com.sakurahino.clients.enums.UserStatus;
@@ -30,10 +31,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneId;
+
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Slf4j
@@ -47,7 +46,6 @@ public class UserServiceImpl  implements UserService {
     private final AuthHelper authHelper;
     private final RabbitMQMessageProducer rabbitMQProducer;
     private final UploadServiceClients uploadServiceClients;
-    private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     // xử lý bất đồng bộ ừ auth-service sang
     @Override
@@ -165,7 +163,7 @@ public class UserServiceImpl  implements UserService {
                 userRepository.existsByEmail(dto.getEmail())) {
             throw new AppException(ExceptionCode.EMAIL_TON_TAI);
         }
-        Instant updateDay = ZonedDateTime.now(VN_ZONE).toInstant();
+        ZonedDateTime updateDay = TimeUtils.nowVn();
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setStatus(dto.getStatus());
@@ -218,7 +216,7 @@ public class UserServiceImpl  implements UserService {
             log.debug("New avatar uploaded: {}", newUrlAvatar);
             user.setAvatarUrl(newUrlAvatar);
         }
-        Instant updateDay = ZonedDateTime.now(VN_ZONE).toInstant();
+        ZonedDateTime updateDay = TimeUtils.nowVn();
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setUpdatedDay(updateDay);
@@ -251,15 +249,14 @@ public class UserServiceImpl  implements UserService {
     public void checkAndResetStreak() {
         log.info("=== Bắt đầu kiểm tra streak và freeze của người dùng ===");
 
-        ZonedDateTime yesterdayVn = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusDays(1);
-        Instant yesterday = yesterdayVn.toInstant();
+        ZonedDateTime yesterdayVn = TimeUtils.nowVn().minusDays(1);
 
         // 1. Reset streak nếu không có freeze
-        int resetCount = userRepository.resetStreakForInactiveUsers(yesterday);
+        int resetCount = userRepository.resetStreakForInactiveUsers(yesterdayVn);
         log.info("Đã reset streak cho {} người dùng không hoạt động và không có freeze", resetCount);
 
         // 2. Sử dụng freeze nếu có và bỏ lỡ ngày
-        int freezeCount = userRepository.useFreezeForInactiveUsers(yesterday);
+        int freezeCount = userRepository.useFreezeForInactiveUsers(yesterdayVn);
         log.info("Đã sử dụng freeze cho {} người dùng bỏ lỡ ngày", freezeCount);
 
         log.info("=== Hoàn thành kiểm tra streak và freeze ===");

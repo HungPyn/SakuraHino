@@ -62,7 +62,7 @@ public class UserLessonStatusServiceImpl implements UserLessonStatusService {
             item.setUserId(userId);
             item.setLesson(currentLesson);
             item.setProgressStatus(ProgressStatus.UNLOCKED);
-            item.setCompletedAt(TimeUtils.nowInstant());
+            item.setCompletedAt(TimeUtils.nowVn());
             listInsert.add(item);
         }
         userStatusLessonRepository.batchInsertUserStatusLesson(listInsert, 1000);
@@ -109,7 +109,7 @@ public class UserLessonStatusServiceImpl implements UserLessonStatusService {
                         .orElseGet(() -> {
                             UserLessonStatus nextLessonStatus = new UserLessonStatus();
                             nextLessonStatus.setProgressStatus(ProgressStatus.UNLOCKED);
-                            nextLessonStatus.setCompletedAt(TimeUtils.nowInstant());
+                            nextLessonStatus.setCompletedAt(TimeUtils.nowVn());
                             nextLessonStatus.setUserId(userId);
                             nextLessonStatus.setLesson(nextLesson);
                             return userStatusLessonRepository.save(nextLessonStatus);
@@ -134,7 +134,7 @@ public class UserLessonStatusServiceImpl implements UserLessonStatusService {
                     lessonStatus.setUserId(userId);
                     lessonStatus.setLesson(firstLesson);
                     lessonStatus.setProgressStatus(ProgressStatus.UNLOCKED);
-                    lessonStatus.setCompletedAt(TimeUtils.nowInstant());
+                    lessonStatus.setCompletedAt(TimeUtils.nowVn());
                     return userStatusLessonRepository.save(lessonStatus);
                 });
     }

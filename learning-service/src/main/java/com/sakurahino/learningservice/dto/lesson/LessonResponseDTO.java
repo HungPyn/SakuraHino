@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Data
 @AllArgsConstructor
@@ -22,9 +22,9 @@ public class LessonResponseDTO {
 
     private int position;
 
-    private Instant createdAt;
+    private ZonedDateTime createdAt;
 
-    private Instant updateAt;
+    private ZonedDateTime updateAt;
 
     private Integer topicId;
 

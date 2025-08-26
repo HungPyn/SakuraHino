@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Data
 @AllArgsConstructor
@@ -17,6 +18,6 @@ public class RegisterSuccessDTO {
     private String email;
     private String username;
     private Role role;
-    private Instant dayCreation;
+    private ZonedDateTime dayCreation;
     private UserStatus status;
 }

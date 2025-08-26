@@ -3,7 +3,6 @@ package com.sakurahino.learningservice.repository;
 import com.sakurahino.learningservice.entity.UserTopicStatus;
 import com.sakurahino.learningservice.enums.ProgressStatus;
 import com.sakurahino.learningservice.repository.custom.UserStatusTopicRepositoryCustom;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalDouble;
 
 
 @Repository

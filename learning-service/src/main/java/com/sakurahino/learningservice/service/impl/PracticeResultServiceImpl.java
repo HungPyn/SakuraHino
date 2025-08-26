@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Service
 @Slf4j
@@ -53,8 +53,8 @@ public class PracticeResultServiceImpl implements PracticeResultService {
                 .orElse(0);
 
         PracticeResult practiceResult = buildPracticeResult(dto, topic);
-        int xpAmount = 0;
-        int streakIncrement = 0;
+        int xpAmount;
+        int streakIncrement;
         // ===== Tính streak =====
         log.info("Checking first practice today for user {}", userId);
         streakIncrement = lessonResultService.isFirstPassedToday(userId, practiceResult.getCompletedAt()) ? 1 : 0;
@@ -75,7 +75,7 @@ public class PracticeResultServiceImpl implements PracticeResultService {
                         userId,
                         xpAmount,
                         streakIncrement,
-                        TimeUtils.nowInstant()
+                        TimeUtils.nowVn()
                 );
 
                 rabbitMQProducer.publish(
@@ -93,8 +93,8 @@ public class PracticeResultServiceImpl implements PracticeResultService {
 
     private PracticeResult buildPracticeResult(PracticeResultRequestDTO dto, Topic topic) {
         // Lấy thời điểm hiện tại theo giờ VN
-        Instant completedAt = TimeUtils.nowInstant();
-        Instant startTime = completedAt.minusSeconds(dto.getDurationSeconds());
+        ZonedDateTime completedAt = TimeUtils.nowVn();
+        ZonedDateTime startTime = completedAt.minusSeconds(dto.getDurationSeconds());
 
         PracticeResult result = new PracticeResult();
         result.setTopic(topic);

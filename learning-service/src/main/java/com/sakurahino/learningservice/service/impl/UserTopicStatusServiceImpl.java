@@ -26,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 @Service
@@ -72,7 +73,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
 
         // 3️⃣ Lấy toàn bộ lesson của topic
         List<Integer> lessonIds = lessonRepository.findLessonIdsByTopicId(topicId);
-        Instant now = TimeUtils.nowInstant();
+        ZonedDateTime now = TimeUtils.nowVn();
 
         // 4️⃣ Insert user_topic_status
         List<UserTopicStatus> topicStatusList = userIds.stream()
@@ -205,7 +206,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
                             nextTopicStatus.setProgressStatus(ProgressStatus.UNLOCKED);
                             nextTopicStatus.setUserId(userId);
                             nextTopicStatus.setTopic(nextTopic);
-                            nextTopicStatus.setCompletedAt(TimeUtils.nowInstant());
+                            nextTopicStatus.setCompletedAt(TimeUtils.nowVn());
                             return userTopicStatusRepository.save(nextTopicStatus);
                         });
                 userLessonStatusService.unlockFirstLessonOfTopic(userId, nextTopic);
@@ -289,7 +290,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
                             .userId(userId)
                             .topic(topic)
                             .progressStatus(ProgressStatus.UNLOCKED)
-                            .completedAt(TimeUtils.nowInstant())
+                            .completedAt(TimeUtils.nowVn())
                             .build()
             );
             log.debug("Topic {} đã được unlock cho user {}", topic.getId(), userId);
@@ -316,7 +317,7 @@ public class UserTopicStatusServiceImpl implements UserTopicStatusService {
 
         // 4️⃣ Chỉ insert lesson chưa có
         List<UserLessonStatus> userLessonStatuses = new ArrayList<>();
-        Instant now = TimeUtils.nowInstant();
+        ZonedDateTime now = TimeUtils.nowVn();
         for (Integer lessonId : lessonIds) {
             if (!existingLessonIds.contains(lessonId)) {
                 Lesson lesson = new Lesson();

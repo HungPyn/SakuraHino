@@ -23,11 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -39,7 +35,6 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordRepository passwordRepository;
     private final JwtUtil jwtUtil;
     private final RabbitMQMessageProducer rabbitMQProducer;
-    private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     @Override
     public void register(RegisterRequestDTO dto) {
@@ -50,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ExceptionCode.USERNAME_TON_TAI);
         }
 
-        Instant dayCreation =  ZonedDateTime.now(VN_ZONE).toInstant();
+        ZonedDateTime dayCreation =  TimeUtils.nowVn();
         String id = UUID.randomUUID().toString();
         String password = passwordEncoder.encode(dto.getPassword());
         User user = new User();
@@ -128,13 +123,13 @@ public class AuthServiceImpl implements AuthService {
         SecureRandom random = new SecureRandom();
         String code = String.format("%06d", random.nextInt(1000000));
 
-        Instant nowUtc = ZonedDateTime.now(VN_ZONE).toInstant();
+        ZonedDateTime now = TimeUtils.nowVn();
 
         ResetPassword resetPassword = new ResetPassword();
         resetPassword.setUsername(user.getUsername());
         resetPassword.setCode(code);
-        resetPassword.setCreatedAt(nowUtc);
-        resetPassword.setExpiresAt(nowUtc.plus(10, ChronoUnit.MINUTES));
+        resetPassword.setCreatedAt(now);
+        resetPassword.setExpiresAt(now.plusMinutes(10));
         resetPassword.setUsed(false);
 
         passwordRepository.save(resetPassword);
@@ -159,7 +154,7 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ExceptionCode.MA_XAC_NHAN_KHONG_HOP_LE);
         }
 
-        Instant now = Instant.now();
+        ZonedDateTime now = TimeUtils.nowVn();
         if (resetPassword.getExpiresAt().isBefore(now)) {
             throw new AppException(ExceptionCode.MA_XAC_NHAN_HET_HAN);
         }
@@ -183,7 +178,7 @@ public class AuthServiceImpl implements AuthService {
         // Lấy ResetPassword chưa dùng và hợp lệ
         ResetPassword resetPassword = passwordRepository.findTopByUsernameOrderByCreatedAtDesc(dto.getUsername())
                 .filter(r -> !r.isUsed())
-                .filter(r -> r.getExpiresAt().isAfter(Instant.now()))
+                .filter(r -> r.getExpiresAt().isAfter(TimeUtils.nowVn()))
                 .orElseThrow(() -> new AppException(ExceptionCode.MA_XAC_NHAN_KHONG_HOP_LE));
 
         String encodedPassword = passwordEncoder.encode(dto.getNewPassword());
@@ -199,7 +194,7 @@ public class AuthServiceImpl implements AuthService {
     // Chạy mỗi 1 giờ theo giờ VN
     @Scheduled(cron = "0 0 * * * *", zone = "Asia/Ho_Chi_Minh")
     public void cleanupExpiredCodes() {
-        Instant now = TimeUtils.nowInstant();
+        ZonedDateTime now = TimeUtils.nowVn();
         int deleted = passwordRepository.deleteByUsedTrueOrExpiresAtBefore(now);
         System.out.println("Đã xóa " + deleted + " mã OTP hết hạn hoặc đã dùng.");
     }

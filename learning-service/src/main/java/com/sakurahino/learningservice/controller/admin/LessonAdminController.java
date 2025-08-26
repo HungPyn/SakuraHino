@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @RestController
 @RequestMapping("/learning/admin/lessons")
@@ -39,8 +40,8 @@ public class LessonAdminController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String tuKhoa,
-            @RequestParam(required = false) Instant startDate,
-            @RequestParam(required = false) Instant endDate,
+            @RequestParam(required = false) ZonedDateTime startDate,
+            @RequestParam(required = false) ZonedDateTime endDate,
             @RequestParam(required = false) String status) {
         var result = lessonService.findByFilters(tuKhoa,topicId,status,startDate,endDate,page, size);
         return new SuccessResponse(result);

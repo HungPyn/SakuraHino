@@ -13,7 +13,7 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,10 +65,10 @@ public class LessonQuestion {
 
     private LearningStatus status;
     @Column(name = "updated_at")
-    private Instant updatedAt;
+    private ZonedDateTime updatedAt;
 
     @Column(name = "created_at")
-    private Instant createdAt;
+    private ZonedDateTime createdAt;
 
     @OneToMany(mappedBy = "lessonQuestion",
             cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

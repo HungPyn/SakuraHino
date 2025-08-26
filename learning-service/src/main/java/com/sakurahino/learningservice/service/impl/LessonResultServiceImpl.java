@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Service
 @Slf4j
@@ -65,7 +65,7 @@ public class LessonResultServiceImpl implements LessonResultService {
 
         LessonResult lessonResult = buildLessonResult(dto, lesson);
         int xpAmount = 0;
-        int streakIncrement = 0;
+        int streakIncrement;
         // ===== Tính streak =====
         log.info("Checking first lesson today for user {}", userId);
         streakIncrement = isFirstPassedToday(userId, lessonResult.getCompletedAt()) ? 1 : 0;
@@ -91,7 +91,7 @@ public class LessonResultServiceImpl implements LessonResultService {
                     userId,
                     xpAmount,
                     streakIncrement,
-                    TimeUtils.nowInstant()
+                    TimeUtils.nowVn()
             );
 
             rabbitMQProducer.publish(
@@ -105,8 +105,8 @@ public class LessonResultServiceImpl implements LessonResultService {
     }
 
     private LessonResult buildLessonResult(LessonResultRequestDTO dto, Lesson lesson) {
-        Instant completedAt = TimeUtils.nowInstant(); // giờ VN
-        Instant startTime = completedAt.minusSeconds(dto.getDurationSeconds());
+        ZonedDateTime completedAt = TimeUtils.nowVn();// giờ VN
+        ZonedDateTime startTime = completedAt.minusSeconds(dto.getDurationSeconds());
 
         LessonResult lessonResult = new LessonResult();
         lessonResult.setLesson(lesson);
@@ -123,8 +123,8 @@ public class LessonResultServiceImpl implements LessonResultService {
     }
 
     // Kiểm tra lần đầu làm bài trong ngày (trước thời điểm hiện tại)
-    protected boolean isFirstPassedToday(String userId, Instant currentTime) {
-        Instant startOfDay = TimeUtils.startOfDayInstant(); // 00:00 giờ VN hôm nay
+    protected boolean isFirstPassedToday(String userId, ZonedDateTime currentTime) {
+        ZonedDateTime startOfDay = TimeUtils.startOfDayVietNam(); // 00:00 giờ VN hôm nay
 
         boolean lessonPassed = lessonResultRepository.existsByUserIdAndStatusBetween(
                 userId, ResultStatus.PASSED, startOfDay, currentTime

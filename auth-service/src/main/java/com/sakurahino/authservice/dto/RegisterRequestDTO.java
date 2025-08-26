@@ -15,10 +15,11 @@ public class RegisterRequestDTO {
     private String email;
 
     @NotBlank(message = "Tài khoản không được để trống")
+    @Pattern(regexp = "^\\S+$", message = "Tài khoản không được chứa khoảng trắng")
     private String username;
 
     @NotBlank(message = "Mật khẩu không được để trống")
-    @Size(min = 6, max = 32, message = "Mật khẩu phải từ 6 đến 32 ký tự")
+    @Size(min = 6, max = 16, message = "Mật khẩu phải từ 6 đến 32 ký tự")
     private String password;
 
     private Role role = Role.USER;

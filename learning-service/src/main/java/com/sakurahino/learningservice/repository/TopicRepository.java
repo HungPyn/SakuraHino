@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Repository
@@ -33,8 +33,8 @@ public interface TopicRepository extends JpaRepository<Topic, Integer> {
             @Param("tuKhoa") String tuKhoa,
             @Param("levelId") Integer levelId,
             @Param("status") LearningStatus status,
-            @Param("startDate") Instant startDate,
-            @Param("endDate") Instant endDate,
+            @Param("startDate") ZonedDateTime startDate,
+            @Param("endDate") ZonedDateTime endDate,
             Pageable pageable
     );
 
@@ -57,8 +57,8 @@ public interface TopicRepository extends JpaRepository<Topic, Integer> {
     );
 
     // Kiểm tra có topic nào trùng tên hay không (dùng cho tạo mới)
-    boolean existsByName(String name);
+    boolean existsByNameIgnoreCase(String name);
 
     // Kiểm tra có topic nào trùng tên nhưng khác ID (dùng cho update)
-    boolean existsByNameAndIdNot(String name, Integer id);
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Integer id);
 }

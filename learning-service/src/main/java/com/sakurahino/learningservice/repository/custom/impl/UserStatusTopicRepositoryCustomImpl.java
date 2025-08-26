@@ -85,8 +85,7 @@ public class UserStatusTopicRepositoryCustomImpl implements UserStatusTopicRepos
 
             StringBuilder sql = new StringBuilder();
             sql.append("INSERT INTO user_topic_status (user_id, topic_id, progress_status, completed_at) VALUES ");
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
-                    .withZone(ZoneId.of("Asia/Ho_Chi_Minh")); // múi giờ VN
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
             for (int i = 0; i < batch.size(); i++) {
                 UserTopicStatus item = batch.get(i);
 

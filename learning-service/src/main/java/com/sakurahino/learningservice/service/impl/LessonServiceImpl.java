@@ -15,6 +15,7 @@ import com.sakurahino.learningservice.repository.TopicRepository;
 import com.sakurahino.learningservice.service.LessonService;
 import com.sakurahino.learningservice.service.UserLessonStatusService;
 import com.sakurahino.common.util.TimeUtils;
+import com.sakurahino.learningservice.utils.valid.ValidUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 
@@ -53,7 +55,7 @@ public class LessonServiceImpl implements LessonService {
     }
 
     @Override
-    public PaginatedResponse<LessonResponseDTO> findByFilters(String tuKhoa, Integer topicId, String status, Instant startDate, Instant endDate, int page, int size) {
+    public PaginatedResponse<LessonResponseDTO> findByFilters(String tuKhoa, Integer topicId, String status, ZonedDateTime startDate, ZonedDateTime endDate, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Lesson> lessonPage;
         LearningStatus learningStatus = null;
@@ -110,7 +112,7 @@ public class LessonServiceImpl implements LessonService {
             throw new AppException(ExceptionCode.MAX_PUBLIC_LESSON_REACHED);
         }
 
-        if (lessonRepository.existsByLessonNameAndTopicId(lessonRequest.getLessonName(), topic.getId())) {
+        if (lessonRepository.existsByLessonNameIgnoreCaseAndTopicId(ValidUtils.normalizeForCompare(lessonRequest.getLessonName()), topic.getId())) {
             log.warn("Bài học với tên '{}' đã tồn tại trong topic {}", lessonRequest.getLessonName(), topic.getId());
             throw new AppException(ExceptionCode.LESSON_DA_TON_TAI);
         }
@@ -125,7 +127,7 @@ public class LessonServiceImpl implements LessonService {
         } while (lessonRepository.existsByCode(code));
         log.debug("Code mới được tạo: {}", code);
 
-        Instant createdAt = TimeUtils.nowInstant();
+        ZonedDateTime createdAt = TimeUtils.nowVn();
         Lesson lesson = new Lesson();
         lesson.setTopic(topic);
         lesson.setCreatedAt(createdAt);
@@ -169,11 +171,11 @@ public class LessonServiceImpl implements LessonService {
         }
 
         if (!lesson.getLessonName().equals(lessonRequest.getLessonName()) &&
-                lessonRepository.existsByLessonNameAndTopicIdAndIdNot(lessonRequest.getLessonName(), topic.getId(), lesson.getId())) {
+                lessonRepository.existsByLessonNameIgnoreCaseAndTopicIdAndIdNot(ValidUtils.normalizeForCompare(lessonRequest.getLessonName()), topic.getId(), lesson.getId())) {
             log.warn("[LESSON_UPDATE] Tên bài học '{}' đã tồn tại trong topicId={}", lessonRequest.getLessonName(), topic.getId());
             throw new AppException(ExceptionCode.LESSON_DA_TON_TAI);
         }
-         Instant updateAt = TimeUtils.nowInstant();
+        ZonedDateTime updateAt = TimeUtils.nowVn();
         lesson.setLessonName(lessonRequest.getLessonName());
         lesson.setStatus(lessonRequest.getStatus());
         lesson.setUpdateAt(updateAt);

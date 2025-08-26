@@ -17,6 +17,7 @@ import com.sakurahino.learningservice.repository.TopicRepository;
 import com.sakurahino.learningservice.service.TopicService;
 import com.sakurahino.learningservice.service.UserTopicStatusService;
 import com.sakurahino.common.util.TimeUtils;
+import com.sakurahino.learningservice.utils.valid.ValidUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +54,7 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public PaginatedResponse<TopicResponseDTO> findByFilters(int page, int size, String tuKhoa, Integer levelId, Instant startDdate, Instant endDate, String status) {
+    public PaginatedResponse<TopicResponseDTO> findByFilters(int page, int size, String tuKhoa, Integer levelId, ZonedDateTime startDdate, ZonedDateTime endDate, String status) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Topic> topicPage;
         LearningStatus learningStatus = null;
@@ -106,7 +107,7 @@ public class TopicServiceImpl implements TopicService {
         log.info("Bắt đầu tạo chủ đề: {}", dto.getName());
         Level level = levelRepository.findById(dto.getLevelId())
                 .orElseThrow(() -> new AppException(ExceptionCode.LEVEL_KHONG_TON_TAI));
-        if (topicRepository.existsByName(dto.getName())) {
+        if (topicRepository.existsByNameIgnoreCase(ValidUtils.normalizeForCompare(dto.getName()))){
             throw new AppException(ExceptionCode.TOPIC_NAME_FOUND);
         }
         if (file.isEmpty()) {
@@ -124,7 +125,7 @@ public class TopicServiceImpl implements TopicService {
         do {
             code = RandomStringUtils.randomNumeric(6);
         } while (topicRepository.existsByCode(code));
-        Instant createAt = TimeUtils.nowInstant();
+        ZonedDateTime createAt = TimeUtils.nowVn();
         Topic topic = new Topic();
         topic.setUrlImage(response.getUrlImage());
         topic.setCreateAt(createAt);
@@ -154,7 +155,7 @@ public class TopicServiceImpl implements TopicService {
                     log.warn("Chủ đề không tồn tại: {}", id);
                     return new AppException(ExceptionCode.CHU_DE_KHONG_TON_TAI);
                 });
-        if (topicRepository.existsByNameAndIdNot(dto.getName(),topic.getId())) {
+        if (topicRepository.existsByNameIgnoreCaseAndIdNot(ValidUtils.normalizeForCompare(dto.getName()),topic.getId())) {
             throw new AppException(ExceptionCode.TOPIC_NAME_FOUND);
         }
         if (file != null && !file.isEmpty()) {
@@ -186,7 +187,7 @@ public class TopicServiceImpl implements TopicService {
                 log.error("Upload ảnh thất bại: {}", e.getMessage());
             }
         }
-        Instant updateAt = TimeUtils.nowInstant();
+        ZonedDateTime updateAt = TimeUtils.nowVn();
         topic.setName(dto.getName());
         topic.setUpdateAt(updateAt);
         topic.setMaxLesson(dto.getMaxLesson());

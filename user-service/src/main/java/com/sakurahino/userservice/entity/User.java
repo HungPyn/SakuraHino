@@ -6,7 +6,7 @@ import com.sakurahino.userservice.enums.UserType;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "users")
@@ -33,10 +33,10 @@ public class User {
     private String avatarUrl;
 
     @Column(name = "day_creation")
-    private Instant dayCreation;
+    private ZonedDateTime dayCreation;
 
     @Column(name = "updated_day")
-    private Instant updatedDay;
+    private ZonedDateTime updatedDay;
 
     @Column(name = "isNewUser")
     private  Boolean isNewUser = true;
@@ -45,7 +45,7 @@ public class User {
     private Integer longStreak = 0;
 
     @Column(name = "last_date_login")
-    private Instant lastDateLogin;
+    private ZonedDateTime lastDateLogin;
 
     @Column(name = "exp_score")
     private Long expScore = 0L;

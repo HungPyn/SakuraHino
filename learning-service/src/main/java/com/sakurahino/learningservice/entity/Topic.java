@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Getter
@@ -42,10 +42,10 @@ public class Topic {
     private int maxLesson;
 
     @Column(name = "create_at")
-    private Instant createAt;
+    private ZonedDateTime createAt;
 
     @Column(name = "update_at")
-    private Instant updateAt;
+    private ZonedDateTime updateAt;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)

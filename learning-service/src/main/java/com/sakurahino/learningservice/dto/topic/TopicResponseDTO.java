@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Data
 @AllArgsConstructor
@@ -20,9 +21,9 @@ public class TopicResponseDTO {
 
     private String urlImage;
 
-    private Instant createAt;
+    private ZonedDateTime createAt;
 
-    private Instant updateAt;
+    private ZonedDateTime updateAt;
 
     private Integer position;
 

@@ -3,8 +3,6 @@ package com.sakurahino.learningservice.repository;
 import com.sakurahino.learningservice.entity.Lesson;
 import com.sakurahino.learningservice.entity.Topic;
 import com.sakurahino.learningservice.enums.LearningStatus;
-import com.sakurahino.learningservice.enums.ResultStatus;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,9 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface LessonRepository extends JpaRepository<Lesson, Integer> {
@@ -26,8 +23,10 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
     @Query("SELECT MAX(l.position) FROM Lesson l WHERE l.topic.id = :topicId")
     Integer findMaxPositionByTopicId(@Param("topicId") Integer topicId);
 
-    boolean existsByLessonNameAndTopicId(String lessonName, Integer topicId);
-    boolean existsByLessonNameAndTopicIdAndIdNot(String lessonName, Integer topicId, Integer lessonId);
+    boolean existsByLessonNameIgnoreCaseAndTopicId(String lessonName, Integer topicId);
+
+    boolean existsByLessonNameIgnoreCaseAndTopicIdAndIdNot(String lessonName, Integer topicId, Integer lessonId);
+
 
     Long countByTopicIdAndStatus(Integer topicId, LearningStatus status);
 
@@ -41,8 +40,8 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
             @Param("tuKhoa") String tuKhoa,
             @Param("topicId") Integer topicId,
             @Param("status") LearningStatus status,
-            @Param("startDate") Instant startDate,
-            @Param("endDate") Instant endDate,
+            @Param("startDate") ZonedDateTime startDate,
+            @Param("endDate") ZonedDateTime endDate,
             Pageable pageable);
 
     Lesson findByCode(String code);

@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,9 +23,9 @@ public class ResponseUserDTO {
 
     private String avatarUrl;
 
-    private Instant dayCreation;
+    private ZonedDateTime dayCreation;
 
-    private Instant updatedDay;
+    private ZonedDateTime updatedDay;
 
     private Role role;
 

@@ -1,5 +1,6 @@
 package com.sakurahino.userservice.service.impl;
 
+import com.sakurahino.common.util.TimeUtils;
 import com.sakurahino.userservice.dto.PublicUserResponseDTO;
 import com.sakurahino.userservice.entity.User;
 import com.sakurahino.userservice.mapper.UserServiceMapper;
@@ -8,8 +9,7 @@ import com.sakurahino.userservice.service.UserStatisticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,10 +25,10 @@ public class UserStatisticsServiceServiceImpl implements UserStatisticsService {
     @Override
     public Map<String, Long> getUserRegistrationStats() {
         Map<String, Long> stats  = new HashMap<>();
-        Instant dayCreation = Instant.now();
-        stats.put("last7days", userRepository.countByDayCreationAfter(dayCreation.minus(7, ChronoUnit.DAYS)));
-        stats.put("last30days", userRepository.countByDayCreationAfter(dayCreation.minus(30, ChronoUnit.DAYS)));
-        stats.put("last90days", userRepository.countByDayCreationAfter(dayCreation.minus(90, ChronoUnit.DAYS)));
+        ZonedDateTime dayCreation = TimeUtils.nowVn();
+        stats.put("last7days", userRepository.countByDayCreationAfter(dayCreation.minusDays(7)));
+        stats.put("last30days", userRepository.countByDayCreationAfter(dayCreation.minusDays(30)));
+        stats.put("last90days", userRepository.countByDayCreationAfter(dayCreation.minusDays(90)));
         return stats;
     }
 

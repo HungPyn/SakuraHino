@@ -37,12 +37,14 @@ public enum ExceptionCode {
     QUESTION_ALREADY_EXISTS(2013,"Câu hỏi đã tồn tại trong bài học"),
     DUPLICATE_CHOICE_IN_REQUEST(2014,"Câu hỏi có đáp án giống nhau"),
     CORRECT_ANSWER_NOT_MATCH_TARGET(2015,"Đáp án đúng phải giống với đáp án câu hỏi"),
+    IMAGE_CHOICE_MUST_HAVE_4(2016,"Đáp án đang thiếu ảnh"),
+    DAP_AN_IS_JAPANESE(2017,"Đáp án phải là tiếng Nhật"),
     // dùng bên status
     USER_LESSON_STATUS_NOT_FOUND(2006,"trạng thái bài học của user không tồn tại"),
     USER_TOPIC_STATUS_NOT_FOUND(2007,"trạng thái chu de của user không tồn tại"),
     LESSON_STATUS_DONT_PUBLISHED(2008, "Bài học chưa được xuất bản"),
     CHOICE_NOT_FOUND(2012,"Lựa chọn không tồn tại"),
-
+    IMPORT_EXCEL_FAILED(2018,"Thêm file excel thất bại"),
     //Upload-serivce
     FILE_NOT_NULL(3001,"Ảnh không được trống"),
     FILE_MAX(3002,"Ảnh vượt quá 5MB"),

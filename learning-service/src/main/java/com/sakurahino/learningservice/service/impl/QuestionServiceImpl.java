@@ -23,6 +23,8 @@ import com.sakurahino.learningservice.service.QuestionService;
 import com.sakurahino.learningservice.utils.language.JapaneseTokenizerUtil;
 import com.sakurahino.learningservice.utils.language.LanguageUtil;
 import com.sakurahino.learningservice.utils.language.VietnameseTokenizerUtil;
+import com.sakurahino.learningservice.utils.valid.LessonQuestionValidator;
+import com.sakurahino.learningservice.utils.valid.ValidUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -235,44 +237,18 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional
-    public LessonQuestionResponse create(LessonQuestionRequest data,Map<String, MultipartFile> imageFilesMap) {
+    public LessonQuestionResponse create(LessonQuestionRequest data, Map<String, MultipartFile> imageFilesMap) {
+        LessonQuestionValidator.validate(data, imageFilesMap, lessonRepository, lessonQuestionRepository, null);
+
         Lesson l = lessonRepository.findById(data.getLessonId())
-                .orElseThrow(()->new AppException(ExceptionCode.LESSON_KHONG_TON_TAI));
-        int publishedCount = lessonQuestionRepository.countQuestions(l.getId(), LearningStatus.PUBLISHED);
-        if (l.getMaxQuestions()<= publishedCount && data.getStatus()== LearningStatus.PUBLISHED) {
-            throw new AppException(ExceptionCode.MAX_PUBLIC_QUESTION_REACHED);
-        }
-        boolean questionExists = lessonQuestionRepository
-                .existsByLessonIdAndTargetWordNative(data.getLessonId(), data.getTargetWordNative());
+                .orElseThrow(() -> new AppException(ExceptionCode.LESSON_KHONG_TON_TAI));
 
-        if (questionExists) {
-            throw new AppException(ExceptionCode.QUESTION_ALREADY_EXISTS);
-        }
-
-        // Check duplicate trong choiceRequests
-        Set<String> seen = new HashSet<>();
-        for (QuestionChoiceRequest cr : data.getChoiceRequests()) {
-            String key = cr.getTextForeign() + "||" + cr.getMeaning();
-            if (!seen.add(key)) {
-                throw new AppException(ExceptionCode.DUPLICATE_CHOICE_IN_REQUEST);
-            }
-        }
-        // Validate đáp án đúng
-        boolean hasCorrectChoice = false;
-        for (QuestionChoiceRequest cr : data.getChoiceRequests()) {
-            if (cr.getIsCorrect()) {
-                hasCorrectChoice = true;
-                // Nếu dạng question yêu cầu match với targetWordNative thì check luôn
-                if (!cr.getTextForeign().equalsIgnoreCase(data.getTargetWordNative())) {
-                    throw new AppException(ExceptionCode.CORRECT_ANSWER_NOT_MATCH_TARGET);
-                }
-            }
-        }
-       LessonQuestion lq = new LessonQuestion();
-       lq.setLesson(l);
-       lq.setStatus(data.getStatus());
-       lq.setCreatedAt(TimeUtils.nowInstant());
+        LessonQuestion lq = new LessonQuestion();
+        lq.setLesson(l);
+        lq.setStatus(data.getStatus());
+        lq.setCreatedAt(TimeUtils.nowVn());
         lq.setQuestionType(data.getQuestionType());
+
         if (LanguageUtil.isJapanese(data.getTargetWordNative())) {
             lq.setTargetLanguageCode("ja");
         } else if (LanguageUtil.isVietnamese(data.getTargetWordNative())) {
@@ -280,16 +256,24 @@ public class QuestionServiceImpl implements QuestionService {
         } else {
             lq.setTargetLanguageCode("unknown");
         }
-       if (data.getQuestionType() == QuestionType.PRONUNCIATION|| data.getQuestionType()== QuestionType.AUDIO_CHOICE) {
-           AudioUploadResponseDTO response = uploadServiceClients.upLoadText(data.getTargetWordNative());
-           lq.setAudioUrl(response.getUrlAudio()); // hoặc getUrlImage() tùy field
-       }
-       lq.setTargetWordNative(data.getTargetWordNative());
-       lq.setPromptTextTemplate(data.getPromptTextTemplate());
+
+        if (data.getQuestionType() == QuestionType.PRONUNCIATION || data.getQuestionType() == QuestionType.AUDIO_CHOICE) {
+            if (LanguageUtil.isJapanese(data.getTargetWordNative())) {
+                AudioUploadResponseDTO response = uploadServiceClients.upLoadText(data.getTargetWordNative());
+                lq.setAudioUrl(response.getUrlAudio());
+            } else {
+
+                lq.setAudioUrl(null);
+            }
+        }
+
+        lq.setTargetWordNative(data.getTargetWordNative());
+        lq.setPromptTextTemplate(data.getPromptTextTemplate());
+
         lq = lessonQuestionRepository.save(lq);
-        // Gọi addChoice sau khi có ID
+
         if (data.getChoiceRequests() != null && !data.getChoiceRequests().isEmpty()) {
-            questionChoiceService.addQuestionChoice(lq,data.getChoiceRequests(), imageFilesMap);
+            questionChoiceService.addQuestionChoice(lq, data.getChoiceRequests(), imageFilesMap);
         }
 
         return lessonQuestionMapper.mapQuestionResponse(lq);
@@ -297,44 +281,23 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional
-    public LessonQuestionResponse update(Integer questionId,LessonQuestionRequest data, Map<String, MultipartFile> imageFilesMap) {
-        // Lấy LessonQuestion hiện tại
+    public LessonQuestionResponse update(Integer questionId, LessonQuestionRequest data, Map<String, MultipartFile> imageFilesMap) {
         LessonQuestion question = lessonQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new AppException(ExceptionCode.QUESTION_NOT_FOUND));
-        // 2️⃣ Check duplicate choice trong request (textForeign + meaning)
-        if (data.getChoiceRequests() != null) {
-            Set<String> seen = new HashSet<>();
-            for (QuestionChoiceRequest cr : data.getChoiceRequests()) {
-                String key = cr.getTextForeign() + "||" + cr.getMeaning();
-                if (!seen.add(key)) {
-                    throw new AppException(ExceptionCode.DUPLICATE_CHOICE_IN_REQUEST);
-                }
-            }
-        }
+
+        LessonQuestionValidator.validate(data, imageFilesMap, lessonRepository, lessonQuestionRepository, questionId);
+
         boolean updated = false;
 
-        // Cập nhật các field cơ bản của LessonQuestion nếu có thay đổi
         if (!Objects.equals(data.getStatus(), question.getStatus())) {
             question.setStatus(data.getStatus());
             updated = true;
         }
-        if (!Objects.equals(data.getTargetWordNative(), question.getTargetWordNative())) {
-            // 1️⃣ Check duplicate question trong DB (bỏ qua chính câu hỏi đang update)
-            boolean duplicateQuestion = lessonQuestionRepository
-                    .existsByLessonIdAndTargetWordNativeAndIdNot(
-                            question.getLesson().getId(),
-                            data.getTargetWordNative(),
-                            question.getId()
-                    );
-            if (duplicateQuestion) {
-                throw new AppException(ExceptionCode.QUESTION_ALREADY_EXISTS);
-            }
 
-            // 2️⃣ Update targetWordNative
+        if (!Objects.equals(data.getTargetWordNative(), question.getTargetWordNative())) {
             question.setTargetWordNative(data.getTargetWordNative());
             updated = true;
 
-            // 3️⃣ Nếu là câu hỏi có audio, update audio URL
             if (data.getQuestionType() == QuestionType.PRONUNCIATION
                     || data.getQuestionType() == QuestionType.AUDIO_CHOICE) {
                 AudioUploadResponseDTO response = uploadServiceClients.upLoadText(data.getTargetWordNative());
@@ -347,7 +310,6 @@ public class QuestionServiceImpl implements QuestionService {
             updated = true;
         }
 
-        // Chỉ update các QuestionChoice đã có id
         if (data.getChoiceRequests() != null) {
             for (QuestionChoiceRequest cr : data.getChoiceRequests()) {
                 if (cr.getId() != null) {
@@ -356,12 +318,10 @@ public class QuestionServiceImpl implements QuestionService {
             }
         }
 
-        // Lưu LessonQuestion nếu có thay đổi
         if (updated) {
             question = lessonQuestionRepository.save(question);
         }
 
-        // Map sang response
         return lessonQuestionMapper.mapQuestionResponse(question);
     }
 
@@ -372,5 +332,4 @@ public class QuestionServiceImpl implements QuestionService {
         lessonQuestion.setStatus(LearningStatus.DELETED);
         lessonQuestionRepository.save(lessonQuestion);
     }
-
 }

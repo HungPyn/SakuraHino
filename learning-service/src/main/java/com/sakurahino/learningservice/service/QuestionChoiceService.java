@@ -2,9 +2,7 @@ package com.sakurahino.learningservice.service;
 
 
 import com.sakurahino.learningservice.dto.questionchoice.QuestionChoiceRequest;
-import com.sakurahino.learningservice.entity.Lesson;
 import com.sakurahino.learningservice.entity.LessonQuestion;
-import com.sakurahino.learningservice.entity.QuestionChoice;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

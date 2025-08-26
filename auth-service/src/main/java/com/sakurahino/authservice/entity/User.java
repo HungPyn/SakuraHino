@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "users")
@@ -35,7 +36,7 @@ public class User {
     private String password;
 
     @Column(name = "day_creattion")
-    private Instant dayCreation;
+    private ZonedDateTime dayCreation;
 
     @Column(name = "role")
     @Enumerated(EnumType.STRING)

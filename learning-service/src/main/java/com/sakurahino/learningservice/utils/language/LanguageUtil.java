@@ -9,7 +9,8 @@ public class LanguageUtil {
             Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
             if (block == Character.UnicodeBlock.HIRAGANA
                     || block == Character.UnicodeBlock.KATAKANA
-                    || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS) {
+                    || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                    || block == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS) {
                 return true;
             }
         }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Data
 @AllArgsConstructor
@@ -18,6 +19,6 @@ public class LessonResultResponseDTO {
     private Integer correctCount;
     private Integer wrongCount;
     private Long durationSeconds;
-    private Instant completedAt;
+    private ZonedDateTime completedAt;
     private ResultStatus status;
 }

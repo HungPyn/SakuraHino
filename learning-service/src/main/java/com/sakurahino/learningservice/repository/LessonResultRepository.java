@@ -1,15 +1,13 @@
 package com.sakurahino.learningservice.repository;
 
 import com.sakurahino.learningservice.entity.LessonResult;
-import com.sakurahino.learningservice.enums.ProgressStatus;
 import com.sakurahino.learningservice.enums.ResultStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
-import java.util.List;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 
 @Repository
@@ -24,8 +22,8 @@ public interface LessonResultRepository  extends JpaRepository<LessonResult, Int
        """)
     boolean existsByUserIdAndStatusBetween(@Param("userId") String userId,
                                            @Param("status") ResultStatus status,
-                                           @Param("startOfDay") Instant startOfDay,
-                                           @Param("currentTime") Instant currentTime);
+                                           @Param("startOfDay") ZonedDateTime startOfDay,
+                                           @Param("currentTime") ZonedDateTime currentTime);
 
     @Query("""
     SELECT MAX(lr.correctCount)

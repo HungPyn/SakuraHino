@@ -2,6 +2,7 @@ package com.sakurahino.learningservice.controller.admin;
 
 import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.learningservice.dto.question.LessonQuestionRequest;
+import com.sakurahino.learningservice.service.ImportExcelForQuestionService;
 import com.sakurahino.learningservice.service.QuestionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.Map;
 public class QuestionAdminController {
 
     private final QuestionService questionService;
+    private final ImportExcelForQuestionService importExcelForQuestionService;
 
     @GetMapping
     public SuccessResponse getAllQuestions(
@@ -80,5 +82,11 @@ public class QuestionAdminController {
     public SuccessResponse deleteQuestionById(@PathVariable Integer questionId) {
         questionService.delete(questionId);
         return new SuccessResponse();
+    }
+
+    @PostMapping("/excel")
+    public SuccessResponse importExcel(@RequestParam("file") MultipartFile file){
+        importExcelForQuestionService.importExcelForQuestion(file);
+        return new SuccessResponse("Thêm bằng excel thành công");
     }
 }

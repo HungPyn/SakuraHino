@@ -4,6 +4,7 @@ import com.sakurahino.clients.dto.AudioUploadResponseDTO;
 import com.sakurahino.clients.feign.UploadServiceClients;
 import com.sakurahino.learningservice.entity.LessonQuestion;
 import com.sakurahino.learningservice.entity.QuestionChoice;
+import com.sakurahino.learningservice.repository.LessonQuestionRepository;
 import com.sakurahino.learningservice.repository.QuestionChoiceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ public class AudioService {
 
     private final UploadServiceClients uploadServiceClients;
     private final QuestionChoiceRepository questionChoiceRepository;
+    private final LessonQuestionRepository lessonQuestionRepository;
 
     /**
      * Cache tạm để tránh upload trùng trong cùng phiên tạo/update
@@ -42,7 +44,15 @@ public class AudioService {
             return choice.getAudioUrlForeign();
         }
 
-        // 2. Check DB: tìm choice bất kỳ đã có audio cho textForeign
+        // 2. Check DB: bất kỳ LessonQuestion nào có targetWordNative và targetLanguageCode trùng
+        LessonQuestion existingQuestion = lessonQuestionRepository
+                .findTop1ByTargetWordNativeAndTargetLanguageCodeAndAudioUrlIsNotNull(textForeign, "ja")
+                .orElse(null);
+        if (existingQuestion != null) {
+            return existingQuestion.getAudioUrl(); // Dùng luôn audio của question này
+        }
+
+        // 3. Check DB: tìm choice bất kỳ đã có audio cho textForeign
         QuestionChoice existingChoice = questionChoiceRepository
                 .findTop1ByTextForeignAndAudioUrlForeignIsNotNull(textForeign)
                 .orElse(null);

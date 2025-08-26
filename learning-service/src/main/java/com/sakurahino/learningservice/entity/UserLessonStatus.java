@@ -7,7 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Getter
 @Setter
@@ -36,5 +36,5 @@ public class UserLessonStatus {
     private Lesson lesson;
 
     @Column(name = "completed_at")
-    private Instant completedAt;
+    private ZonedDateTime completedAt;
 }
