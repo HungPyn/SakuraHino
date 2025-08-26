@@ -273,7 +273,6 @@ function formatDate(dateStr) {
   });
 }
 
-// KHAI BÁO TẤT CẢ CÁC REF TRƯỚC KHI SỬ DỤNG CHÚNG TRONG `watch` HOẶC CÁC HÀM KHÁC
 const currentPage = ref(0); // Trang hiện tại (0-indexed để khớp với backend)
 const size = ref(10); // Kích thước trang
 const totalPages = ref(0); // Tổng số trang

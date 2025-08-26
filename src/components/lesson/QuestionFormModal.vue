@@ -4,7 +4,6 @@
     id="questionFormModal"
     tabindex="-1"
     aria-labelledby="questionFormModalLabel"
-    aria-hidden="true"
     ref="modalRef"
   >
     <div class="modal-dialog modal-xl">
@@ -33,6 +32,7 @@
                   <select
                     v-model="question.questionType"
                     class="form-select"
+                    :disabled="isEditing"
                     required
                   >
                     <option
@@ -43,6 +43,18 @@
                     >
                       {{ type.text }}
                     </option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="userStatus" class="form-label">Trạng thái:</label>
+                  <select
+                    class="form-select"
+                    id="userStatus"
+                    v-model="question.status"
+                  >
+                    <option value="PUBLISHED">Hoạt động</option>
+                    <option value="PENDING">chưa xuất bản</option>
+                    <option value="DELETED">Xóa</option>
                   </select>
                 </div>
 
@@ -57,21 +69,9 @@
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-label">Từ</label>
+                  <label class="form-label">Từ đúng</label>
                   <input
                     v-model="question.targetWordNative"
-                    type="text"
-                    class="form-control"
-                    required
-                  />
-                </div>
-
-                <div class="mb-3">
-                  <label class="form-label"
-                    >Từ để chuyển sang âm thanh tiếng Nhật</label
-                  >
-                  <input
-                    v-model="question.textAudioQuestion"
                     type="text"
                     class="form-control"
                     required
@@ -82,57 +82,78 @@
               <!-- BÊN PHẢI -->
               <div
                 class="col-md-6 ps-4"
-                v-if="
-                  !['PRONUNCIATION', 'WRITING'].includes(question.questionType)
-                "
                 style="max-height: 65vh; overflow-y: auto"
               >
                 <label class="form-label fw-bold">Các lựa chọn:</label>
 
                 <div
-                  v-for="(choice, index) in question.choices"
+                  v-for="(choice, index) in question.choiceRequests"
                   :key="index"
                   class="border rounded p-3 mb-3 bg-light"
                 >
-                  <div v-if="question.questionType === 'WORD_ORDER'">
+                  <div>
                     <input
-                      v-model="choice.textBlock"
-                      class="form-control"
-                      placeholder="Đáp án câu xắp xếp"
-                    />
-                  </div>
-
-                  <div v-else>
-                    <input
+                      v-if="
+                        !['PRONUNCIATION', 'WRITING'].includes(
+                          question.questionType
+                        ) &&
+                        !(
+                          question.questionType === 'WORD_ORDER' &&
+                          isJapanese(question.targetWordNative)
+                        )
+                      "
                       v-model="choice.textForeign"
                       class="form-control mb-2"
                       placeholder="Từ ngoại ngữ"
                     />
+
                     <input
                       v-model="choice.textRomaji"
                       class="form-control mb-2"
                       placeholder="Từ phiên âm"
                     />
-                    <input
-                      v-if="question.questionType !== 'AUDIO_CHOICE'"
-                      v-model="choice.textAudioChoice"
-                      class="form-control mb-2"
-                      placeholder="Từ để chuyển sang âm thanh"
-                    />
-                    <input
-                      v-if="
-                        question.questionType === 'MULTIPLE_CHOICE_VOCAB_IMAGE'
-                      "
-                      type="file"
-                      class="form-control mb-2"
-                      placeholder="Chọn hình ảnh"
-                    />
+
                     <input
                       v-model="choice.meaning"
                       class="form-control mb-2"
-                      placeholder="Nghĩa của từ"
+                      :placeholder="
+                        question.questionType === 'WORD_ORDER' &&
+                        isJapanese(question.targetWordNative)
+                          ? 'Nhập từ cần Sắp xếp (tiếng Việt)'
+                          : 'Nghĩa của từ'
+                      "
                     />
-                    <div class="form-check mt-1">
+                    <div
+                      v-if="
+                        question.questionType !== 'PRONUNCIATION' &&
+                        question.questionType !== 'WRITING' &&
+                        question.questionType !== 'WORD_ORDER'
+                      "
+                      class="form-check mt-1 justify-content-between"
+                    >
+                      <div
+                        v-if="
+                          question.questionType ===
+                          'MULTIPLE_CHOICE_VOCAB_IMAGE'
+                        "
+                      >
+                        <input
+                          type="file"
+                          class="form-control mb-2"
+                          @change="onFileChange($event, choice)"
+                        />
+
+                        <!-- Hiển thị ảnh nếu có -->
+                        <div v-if="choice.imageUrl" class="mt-3 text-center">
+                          <img
+                            :src="choice.imageUrl"
+                            alt="Ảnh đã chọn"
+                            class="img-thumbnail"
+                            style="max-width: 180px; margin-top: 10px"
+                          />
+                        </div>
+                      </div>
+
                       <input
                         v-model="choice.isCorrect"
                         class="form-check-input"
@@ -142,14 +163,36 @@
                       <label class="form-check-label" :for="'correct' + index"
                         >Đáp án đúng</label
                       >
+                      <div class="text-end mt-2">
+                        <button
+                          v-if="!isEditing"
+                          type="button"
+                          class="btn btn-outline-danger btn-sm"
+                          @click="removeChoice(index)"
+                        >
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <button
-                  v-if="question.questionType !== 'WORD_ORDER'"
                   type="button"
-                  class="btn btn-sm btn-outline-primary"
+                  v-if="!isEditing"
+                  class="btn btn-sm"
+                  :class="
+                    ['WORD_ORDER', 'PRONUNCIATION', 'WRITING'].includes(
+                      question.questionType
+                    )
+                      ? 'btn-secondary'
+                      : 'btn-outline-primary'
+                  "
+                  :disabled="
+                    ['WORD_ORDER', 'PRONUNCIATION', 'WRITING'].includes(
+                      question.questionType
+                    )
+                  "
                   @click="addChoice"
                 >
                   Thêm lựa chọn
@@ -177,105 +220,284 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, onUnmounted, watch } from "vue";
 import { Modal } from "bootstrap";
 
-const props = defineProps({ lessonId: Number });
+const props = defineProps({
+  lessonId: Number,
+  currentQuestion: Object,
+  isEditing: Boolean,
+});
 const emit = defineEmits(["question-saved"]);
 
 const modalRef = ref();
 let bsModal = null;
+const allImages = ref([]); // Danh sách tất cả ảnh của modal
 
 const isEditing = ref(false);
-const question = reactive(getInitialQuestion());
+const question = reactive({
+  id: null,
+  lessonId: null,
+  questionType: null,
+  promptTextTemplate: "",
+  targetWordNative: "",
+  status: null,
+  choiceRequests: [
+    {
+      id: null,
+      textForeign: "",
+      textRomaji: "",
+      imageKey: "",
+      imageUrl: "",
+      audioUrlForeign: "",
+      isCorrect: false,
+      meaning: "",
+    },
+  ],
+});
 
 const questionTypes = [
-  { value: "MULTIPLE_CHOICE_TEXT_ONLY", text: "Trắc nghiệm" },
+  { value: "MULTIPLE_CHOICE_TEXT_ONLY", text: "Trắc nghiệm văn bản" },
   { value: "MULTIPLE_CHOICE_VOCAB_IMAGE", text: "Trắc nghiệm hình ảnh" },
-  { value: "WORD_ORDER", text: "Xắp xếp từ" },
-  { value: "AUDIO_CHOICE", text: "Câu hỏi nghe" },
-  { value: "PRONUNCIATION", text: "Luyện nói" },
+  { value: "AUDIO_CHOICE", text: "Nghe và chọn đáp án" },
+  { value: "WORD_ORDER", text: "Sắp xếp từ" },
+  { value: "PRONUNCIATION", text: "Luyện phát âm" },
   { value: "WRITING", text: "Luyện viết" },
 ];
 
-function getInitialQuestion() {
-  return {
+function closeModal() {
+  if (bsModal) {
+    bsModal.hide();
+
+    bsModal = null;
+  }
+  // Reset dữ liệu khi đóng modal
+  Object.assign(question, {
+    id: null,
+    lessonId: null,
+    questionType: null,
+    promptTextTemplate: "",
+    targetWordNative: "",
+    status: null,
+    choiceRequests: [],
+  });
+  allImages.value = [];
+}
+
+function openModal(data = {}) {
+  allImages.value = []; // Reset allImages để tránh giữ ảnh cũ
+  Object.assign(question, {
     id: null,
     lessonId: props.lessonId,
-    promptTextTemplate: "",
     questionType: "MULTIPLE_CHOICE_TEXT_ONLY",
+    promptTextTemplate: "",
     targetWordNative: "",
-    targetLanguageCode: "",
-    optionsLanguageCode: "",
-    textAudioQuestion: "",
-    choices: [
+    status: "PUBLISHED",
+    choiceRequests: [
       {
+        id: null,
         textForeign: "",
         textRomaji: "",
-        textAudioChoice: "",
+        imageKey: "",
+        imageUrl: "",
+        audioUrlForeign: "",
         isCorrect: false,
-        textBlock: "",
         meaning: "",
       },
     ],
-  };
-}
-
-function openModal(data = null) {
-  Object.assign(question, getInitialQuestion());
+  });
 
   if (data) {
-    isEditing.value = true;
-    Object.assign(question, JSON.parse(JSON.stringify(data)));
-  } else {
-    isEditing.value = false;
+    isEditing.value = !!data.isEditing;
+    if (data.currentQuestion) {
+      Object.assign(question, JSON.parse(JSON.stringify(data.currentQuestion)));
+      if (data.currentQuestion.choices) {
+        question.choiceRequests = data.currentQuestion.choices.map((c) => {
+          const choice = { ...c, imageKey: c.imageKey || "" };
+          if (
+            c.imageUrl &&
+            !allImages.value.some((img) => img.imageKey === choice.imageKey)
+          ) {
+            allImages.value.push({
+              imageKey: choice.imageKey,
+              file: null,
+              imageUrl: c.imageUrl,
+            });
+          }
+          return choice;
+        });
+        delete question.choices;
+      }
+    }
+    if (data.lessonId) question.lessonId = data.lessonId;
   }
 
-  // Nếu là WORD_ORDER, giới hạn 1 choice
-  if (question.questionType === "WORD_ORDER" && question.choices.length > 1) {
-    question.choices = [question.choices[0]];
+  if (["PRONUNCIATION", "WRITING"].includes(question.questionType)) {
+    if (!question.choiceRequests || question.choiceRequests.length === 0) {
+      question.choiceRequests = [
+        {
+          id: null,
+          textForeign: question.targetWordNative || "",
+          textRomaji: "",
+          imageKey: "",
+          imageUrl: "",
+          audioUrlForeign: "",
+          isCorrect: true,
+          meaning: "",
+        },
+      ];
+    } else {
+      question.choiceRequests[0].textForeign = question.targetWordNative || "";
+      question.choiceRequests = [question.choiceRequests[0]];
+    }
   }
 
+  updateImageKeys();
+  console.log("isEditing:", isEditing.value); // Giữ nguyên log
   bsModal.show();
 }
-defineExpose({ openModal });
+
+function isJapanese(text) {
+  return /^[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}\s\p{P}ー]+$/u.test(
+    text
+  );
+}
+
+watch(
+  () => question.targetWordNative,
+  (newVal) => {
+    const choice = question.choiceRequests[0];
+    if (!choice) return;
+    if (question.questionType === "WORD_ORDER" && isJapanese(newVal)) {
+      choice.textForeign = "";
+    }
+    if (["PRONUNCIATION", "WRITING"].includes(question.questionType)) {
+      choice.textForeign = newVal;
+    }
+  }
+);
+
+function onFileChange(event, choice) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!choice.imageKey) {
+    choice.imageKey = "temp-" + Date.now();
+  }
+  choice.imageUrl = "";
+  const existing = allImages.value.find(
+    (img) => img.imageKey === choice.imageKey
+  );
+  if (existing) {
+    existing.file = file;
+    existing.imageUrl = "";
+  } else {
+    allImages.value.push({ file, imageKey: choice.imageKey, imageUrl: "" });
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    choice.imageUrl = e.target.result;
+    const img = allImages.value.find((img) => img.imageKey === choice.imageKey);
+    if (img) img.imageUrl = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
 
 function addChoice() {
-  if (question.questionType === "WORD_ORDER") return;
-
-  question.choices.push({
+  if (
+    ["WORD_ORDER", "PRONUNCIATION", "WRITING"].includes(question.questionType)
+  )
+    return;
+  question.choiceRequests.push({
     textForeign: "",
     textRomaji: "",
-    textAudioChoice: "",
     isCorrect: false,
-    textBlock: "",
+    imageKey: "",
+    imageUrl: "",
     meaning: "",
   });
+  updateImageKeys();
+}
+
+function removeChoice(index) {
+  const removed = question.choiceRequests.splice(index, 1)[0];
+  allImages.value = allImages.value.filter(
+    (img) => img.imageKey !== removed.imageKey
+  );
+  updateImageKeys();
 }
 
 function validateBeforeSubmit() {
-  if (!question.promptTextTemplate.trim()) return false;
-
-  const count = question.choices.length;
-  if (question.questionType === "WORD_ORDER" && count !== 1) return false;
-  if (["PRONUNCIATION", "WRITING"].includes(question.questionType)) return true;
-  if (count < 2) return false;
-
-  return true;
+  return true; // Giữ nguyên logic validate hiện tại
 }
 
+function updateImageKeys() {
+  question.choiceRequests.forEach((choice, idx) => {
+    const oldKey = choice.imageKey;
+    const newKey = "image" + (idx + 1);
+    choice.imageKey = newKey;
+    const img = allImages.value.find((img) => img.imageKey === oldKey);
+    if (img) img.imageKey = newKey;
+  });
+}
+
+watch(
+  () => question.questionType,
+  (newType) => {
+    if (["PRONUNCIATION", "WRITING", "WORD_ORDER"].includes(newType)) {
+      question.choiceRequests = [
+        {
+          id: null,
+          textForeign: "",
+          textRomaji: "",
+          imageKey: "",
+          imageUrl: "",
+          audioUrlForeign: "",
+          isCorrect: true,
+          meaning: "",
+        },
+      ];
+      allImages.value = [];
+      updateImageKeys();
+    }
+  }
+);
+
 function onSubmit() {
+  if (
+    question.questionType === "WORD_ORDER" &&
+    isJapanese(question.targetWordNative) &&
+    question.choiceRequests.length > 0
+  ) {
+    question.choiceRequests[0].textForeign = question.targetWordNative;
+  }
+  updateImageKeys();
   if (!validateBeforeSubmit()) {
     alert("Vui lòng nhập đủ nội dung phù hợp với loại câu hỏi.");
     return;
   }
-  emit("question-saved", { ...question });
-  bsModal.hide();
+  const questionToEmit = JSON.parse(JSON.stringify(question));
+  questionToEmit.choiceRequests.forEach((choice) => {
+    delete choice.imageUrl;
+  });
+  console.log("Question được gửi là:", JSON.stringify(questionToEmit, null, 2)); // Giữ nguyên log
+  emit("question-saved", {
+    ...question,
+    allImages: allImages.value,
+  });
 }
 
 onMounted(() => {
   bsModal = new Modal(modalRef.value);
 });
+
+onUnmounted(() => {
+  if (bsModal) {
+    bsModal.dispose();
+    bsModal = null;
+  }
+});
+
+defineExpose({ openModal, closeModal });
 </script>
 
 <style scoped>

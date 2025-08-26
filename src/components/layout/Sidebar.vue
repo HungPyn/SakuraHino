@@ -32,7 +32,7 @@
             Chủ đề
           </router-link>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <router-link
             to="/admin/personal-path"
             class="nav-link"
@@ -41,7 +41,7 @@
             <i class="bi bi-map nav-icon"></i>
             Lộ trình học cá nhân
           </router-link>
-        </li>
+        </li> -->
         <li class="nav-item">
           <router-link
             to="/admin/badges"
@@ -68,39 +68,33 @@
             Giải trí
           </router-link>
         </li> -->
-<li class="nav-item">
-  <router-link
-    to="/admin/learningHistory"
-    class="nav-link"
-    active-class="active"
-  >
-    <i class="bi bi-clock-history nav-icon"></i>
-    Lịch sử học tập
-  </router-link>
-</li>
+        <li class="nav-item">
+          <router-link
+            to="/admin/learningHistory"
+            class="nav-link"
+            active-class="active"
+          >
+            <i class="bi bi-clock-history nav-icon"></i>
+            Lịch sử học tập
+          </router-link>
+        </li>
 
-<li class="nav-item">
-  <router-link
-    to="/admin/review"
-    class="nav-link"
-    active-class="active"
-  >
-    <i class="bi bi-journal-bookmark nav-icon"></i>
-    Ôn tập
-  </router-link>
-</li>
-<li class="nav-item">
-  <router-link
-    to="/admin/exam"
-    class="nav-link"
-    active-class="active"
-  >
-    <i class="bi bi-journal-check nav-icon"></i>
-   Thi
-  </router-link>
-</li>
-
-
+        <li class="nav-item">
+          <router-link
+            to="/admin/review"
+            class="nav-link"
+            active-class="active"
+          >
+            <i class="bi bi-journal-bookmark nav-icon"></i>
+            Ôn tập
+          </router-link>
+        </li>
+        <li class="nav-item">
+          <router-link to="/admin/exam" class="nav-link" active-class="active">
+            <i class="bi bi-journal-check nav-icon"></i>
+            Thi
+          </router-link>
+        </li>
         <li class="nav-item">
           <router-link
             to="/admin/community"
@@ -120,7 +114,7 @@
             Quản lý người dùng
           </router-link>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <router-link
             to="/admin/packages"
             class="nav-link"
@@ -129,7 +123,7 @@
             <i class="bi bi-box-seam nav-icon"></i>
             Quản lý Gói & Đăng ký
           </router-link>
-        </li>
+        </li> -->
 
         <!-- System Settings Section
         <li class="nav-item category-title">Cài đặt hệ thống</li>
@@ -165,10 +159,10 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  height: 100vh; /* Full height of viewport */
-  position: sticky; /* Keeps sidebar fixed when scrolling */
+  height: 100vh;
+  position: sticky;
   top: 0;
-  overflow-y: auto; /* Allows content within sidebar to scroll */
+  overflow-y: auto;
 }
 
 .sidebar-header {
@@ -182,9 +176,7 @@ export default defineComponent({
   height: 45px;
   width: auto;
   margin-right: 15px;
-  border-radius: var(
-    --border-radius-tag
-  ); /* Small radius for logo background */
+  border-radius: var(--border-radius-tag);
 }
 
 .app-name {
@@ -194,7 +186,7 @@ export default defineComponent({
 }
 
 .sidebar-nav {
-  flex-grow: 1; /* Navigation takes up remaining space */
+  flex-grow: 1;
 }
 
 .nav-item {
@@ -221,7 +213,7 @@ export default defineComponent({
 .nav-icon {
   font-size: 18px;
   margin-right: 15px;
-  width: 20px; /* Fixed width for consistent icon alignment */
+  width: 20px;
   text-align: center;
 }
 
@@ -235,7 +227,6 @@ export default defineComponent({
   padding: 0 15px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 992px) {
   .sidebar {
     width: 100%;
@@ -259,7 +250,7 @@ export default defineComponent({
     flex-basis: auto;
   }
   .category-title {
-    display: none; /* Hide category titles on smaller screens */
+    display: none;
   }
   .nav-link {
     font-size: 15px;
