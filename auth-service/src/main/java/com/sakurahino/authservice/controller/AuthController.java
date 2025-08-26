@@ -15,6 +15,7 @@ import com.sakurahino.authservice.service.impl.GoogleAuthService;
 import com.sakurahino.clients.commons.RabbitKey;
 import com.sakurahino.clients.enums.Role;
 import com.sakurahino.common.retresponse.SuccessResponse;
+import com.sakurahino.common.util.TimeUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -119,7 +120,7 @@ public class AuthController {
             user.setEmail(email);
             user.setUsername(email.split("@")[0]);
             user.setRole(Role.USER);
-            user.setDayCreation( ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant());
+            user.setDayCreation(TimeUtils.nowVn());
 
             userRepository.save(user);
 

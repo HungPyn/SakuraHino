@@ -11,6 +11,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "alphabets_user_status")
@@ -25,14 +26,14 @@ public class AlphabetsUserStatus {
     private Long id;
 
     @Column(name = "complete_at")
-    private Instant completeAt;
+    private ZonedDateTime completeAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "progress_status")
     private ProgressStatus progressStatus;
 
     @Column(name = "next_due_date")
-    private Instant nextDueDate;
+    private ZonedDateTime nextDueDate;
 
     @Column(name = "repetition_interval")
     private Integer repetiton;

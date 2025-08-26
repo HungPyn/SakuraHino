@@ -17,8 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -76,7 +75,7 @@ public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService
             }
             AlphabetsUserStatus status = alphabetsUserStatusRepository.findByAlphabetIdAndUserId(alphabetId, userId);
 
-            Instant completeAt = TimeUtils.nowInstant();
+            ZonedDateTime completeAt = TimeUtils.nowVn();
 
             if (status == null) {
                 status = new AlphabetsUserStatus();
@@ -85,7 +84,7 @@ public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService
                 status.setRepetiton(1);
                 status.setProgressStatus(ProgressStatus.LEARNED);
                 status.setCompleteAt(completeAt);
-                status.setNextDueDate(completeAt.plus(1, ChronoUnit.DAYS));
+                status.setNextDueDate(completeAt.plusDays(1));
             }else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(BaseResponeDTO.<String>builder()
@@ -123,7 +122,7 @@ public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService
                 alphabetsUserStatusRepository.findByAlphabetIdAndUserId(alphabetId,userId)
         ).orElseThrow(() -> new IllegalArgumentException("Alphabet status not found"));
 
-        Instant completeAt = TimeUtils.nowInstant();
+        ZonedDateTime completeAt = TimeUtils.nowVn();
         status.setCompleteAt(completeAt);
         status.setProgressStatus(ProgressStatus.LEARNED);
 
@@ -141,7 +140,7 @@ public class AlphabetUserStatusServiceImpl implements AlphabetsUserStatusService
         };
 
         status.setRepetiton(next);
-        status.setNextDueDate(next == null ? null : completeAt.plus(next, ChronoUnit.DAYS));
+        status.setNextDueDate(next == null ? null : completeAt.plusDays(next));
 
         alphabetsUserStatusRepository.save(status);
 

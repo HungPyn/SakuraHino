@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.sakurahino.common.util.TimeUtils;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -71,7 +71,7 @@ public class AlphabetServiceImpl implements AlphabetService {
         if (addNewRequestDTO == null){
             throw new IllegalArgumentException("No alphabet data found");
         }
-        Instant createdAt = TimeUtils.nowInstant();
+        ZonedDateTime createdAt = TimeUtils.nowVn();
         Alphabet alphabet = Alphabet.builder()
                 .code(UUID.randomUUID().toString())
                 .japaneseCharacter(addNewRequestDTO.getJapaneseCharacter())
@@ -95,7 +95,7 @@ public class AlphabetServiceImpl implements AlphabetService {
             throw new IllegalArgumentException("Data not found in List");
         }
 
-        Instant createdAt = TimeUtils.nowInstant();
+        ZonedDateTime createdAt = TimeUtils.nowVn();
         List<Alphabet> savedAlphabets = addListByTypeRequestDTO.getAddNewRequestDTOList().stream()
                 .map(addNewRequestDTO -> {
                     Alphabet alphabet = Alphabet.builder()
@@ -128,7 +128,7 @@ public class AlphabetServiceImpl implements AlphabetService {
     @Override
     public ResponseEntity<BaseResponeDTO<Alphabet>> updateCharacter(UpdateCharaterDTO updateCharaterDTO) {
         Optional<Alphabet> alphabet = alphabetRepository.findById(updateCharaterDTO.getId());
-        Instant modifyAt = TimeUtils.nowInstant();
+        ZonedDateTime modifyAt = TimeUtils.nowVn();
         if (alphabet.isPresent()){
             Alphabet alphabetUpdate = alphabet.get();
             alphabetUpdate.setStatus(updateCharaterDTO.getAlphabetsStatus());
@@ -155,7 +155,7 @@ public class AlphabetServiceImpl implements AlphabetService {
             throw new IllegalArgumentException("List Request Null");
         }
 
-        Instant modifyAt = TimeUtils.nowInstant();
+        ZonedDateTime modifyAt = TimeUtils.nowVn();
 
         List<Alphabet> updatedAlphabets = updateListCharacterRequestDTO.getCharaterDTOS().stream()
                 .map(dto -> {

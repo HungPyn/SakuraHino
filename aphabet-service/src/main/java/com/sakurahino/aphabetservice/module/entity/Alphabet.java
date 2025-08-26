@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Data
@@ -30,10 +30,10 @@ public class Alphabet {
     private String japaneseCharacter;
 
     @Column(name = "created_at")
-    private Instant createdAt;
+    private ZonedDateTime createdAt;
 
     @Column(name = "modify_at")
-    private Instant modifyAt;
+    private ZonedDateTime modifyAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")

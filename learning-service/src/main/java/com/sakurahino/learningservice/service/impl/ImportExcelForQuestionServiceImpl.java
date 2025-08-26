@@ -54,7 +54,7 @@ public class ImportExcelForQuestionServiceImpl implements ImportExcelForQuestion
 
             for (int i = 1; i <= sheet.getLastRowNum(); i++) { // bỏ header
                 Row row = sheet.getRow(i);
-                if (row == null) continue;
+                if (isRowEmpty(row)) continue; // bỏ qua dòng trống/format rác
 
                 try {
                     LessonQuestionRequest request = parseRow(row);
@@ -175,5 +175,16 @@ public class ImportExcelForQuestionServiceImpl implements ImportExcelForQuestion
         choice.setMeaning(cr.getMeaning());
         choice.setIsCorrect(cr.getIsCorrect());
         return choice;
+    }
+
+    private boolean isRowEmpty(Row row) {
+        if (row == null) return true;
+        for (int j = row.getFirstCellNum(); j < row.getLastCellNum(); j++) {
+            Cell cell = row.getCell(j);
+            if (cell != null && cell.getCellType() != CellType.BLANK && !cell.toString().trim().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 }
