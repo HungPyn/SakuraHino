@@ -17,6 +17,7 @@ import com.sakurahino.learningservice.repository.LessonRepository;
 import com.sakurahino.learningservice.repository.QuestionChoiceRepository;
 import com.sakurahino.learningservice.service.ImportExcelForQuestionService;
 import com.sakurahino.learningservice.utils.language.LanguageUtil;
+import com.sakurahino.learningservice.utils.servicehelper.AudioService;
 import com.sakurahino.learningservice.utils.valid.LessonQuestionValidator;
 import com.sakurahino.learningservice.utils.valid.ValidUtils;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class ImportExcelForQuestionServiceImpl implements ImportExcelForQuestion
     private final QuestionChoiceRepository questionChoiceRepository;
     private final LessonRepository lessonRepository;
     private final UploadServiceClients uploadServiceClients;
+    private final AudioService audioService;
 
     @Override
     @Transactional
@@ -165,6 +167,10 @@ public class ImportExcelForQuestionServiceImpl implements ImportExcelForQuestion
         QuestionChoice choice = new QuestionChoice();
         choice.setLessonQuestion(lq);
         choice.setTextForeign(cr.getTextForeign());
+        if (cr.getTextForeign() != null) {
+             String audioUrl = audioService.getOrUploadAudio(lq,choice,cr.getTextForeign());
+             choice.setAudioUrlForeign(audioUrl);
+        }
         choice.setTextRomaji(cr.getTextRomaji());
         choice.setMeaning(cr.getMeaning());
         choice.setIsCorrect(cr.getIsCorrect());
