@@ -23,8 +23,8 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/JLPT/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/JLPT/user/**").hasRole("USER")
+                        .requestMatchers("/jlpt/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/jlpt/user/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(userContextFilter, UsernamePasswordAuthenticationFilter.class)

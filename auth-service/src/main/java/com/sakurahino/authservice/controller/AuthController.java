@@ -18,10 +18,16 @@ import com.sakurahino.common.retresponse.SuccessResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.sakurahino.clients.rabitmqModel.user.RegisterSuccessDTO;
+import org.springframework.web.client.RestTemplate;
+
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -151,5 +157,16 @@ public class AuthController {
                         "name", user.getName()
                 )
         ));
+    }
+    @CrossOrigin(origins = "http://localhost:3000") // frontend URL
+    @GetMapping("/download-excel")
+    public ResponseEntity<Resource> downloadExcel(@RequestParam String url) {
+        RestTemplate restTemplate = new RestTemplate();
+        byte[] fileBytes = restTemplate.getForObject(url, byte[].class);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=test.xlsx")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(new ByteArrayResource(fileBytes));
     }
 }

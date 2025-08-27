@@ -6,4 +6,5 @@ public interface UploadService {
     String uploadAvoidDuplicate(MultipartFile file);
     String synthesizeAndUpload(String text);
     boolean deleteFile(String objectName);
+
 }
