@@ -6,14 +6,15 @@ const JLPT_SERVICE_BASE = "http://localhost:8080";
 
 // Gọi API lấy thông tin bài thi từ backend
 async function fetchExamMeta(examId, token) {
-  const res = await fetch(`${JLPT_SERVICE_BASE}/api/jlpt/user/getForUserWeb`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(examId),
-    method: "POST",
-  });
+  const res = await fetch(
+    `${JLPT_SERVICE_BASE}/api/jlpt/user/getForUserWeb?id=${examId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      method: "POST",
+    }
+  );
   if (!res.ok) throw new Error("Không lấy được thông tin bài thi");
   return res.json();
 }
@@ -32,15 +33,18 @@ const Home = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const token = params.get("userToken");
-    const examId = params.get("examId");
+    const token1 = params.get("userToken");
+    const examId1 = params.get("examId");
+    const token = token1 || localStorage.getItem("userToken");
+    const examId = examId1 || localStorage.getItem("id");
 
     if (token) {
       setUserToken(token);
       localStorage.setItem("userToken", token);
+      localStorage.setItem("id", examId);
     }
 
-    if (!examId || !token) {
+    if (!token || !examId) {
       setError("Thiếu thông tin examId hoặc token.");
       setLoading(false);
       return;
@@ -54,16 +58,16 @@ const Home = () => {
         const meta = await fetchExamMeta(examId, token);
 
         // meta trả ra có excelUrl
-        if (!meta.Data.downloadUrl) {
+        if (!meta.data.downloadUrl) {
           throw new Error("API không trả excelUrl");
         }
-        if (!meta.Data.examName) {
+        if (!meta.data.examName) {
           throw new Error("API không trả examName");
         } else {
-          setExamName(meta.Data.examName);
+          setExamName(meta.data.examName);
         }
 
-        const downloadUrl = meta.Data.downloadUrl;
+        const downloadUrl = meta.data.downloadUrl;
 
         const merged = { ...meta, downloadUrl };
         setExamMeta(merged);
@@ -77,7 +81,7 @@ const Home = () => {
         const data = XLSX.utils.sheet_to_json(sheet);
 
         const groups = [...new Set(data.map((q) => q.group))];
-
+        console.log("[Home] Groups found in Excel:", groups); // <-- Thêm log này
         const mapping = [
           {
             id: "part1",
@@ -161,8 +165,8 @@ const Home = () => {
               marginTop: 10,
             }}
           >
-            <span>Thời gian: {examMeta?.Data.examTime || "144 phút"}</span>
-            <span>Mã đề: {examMeta?.Data.id}</span>
+            <span>Thời gian: {examMeta?.data.examTime || "144 phút"}</span>
+            <span>Mã đề: {examMeta?.data.id}</span>
           </div>
         )}
       </header>

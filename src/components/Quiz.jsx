@@ -6,7 +6,6 @@ import { fetchAndProcessExcel } from "../data/fetchAndProcessExcel";
 
 // ==== ĐỔI CHO PHÙ HỢP BACKEND CỦA BẠN ====
 const RESULT_API_BASE = "http://localhost:8080";
-// Gợi ý: POST /jlpt/exams/:examId/submissions
 
 // Bản đồ phần thi
 const sectionMap = {
@@ -22,7 +21,7 @@ const sectionDurations = {
   part3: 50 * 60,
 };
 
-// 🎵 Audio Player (JS thuần, không TS)
+// 🎵 Audio Player
 const AudioPlayer = ({ src }) => {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -74,14 +73,12 @@ const Quiz = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Nhận state từ Home
   const {
     examMeta,
     userToken,
     sectionId: sectionIdFromState,
   } = location.state || {};
 
-  // Fallback từ query (giữ tương thích với code cũ)
   const params = new URLSearchParams(location.search);
   const sectionIdFromQuery = params.get("section");
 
@@ -92,7 +89,8 @@ const Quiz = () => {
   const excelUrl = examMeta?.downloadUrl || params.get("excelUrl") || null;
 
   const sections = useMemo(() => sectionMap[sectionId] || [], [sectionId]);
-
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [textReading, setTextReading] = useState(null);
   const [answers, setAnswers] = useState({});
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [groupedQuestions, setGroupedQuestions] = useState({});
@@ -101,7 +99,6 @@ const Quiz = () => {
   );
   const [submitting, setSubmitting] = useState(false);
 
-  // startedAt: lưu vào localStorage để giữ qua refresh
   const lsStartedKey = `startedAt_${examMeta?.id || "unknown"}_${sectionId}`;
   const [startedAt, setStartedAt] = useState(() => {
     const fromLs = localStorage.getItem(lsStartedKey);
@@ -111,12 +108,10 @@ const Quiz = () => {
     return now;
   });
 
-  // Timer theo phần thi
   const duration = sectionDurations[sectionId] || 3600;
   const expiryTimestamp = new Date();
   expiryTimestamp.setSeconds(expiryTimestamp.getSeconds() + duration);
 
-  // endQuizRef để onExpire gọi đúng hàm (tránh vòng lặp hook)
   const endQuizRef = useRef(null);
 
   const { seconds, minutes, hours, pause } = useTimer({
@@ -126,13 +121,12 @@ const Quiz = () => {
     },
   });
 
-  // Tải câu hỏi (ưu tiên Excel từ backend, fallback local)
+  // Load questions
   useEffect(() => {
     const loadQuestions = async () => {
       let sourceData = null;
       try {
         if (excelUrl) {
-          // Proxy qua upload-service/auth để tránh CORS (đúng như code cũ của bạn)
           const proxied = `http://localhost:8082/auth/download-excel?url=${encodeURIComponent(
             excelUrl
           )}`;
@@ -145,15 +139,12 @@ const Quiz = () => {
       const finalSource = sourceData || fallbackQuestions;
       if (!finalSource || !finalSource[level]) return;
 
-      const sectionsList = sectionMap[sectionId] || [];
-
       let allQuestions = [];
       let groupedData = {};
-      sectionsList.forEach((section) => {
+      sections.forEach((section) => {
         const sectionQuestions = finalSource[level]?.[section];
         if (sectionQuestions) {
           const withGroup = sectionQuestions.map((q, idx) => ({
-            // preserve id if exists, else fallback to deterministic key
             id: q.id ?? `${section}_${idx}`,
             ...q,
             group: section,
@@ -171,6 +162,41 @@ const Quiz = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level, sectionId, excelUrl]);
 
+  // Fetch audio and text reading
+  useEffect(() => {
+    const fetchAudio = async () => {
+      try {
+        const examId = localStorage.getItem("id");
+        if (!examId) {
+          console.error("Không tìm thấy id trong localStorage");
+          return;
+        }
+
+        const res = await fetch(
+          `${RESULT_API_BASE}/api/jlpt/user/getForUserWeb?id=${encodeURIComponent(
+            examId
+          )}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        if (!res.ok) throw new Error("Không lấy được audio/text");
+        const data = await res.json();
+
+        setAudioUrl(data.data.audioUrl);
+        setTextReading(data.data.textReading);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchAudio();
+  }, [userToken]);
+
   const handleAnswerSelect = (questionIndex, option) => {
     setAnswers((prev) => ({ ...prev, [questionIndex]: option }));
   };
@@ -185,20 +211,15 @@ const Quiz = () => {
   const getQuestionIndex = (group, questionIndexInGroup) => {
     let totalIndex = 0;
     for (const s of sections) {
-      if (s === group) {
-        return totalIndex + questionIndexInGroup;
-      }
+      if (s === group) return totalIndex + questionIndexInGroup;
       totalIndex += groupedQuestions[s]?.length || 0;
     }
     return -1;
   };
 
-  // Hàm kết thúc bài (được gán vào endQuizRef để onExpire gọi)
+  // End quiz
   const endQuiz = async (auto = false) => {
-    // đảm bảo pause timer
     pause();
-
-    // Build answerSheet và tính điểm
     let finalScore = 0;
     let part1 = 0,
       part2 = 0,
@@ -208,21 +229,12 @@ const Quiz = () => {
       const chosen = answers[idx] ?? null;
       const correct = q.answer;
       const isCorrect = chosen === correct;
-      if (isCorrect) finalScore += 1;
+      if (isCorrect) finalScore++;
 
-      // phân loại điểm theo group
       if (isCorrect) {
-        if (
-          q.group === "Kanji" ||
-          q.group === "Từ vựng" ||
-          q.group === "Ngữ pháp"
-        ) {
-          part1++;
-        } else if (q.group === "Đọc hiểu") {
-          part2++;
-        } else if (q.group === "Nghe hiểu") {
-          part3++;
-        }
+        if (["Kanji", "Từ vựng", "Ngữ pháp"].includes(q.group)) part1++;
+        else if (q.group === "Đọc hiểu") part2++;
+        else if (q.group === "Nghe hiểu") part3++;
       }
 
       return {
@@ -235,108 +247,77 @@ const Quiz = () => {
       };
     });
 
-    // Lưu tiến độ để mở khóa phần tiếp theo (theo user)
     const uid = userToken || "test-user-123";
-    if (sectionId) {
-      localStorage.setItem(`${uid}_${sectionId}Completed`, "true");
-      // Giữ tương thích key cũ (nếu Home đang đọc key không có userId)
-      localStorage.setItem(`${sectionId}Completed`, "true");
-    }
+    let currentPartScore = 0;
+    if (["part1"].includes(sectionId)) currentPartScore = part1;
+    else if (sectionId === "part2") currentPartScore = part2;
+    else if (sectionId === "part3") currentPartScore = part3;
+    console.log("sectionId", sectionId);
 
-    // Gọi API nộp bài
-    if (examMeta?.id) {
+    localStorage.setItem(`${sectionId}_score`, currentPartScore);
+    // Lưu trạng thái hoàn thành part
+    localStorage.setItem(`${uid}_${sectionId}Completed`, "true");
+    // localStorage.setItem(
+    //   `${uid}_${sectionId}_score`,
+    //   JSON.stringify({ part1, part2, part3, total: finalScore })
+    // );
+
+    // Nếu là part3, gửi toàn bộ dữ liệu lên backend
+    if (sectionId === "part3") {
       try {
         setSubmitting(true);
         const payload = {
-          examId: examMeta.id,
-          sectionId,
-          startedAt,
-          durationSeconds: duration,
-          score: finalScore,
-          part1,
-          part2,
-          part3,
-          autoSubmitted: !!auto,
-          // bạn có thể thêm answerSheet nếu muốn backend lưu đáp án chi tiết
-          // answerSheet
+          examId: localStorage.getItem("id"),
+          score:
+            Number(localStorage.getItem("part1_score") || 0) +
+            Number(localStorage.getItem("part2_score") || 0) +
+            Number(localStorage.getItem("part3_score") || 0),
+          part1: localStorage.getItem(`part1_score`),
+          part2: localStorage.getItem(`part2_score`),
+          part3: localStorage.getItem(`part3_score`),
         };
 
-        const res = await fetch(
-          `${RESULT_API_BASE}/jlpt/exams/${encodeURIComponent(
-            examMeta.id
-          )}/submissions`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${userToken}`,
-            },
-            body: JSON.stringify(payload),
-          }
-        );
+        const res = await fetch(`${RESULT_API_BASE}/api/jlpt/user`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        console.log("payload response:", payload);
 
         if (!res.ok) {
-          // cố gắng parse lỗi nếu backend gửi json lỗi
           let errText = await res.text();
           throw new Error(`Submit failed: ${res.status} ${errText}`);
         }
-
-        // Nếu backend trả JSON trong wrapper (BaseResponseDTO), lấy data nếu có
-        const json = await res.json().catch(() => null);
-        const backendData = json?.data ?? json;
-
-        // điều hướng sang trang kết quả cùng dữ liệu backend (nếu có)
-        navigate("/result", {
-          state: {
-            score: finalScore,
-            total: quizQuestions.length,
-            part1,
-            part2,
-            part3,
-            backend: backendData,
-          },
-        });
       } catch (e) {
         console.error("Submit error:", e);
-        // Nếu submit lỗi, vẫn điều hướng về trang kết quả với data client-side
-        navigate("/result", {
-          state: {
-            score: finalScore,
-            total: quizQuestions.length,
-            part1,
-            part2,
-            part3,
-            backend: null,
-            error: e.message,
-          },
-        });
       } finally {
         setSubmitting(false);
       }
-    } else {
-      // Nếu không có examMeta id thì vẫn chuyển trang kết quả client-side
-      navigate("/result", {
-        state: {
-          score: finalScore,
-          total: quizQuestions.length,
-          part1,
-          part2,
-          part3,
-          backend: null,
-        },
-      });
     }
+
+    // Navigate tới result
+    navigate("/result", {
+      state: {
+        score: finalScore,
+        total: quizQuestions.length,
+        part1: Number(localStorage.getItem(`part1_score`)),
+        part2: Number(localStorage.getItem(`part2_score`)),
+        part3: Number(localStorage.getItem(`part3_score`)),
+        backend: sectionId === "part3" ? "submitted" : null,
+        sectionId,
+      },
+    });
   };
 
-  // expose endQuiz to onExpire via ref
   useEffect(() => {
     endQuizRef.current = endQuiz;
   }, [endQuiz, answers, quizQuestions, startedAt]);
 
-  if (!sectionId) {
+  if (!sectionId)
     return <p>Thiếu thông tin phần thi. Vui lòng quay lại trang Home.</p>;
-  }
-
   if (quizQuestions.length === 0) return <p>Đang tải câu hỏi...</p>;
 
   return (
@@ -372,10 +353,7 @@ const Quiz = () => {
           Thời gian còn lại: {String(hours).padStart(2, "0")}:
           {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
         </div>
-        <h2 style={{ color: "#333", margin: 0 }}>
-          {examMeta?.level || level} -{" "}
-          {(sectionMap[sectionId] || []).join(", ")}
-        </h2>
+        <h2 style={{ color: "#333", margin: 0 }}>{sections.join(", ")}</h2>
         <button
           onClick={() => endQuiz(false)}
           disabled={submitting}
@@ -407,7 +385,7 @@ const Quiz = () => {
           <h3 style={{ color: "#333", marginBottom: "1rem" }}>
             Danh sách câu hỏi
           </h3>
-          {(sectionMap[sectionId] || []).map((sectionName) => (
+          {sections.map((sectionName) => (
             <div key={sectionName} style={{ marginBottom: "1rem" }}>
               <div
                 onClick={() => toggleSection(sectionName)}
@@ -439,13 +417,11 @@ const Quiz = () => {
                     return (
                       <button
                         key={globalIndex}
-                        onClick={() => {
-                          const element = document.getElementById(
-                            `question-${globalIndex}`
-                          );
-                          if (element)
-                            element.scrollIntoView({ behavior: "smooth" });
-                        }}
+                        onClick={() =>
+                          document
+                            .getElementById(`question-${globalIndex}`)
+                            ?.scrollIntoView({ behavior: "smooth" })
+                        }
                         style={{
                           width: "2rem",
                           height: "2rem",
@@ -529,10 +505,22 @@ const Quiz = () => {
                 </div>
 
                 {/* Nghe hiểu */}
-                {q.group === "Nghe hiểu" && q.audio && (
-                  <AudioPlayer src={q.audio} />
+                {q.group === "Nghe hiểu" && index === 0 && (
+                  <AudioPlayer src={audioUrl} />
                 )}
-
+                {q.group === "Đọc hiểu" && index === 0 && textReading && (
+                  <div
+                    style={{
+                      marginBottom: "1rem",
+                      padding: "1rem",
+                      backgroundColor: "#fef3c7",
+                      borderRadius: "8px",
+                      lineHeight: "1.6",
+                    }}
+                  >
+                    {textReading}
+                  </div>
+                )}
                 <div
                   style={{
                     display: "flex",

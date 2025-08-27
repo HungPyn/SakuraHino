@@ -3,10 +3,24 @@ import { useLocation, Link } from "react-router-dom";
 
 const Result = () => {
   const location = useLocation();
-  // lấy dữ liệu được truyền khi navigate
-  const { part1 = 0, part2 = 0, part3 = 0, total = 0 } = location.state || {};
+  const {
+    part1 = 0,
+    part2 = 0,
+    part3 = 0,
+    total = 0,
+    sectionId,
+  } = location.state || {};
 
-  const score = part1 + part2 + part3;
+  let score = 0;
+
+  if (sectionId === "part1") {
+    score = part1;
+  } else if (sectionId === "part2") {
+    score = part2;
+  } else if (sectionId === "part3") {
+    score = part3;
+  }
+
   const percentage = total > 0 ? ((score / total) * 100).toFixed(2) : "0.00";
 
   return (
@@ -24,7 +38,7 @@ const Result = () => {
         </p>
       </div>
       <h2>
-        Tổng điểm: {score} / {total}
+        Điểm hiện tại : {score} / {total}
       </h2>
       <p>Phần trăm: {percentage}%</p>
 
