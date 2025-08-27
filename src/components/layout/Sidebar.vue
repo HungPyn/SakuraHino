@@ -79,22 +79,29 @@
           </router-link>
         </li>
 
-        <li class="nav-item">
-          <router-link
-            to="/admin/review"
-            class="nav-link"
-            active-class="active"
-          >
-            <i class="bi bi-journal-bookmark nav-icon"></i>
-            Ôn tập
-          </router-link>
-        </li>
-        <li class="nav-item">
-          <router-link to="/admin/exam" class="nav-link" active-class="active">
-            <i class="bi bi-journal-check nav-icon"></i>
-            Thi
-          </router-link>
-        </li>
+<li class="nav-item">
+  <router-link 
+    to="/admin/character" 
+    class="nav-link" 
+    active-class="active"
+  >
+    <i class="bi bi-pencil-square nav-icon"></i>
+    Luyện viết
+  </router-link>
+</li>
+
+<li class="nav-item">
+  <router-link
+    to="/admin/exam"
+    class="nav-link"
+    active-class="active"
+  >
+    <i class="bi bi-journal-check nav-icon"></i>
+   Thi
+  </router-link>
+</li>
+
+
         <li class="nav-item">
           <router-link
             to="/admin/community"
