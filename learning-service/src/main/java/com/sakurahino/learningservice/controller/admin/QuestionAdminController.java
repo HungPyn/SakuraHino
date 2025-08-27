@@ -2,7 +2,7 @@ package com.sakurahino.learningservice.controller.admin;
 
 import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.learningservice.dto.question.LessonQuestionRequest;
-import com.sakurahino.learningservice.service.ImportExcelForQuestionService;
+import com.sakurahino.learningservice.service.excel.ImportExcelForQuestionService;
 import com.sakurahino.learningservice.service.QuestionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

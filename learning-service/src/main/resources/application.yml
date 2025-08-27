@@ -1,6 +1,7 @@
 server:
   port: 8084
 spring:
+
   application:
     name: learning-service
   servlet: # Thêm phần này vào dưới 'spring:'
@@ -25,6 +26,8 @@ spring:
     allow-bean-definition-overriding: true
 
   jackson:
+    time-zone: Asia/Ho_Chi_Minh
+    date-format: yyyy-MM-dd HH:mm:ss
     serialization:
       FAIL_ON_EMPTY_BEANS: false
 

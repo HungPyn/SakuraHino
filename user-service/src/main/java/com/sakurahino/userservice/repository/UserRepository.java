@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -57,9 +57,42 @@ public interface UserRepository extends JpaRepository<User, String> {
 
 
     // Lấy top 10 expScore cao nhất
-    List<User> findTop10ByOrderByExpScoreDesc();
+    List<User> findTop5ByOrderByExpScoreDesc();
 
     // Lấy top 10 longStreak cao nhất
-    List<User> findTop10ByOrderByLongStreakDesc();
+    List<User> findTop5ByOrderByLongStreakDesc();
+
+    long countByDayCreationBefore(ZonedDateTime dateTime);
+
+    // Tính trong tháng
+    long countByDayCreationBetween(ZonedDateTime startDate, ZonedDateTime endDate);
+
+
+    // Group theo ngày
+    @Query(value = "SELECT DATE(u.day_creation) as period, COUNT(*) " +
+            "FROM users u " +
+            "WHERE u.day_creation BETWEEN :start AND :end " +
+            "GROUP BY DATE(u.day_creation) " +
+            "ORDER BY DATE(u.day_creation)", nativeQuery = true)
+    List<Object[]> countByDay(@Param("start") LocalDateTime start,
+                              @Param("end") LocalDateTime end);
+
+    // Group theo tuần
+    @Query(value = "SELECT YEARWEEK(u.day_creation) as period, COUNT(*) " +
+            "FROM users u " +
+            "WHERE u.day_creation BETWEEN :start AND :end " +
+            "GROUP BY YEARWEEK(u.day_creation) " +
+            "ORDER BY YEARWEEK(u.day_creation)", nativeQuery = true)
+    List<Object[]> countByWeek(@Param("start") LocalDateTime start,
+                               @Param("end") LocalDateTime end);
+
+    // Group theo tháng
+    @Query(value = "SELECT DATE_FORMAT(u.day_creation, '%Y-%m') as period, COUNT(*) " +
+            "FROM users u " +
+            "WHERE u.day_creation BETWEEN :start AND :end " +
+            "GROUP BY DATE_FORMAT(u.day_creation, '%Y-%m') " +
+            "ORDER BY DATE_FORMAT(u.day_creation, '%Y-%m')", nativeQuery = true)
+    List<Object[]> countByMonth(@Param("start") LocalDateTime start,
+                                @Param("end") LocalDateTime end);
 
 }

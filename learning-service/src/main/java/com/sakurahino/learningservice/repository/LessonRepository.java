@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -73,4 +74,21 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
             "WHERE l.topic.id = :topicId AND l.id <> :lessonId AND l.status = 'PUBLISHED'")
     boolean existsOtherPublishedLesson(@Param("topicId") Integer topicId,
                                        @Param("lessonId") Integer lessonId);
+
+
+    long countByCreatedAtBefore(ZonedDateTime dateTime);
+
+    long countByCreatedAtBeforeAndStatus(ZonedDateTime createdAtBefore, LearningStatus status);
+    long countByStatus(LearningStatus status);
+
+    @Query(
+            value = "SELECT DATE_FORMAT(create_at, '%Y-%m') AS month, COUNT(*) AS count " +
+                    "FROM lessons " +
+                    "WHERE create_at BETWEEN :start AND :end " +
+                    "GROUP BY DATE_FORMAT(create_at, '%Y-%m') " +
+                    "ORDER BY month",
+            nativeQuery = true
+    )
+    List<Object[]> countByMonth(@Param("start") LocalDateTime start,
+                                @Param("end") LocalDateTime end);
 }

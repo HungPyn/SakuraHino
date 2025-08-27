@@ -12,6 +12,7 @@ import com.sakurahino.aphabetservice.module.dto.response.admin.UpdateListCharact
 import com.sakurahino.aphabetservice.module.entity.Alphabet;
 import com.sakurahino.aphabetservice.repository.AlphabetRepository;
 import com.sakurahino.aphabetservice.service.AlphabetService;
+import com.sakurahino.clients.feign.UploadServiceClients;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AlphabetServiceImpl implements AlphabetService {
     private final AlphabetRepository alphabetRepository;
-
+    private final UploadServiceClients uploadServiceClients;
 
     @Override
     public List<Alphabet> getAllCharacter() {
@@ -97,15 +98,17 @@ public class AlphabetServiceImpl implements AlphabetService {
         }
 
         ZonedDateTime createdAt = TimeUtils.nowVn();
+
         List<Alphabet> savedAlphabets = addListByTypeRequestDTO.getAddNewRequestDTOList().stream()
                 .map(addNewRequestDTO -> {
+                    String audio = uploadServiceClients.upLoadText(addNewRequestDTO.getJapaneseCharacter()).getUrlAudio();
                     Alphabet alphabet = Alphabet.builder()
                             .code(UUID.randomUUID().toString())
                             .japaneseCharacter(addNewRequestDTO.getJapaneseCharacter())
                             .characterType(addListByTypeRequestDTO.getCharacterType())
                             .status(addNewRequestDTO.getStatus())
                             .meaning(addNewRequestDTO.getMeaning())
-                            .audioURL(addNewRequestDTO.getAudioURL())
+                            .audioURL(audio)
                             .createdAt(createdAt)
                             .build();
                     return alphabetRepository.save(alphabet);
