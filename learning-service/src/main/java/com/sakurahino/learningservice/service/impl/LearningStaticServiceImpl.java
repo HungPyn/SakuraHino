@@ -105,6 +105,7 @@ public class LearningStaticServiceImpl implements LearningStaticsService {
 
                     return ResponseStatsResultDTO.builder()
                             .userId(lr.getUserId())
+                            .userName(user.getUserName())
                             .topicName(lr.getTopicName())
                             .LessonName(lr.getLessonName())
                             .score(lr.getScore())
