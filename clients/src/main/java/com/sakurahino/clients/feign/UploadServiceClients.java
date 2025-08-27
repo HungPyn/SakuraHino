@@ -2,10 +2,12 @@ package com.sakurahino.clients.feign;
 
 import com.sakurahino.clients.config.FeignMultipartSupportConfig;
 import com.sakurahino.clients.dto.AudioUploadResponseDTO;
+import com.sakurahino.clients.dto.UploadExcelFileResponse;
 import com.sakurahino.clients.dto.UploadResponse;
 import com.sakurahino.common.retresponse.SuccessResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +20,9 @@ public interface UploadServiceClients {
 
     @PostMapping(value = "/api/v1/files/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     UploadResponse uploadFile(@RequestPart("file") MultipartFile file);
+
+    @PostMapping(value = "/api/v1/files/excel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    UploadExcelFileResponse uploadExcel(@RequestPart("file") MultipartFile file);
 
     @DeleteMapping("/api/v1/files/{objectName}")
     void deleteFile(@PathVariable("objectName") String objectName);

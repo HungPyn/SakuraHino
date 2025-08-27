@@ -60,6 +60,7 @@ public class UploadServiceImpl implements UploadService {
         return storageService.delete(objectName);
     }
 
+
     private String generateFileHash(MultipartFile file) throws IOException {
         byte[] bytes = file.getBytes();
         try {

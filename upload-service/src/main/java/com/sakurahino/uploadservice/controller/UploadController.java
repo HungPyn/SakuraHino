@@ -1,6 +1,7 @@
 package com.sakurahino.uploadservice.controller;
 
 import com.sakurahino.clients.dto.AudioUploadResponseDTO;
+import com.sakurahino.clients.dto.UploadExcelFileResponse;
 import com.sakurahino.clients.dto.UploadResponse;
 import com.sakurahino.common.ex.AppException;
 import com.sakurahino.common.ex.ExceptionCode;
@@ -40,6 +41,29 @@ public class UploadController {
         validateFile(file);
         String url = uploadService.uploadAvoidDuplicate(file);
         return ResponseEntity.ok(new UploadResponse(url));
+    }
+
+    /**
+     * Upload file excel
+     */
+    @PostMapping("/excel")
+    public ResponseEntity<?> uploadExcel(@RequestPart("file") MultipartFile file) {
+        validateExcel(file);
+        String url = uploadService.uploadAvoidDuplicate(file);
+        return ResponseEntity.ok(new UploadExcelFileResponse(url));
+    }
+
+    private void validateExcel(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new AppException(ExceptionCode.FILE_NOT_NULL);
+        }
+        if (!"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                .equals(file.getContentType())) {
+            throw new AppException(ExceptionCode.FILE_NOT_SUPPORT);
+        }
+        if (file.getSize() > (100 * 1024 * 1024)) {
+            throw new AppException(ExceptionCode.FILE_MAX);
+        }
     }
 
     /**
@@ -90,4 +114,5 @@ public class UploadController {
             throw new AppException(ExceptionCode.FILE_MAX);
         }
     }
+
 }

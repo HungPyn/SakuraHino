@@ -1,5 +1,5 @@
 package com.sakurahino.JLPTservice.enums;
 
-public enum QuestionStatusEnum {
+public enum StatusEnum {
     PUBLIC, LOCKED, PENDING
 }
