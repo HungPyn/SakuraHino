@@ -116,7 +116,7 @@ const Home = () => {
   }, [location.search]);
 
   const isSectionDisabled = (sectionId) => {
-    const uid = userToken || userIdForTesting;
+    const uid = userToken;
     const p1 = localStorage.getItem(`${uid}_part1Completed`) === "true";
     const p2 = localStorage.getItem(`${uid}_part2Completed`) === "true";
 
@@ -128,7 +128,7 @@ const Home = () => {
   const startQuiz = () => {
     if (!selectedSection || !examMeta?.downloadUrl) return;
 
-    const uid = userToken || userIdForTesting;
+    const uid = userToken;
 
     navigate(`/quiz?section=${encodeURIComponent(selectedSection)}`, {
       state: {
