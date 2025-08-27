@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Linking,
   Button,
@@ -13,14 +13,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomBar } from "../../components/custombar/BottomBar";
 import { Tab } from "../../components/custombar/useBottomBarItems";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { baseTopicApi } from "../../services/baseAPI";
+import axios from "axios";
 
 interface Exam {
   id: number;
-  name: string;
-  time: string;
-  level: string;
-
-  link: string;
+  examName: string;
+  status: string;
 }
 
 const COLORS = {
@@ -34,37 +33,44 @@ const COLORS = {
 };
 const handleOpenLink = async (exam: Exam) => {
   const token = await AsyncStorage.getItem("token");
-  console.log("Token lấy ra là:", token);
-  console.log("id là:", exam.id);
+  const baseUrl = "http://10.0.2.2:3000";
+
+  if (!token) {
+    Alert.alert("Lỗi", "Không tìm thấy token.");
+    return;
+  }
+
+  // Tạo URL với query params
+  const url = `${baseUrl}?userToken=${encodeURIComponent(token)}&examId=${exam.id}`;
+
+  console.log("Link mở:", url);
+
   try {
-    // Dùng Linking.canOpenURL() để kiểm tra tính khả dụng của link
-    const supported = await Linking.canOpenURL(exam.link);
+    const supported = await Linking.canOpenURL(url);
 
     if (supported) {
-      // Nếu link có thể mở, tiến hành mở nó
-      await Linking.openURL(exam.link);
+      await Linking.openURL(url);
     } else {
-      // Nếu không thể mở, hiển thị thông báo lỗi
       Alert.alert(
         "Lỗi",
-        `Không thể mở đường link này: ${exam.link}. Vui lòng kiểm tra lại.`
+        `Không thể mở đường link này: ${url}. Vui lòng kiểm tra lại.`
       );
     }
   } catch (error: any) {
     Alert.alert("Lỗi", `Đã xảy ra lỗi: ${error.message}`);
   }
 };
-
 const ExamItem = ({ exam }: { exam: Exam }) => (
   <View style={examStyles.itemContainer}>
     <View style={examStyles.header}>
-      <Text style={examStyles.title}>{exam.name}</Text>
-      <View style={examStyles.badge}>
+      <Text style={examStyles.title}>{exam.examName}</Text>
+      {/* <View style={examStyles.badge}>
         <Text style={examStyles.badgeText}>{exam.level}</Text>
-      </View>
+      </View> */}
+
+      <Text style={examStyles.stats}>Trạng thái: {exam.status}</Text>
     </View>
 
-    <Text style={examStyles.stats}>Thời gian: {exam.time}</Text>
     <TouchableOpacity
       style={examStyles.button}
       onPress={() => handleOpenLink(exam)}
@@ -83,47 +89,30 @@ const ExamTopBar = () => (
 const ExamScreen = () => {
   const [selectedTab, setSelectedTab] = React.useState<Tab>("Exam");
 
-  const examList: Exam[] = [
-    {
-      id: 1,
-      name: "2019年7月 日本語能力試験 N5",
-      time: "105 phút",
-      level: "N5",
-      link: "http://10.0.2.2:3000",
-    },
-    {
-      id: 2,
-      name: "2019年7月 日本語能力試験 N4",
-      time: "120 phút",
-      level: "N4",
+  const [examList, setExamList] = useState<Exam[]>([]);
+  const getExam = async () => {
+    const token = await AsyncStorage.getItem("token");
+    console.log("Token retrieved from AsyncStorage:", token);
+    if (!token) {
+      console.error("Token not found in AsyncStorage");
+      return [];
+    }
+    try {
+      const response = await axios.get(`${baseTopicApi}/api/jlpt/user`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      // console.log("exam trả về:", JSON.stringify(response.data, null, 2));
 
-      link: "http://10.0.2.2:3000",
-    },
-    {
-      id: 3,
-      name: "2019年7月 日本語能力試験 N3",
-      time: "140 phút",
-      level: "N3",
-
-      link: "http://10.0.2.2:3000",
-    },
-    {
-      id: 4,
-      name: "2019年7月 日本語能力試験 N2",
-      time: "144 phút",
-      level: "N2",
-
-      link: "http://10.0.2.2:3000",
-    },
-    {
-      id: 5,
-      name: "2019年7月 日本語能力試験 N1",
-      time: "170 phút",
-      level: "N1",
-
-      link: "http://10.0.2.2:3000",
-    },
-  ];
+      setExamList(response.data.data || []);
+    } catch (error) {
+      console.error("Lỗi khi gọi api lấy alphabets:", error);
+    }
+  };
+  useEffect(() => {
+    getExam();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -198,8 +187,8 @@ const examStyles = StyleSheet.create({
     borderColor: "#e0e0e0",
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: "column",
+    justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
   },

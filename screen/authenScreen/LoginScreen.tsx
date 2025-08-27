@@ -142,6 +142,7 @@ export const LoginScreen = () => {
 
       if (userInfo.data && userInfo.data.idToken) {
         sendGoogleTokenToBackend(userInfo.data.idToken);
+        console.log("id gửi cho backend là:", userInfo.data.idToken);
       } else {
         console.error("No idToken received.");
         alert("Google login failed. Please try again.");
@@ -309,10 +310,10 @@ export const LoginScreen = () => {
             {loginScreenState === "LOGIN"
               ? "Log in"
               : loginScreenState === "SIGNUP"
-              ? "Create your profile"
-              : loginScreenState === "FORGOT_PASSWORD"
-              ? "Quên mật khẩu?"
-              : "Đổi mật khẩu"}
+                ? "Create your profile"
+                : loginScreenState === "FORGOT_PASSWORD"
+                  ? "Quên mật khẩu?"
+                  : "Đổi mật khẩu"}
           </Text>
 
           {loginScreenState === "LOGIN" && (

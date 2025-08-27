@@ -29,7 +29,7 @@ export const BottomBar = ({ selectedTab }: { selectedTab: Tab | null }) => {
 
   const handlePress = (href: string) => {
     if (href === "/learn") {
-      navigation.navigate("LearningPathScreen");
+      navigation.navigate("LearningPathScreen", { isTest: false });
     } else if (href === "/shop") {
       navigation.navigate("Shop");
     } else if (href.startsWith("/profile")) {
