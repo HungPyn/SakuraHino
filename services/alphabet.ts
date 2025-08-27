@@ -59,17 +59,19 @@ const getAllWord = async () => {
 };
 
 const resultNewWord = async (id: string) => {
-  const token = await AsyncStorage.getItem("token");
-  console.log("Token retrieved from AsyncStorage:", token);
-
-  if (!token) {
-    console.error("Token not found in AsyncStorage");
-    return [];
-  }
   try {
+    const token = await AsyncStorage.getItem("token");
+    console.log("Token retrieved from AsyncStorage:", token);
+
+    if (!token) {
+      console.error("Token not found in AsyncStorage");
+      Alert.alert("Thông báo", "Không tìm thấy token. Vui lòng đăng nhập lại!");
+      return false;
+    }
+
     const response = await axios.post(
       `${baseTopicApi}/api/alphabets/user/new`,
-      id,
+      Number(id),
       {
         headers: {
           "Content-Type": "application/json",
@@ -79,15 +81,29 @@ const resultNewWord = async (id: string) => {
       }
     );
 
+    console.log("API response:", response.data);
+
     if (response.data.data === "Success") {
       return true;
     }
-    if (response.data.statusCode === "500" && response.data.data == null) {
-      Alert.alert("Từ này hôm nay đã viết", "vui lòng chọn từ mới");
-      return true;
+
+    // Nếu từ đã học hôm nay
+    if (response.data.statusCode === "404" && response.data.data == null) {
+      Alert.alert("Thông báo", "Từ này hôm nay đã viết. Vui lòng chọn từ mới!");
+      return false;
     }
+    if (response.data.statusCode === "500" && response.data.data == null) {
+      Alert.alert("Thông báo", "Từ này hôm nay đã viết. Vui lòng chọn từ mới!");
+      return false;
+    }
+
+    return false;
   } catch (error) {
     console.error("Lỗi khi thêm result:", error);
+    Alert.alert(
+      "Thông báo",
+      "Có lỗi xảy ra khi lưu kết quả. Vui lòng thử lại!"
+    );
     return false;
   }
 };
@@ -102,13 +118,17 @@ const resultOldWord = async (id: string) => {
   try {
     const response = await axios.post(
       `${baseTopicApi}/api/alphabets/user/old`,
-      id,
+      Number(id),
       {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       }
+    );
+    console.log(
+      "trả về api them tu cũ :",
+      JSON.stringify(response.data, null, 2)
     );
 
     if (response.data.data === "Success") {

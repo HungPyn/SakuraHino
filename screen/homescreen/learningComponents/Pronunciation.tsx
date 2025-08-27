@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,20 +6,16 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Animated,
-  Alert,
-  PermissionsAndroid,
-  Platform,
   ActivityIndicator,
+  Platform,
+  PermissionsAndroid,
+  Alert,
 } from "react-native";
 import { Audio } from "expo-av";
 import Icon from "react-native-vector-icons/FontAwesome";
-import Voice, {
-  SpeechResultsEvent,
-  SpeechErrorEvent,
-  SpeechStartEvent,
-  SpeechEndEvent,
-} from "@react-native-voice/voice";
+import * as FileSystem from "expo-file-system";
 import { QuestionType } from "./Writing";
+
 export interface Choice {
   id: number;
   lessonQuestionId: number | null;
@@ -30,6 +26,7 @@ export interface Choice {
   isCorrect: boolean;
   meaning?: string | null;
 }
+
 export interface Question {
   id: number;
   lessonId: number;
@@ -37,10 +34,11 @@ export interface Question {
   status: "PUBLISHED" | "PENDING" | "DELETED";
   promptTextTemplate: string;
   targetWordNative: string;
-  targetLanguageCode: string; // "vi", "ja-JP", "en-US", ...
+  targetLanguageCode: string;
   audioUrl?: string | null;
   choices?: Choice[];
 }
+
 interface PronunciationProps {
   question: Question;
   onNextQuestion: () => void;
@@ -48,24 +46,21 @@ interface PronunciationProps {
   onCheckAnswer: () => void;
 }
 
+const API_KEY = "ehehehehehe";
+
 const requestMicrophonePermission = async () => {
   if (Platform.OS === "android") {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-        {
-          title: "Quyền Microphone",
-          message: "Ứng dụng cần quyền microphone để nhận dạng giọng nói",
-          buttonNeutral: "Hỏi sau",
-          buttonNegative: "Hủy",
-          buttonPositive: "Đồng ý",
-        }
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
-      console.warn("Permission request error:", err);
-      return false;
-    }
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+      {
+        title: "Quyền Microphone",
+        message: "Ứng dụng cần quyền microphone để ghi âm",
+        buttonNeutral: "Hỏi sau",
+        buttonNegative: "Hủy",
+        buttonPositive: "Đồng ý",
+      }
+    );
+    return granted === PermissionsAndroid.RESULTS.GRANTED;
   }
   return true;
 };
@@ -77,135 +72,124 @@ const Pronunciation: React.FC<PronunciationProps> = ({
   onCheckAnswer,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [userTranscript, setUserTranscript] = useState<string>("");
-  const [voiceError, setVoiceError] = useState<string>("");
+  const [userTranscript, setUserTranscript] = useState("");
+  const [voiceError, setVoiceError] = useState("");
   const micAnimation = useRef(new Animated.Value(1)).current;
+  const recordingRef = useRef<Audio.Recording | null>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
-  const [isVoiceServiceReady, setIsVoiceServiceReady] = useState(false);
-
-  // Đăng ký listeners và khởi tạo Voice service trong useEffect
-  useEffect(() => {
-    // Đăng ký listeners
-    Voice.onSpeechStart = (e: SpeechStartEvent) => {
-      setIsRecording(true);
-      setUserTranscript("");
-      setVoiceError("");
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(micAnimation, {
-            toValue: 1.3,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(micAnimation, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    };
-
-    Voice.onSpeechEnd = (e: SpeechEndEvent) => {
-      setIsRecording(false);
-      Animated.timing(micAnimation, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    };
-
-    Voice.onSpeechResults = (e: SpeechResultsEvent) => {
-      if (e.value && e.value.length > 0) {
-        const text = e.value[0];
-        setUserTranscript(text);
-        onSelectedWords([text]);
-        onCheckAnswer();
-      }
-    };
-
-    Voice.onSpeechError = (e: SpeechErrorEvent) => {
-      console.log("Speech error:", e);
-      setVoiceError("Không nhận diện được giọng nói. Vui lòng thử lại.");
-      setIsRecording(false);
-      Alert.alert("Lỗi", "Không thể nhận dạng giọng nói!");
-    };
-
-    // Kiểm tra và khởi tạo service
-    const checkVoiceService = async () => {
-      try {
-        const available = await Voice.isAvailable();
-        if (available) {
-          setIsVoiceServiceReady(true);
-          console.log("Voice service is available.");
-        } else {
-          setIsVoiceServiceReady(false);
-          console.warn("Voice service not available on this device.");
-        }
-      } catch (e) {
-        console.error("Error checking voice service:", e);
-        setIsVoiceServiceReady(false);
-      }
-    };
-
-    checkVoiceService();
-
-    // Cleanup
-    return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
-    };
-  }, [onSelectedWords, onCheckAnswer, micAnimation]);
 
   const startRecording = async () => {
-    // 1. Kiểm tra trạng thái của dịch vụ trước khi bắt đầu
-    if (!isVoiceServiceReady) {
-      Alert.alert(
-        "Lỗi",
-        "Thiết bị này không hỗ trợ nhận dạng giọng nói hoặc dịch vụ chưa sẵn sàng."
-      );
-      return;
-    }
+    if (isRecording || isProcessing) return;
 
-    // 2. Kiểm tra quyền truy cập microphone
-    const hasPermission = await requestMicrophonePermission();
-    if (!hasPermission) {
-      Alert.alert("Lỗi", "Vui lòng cấp quyền micro để sử dụng tính năng này.");
-      return;
-    }
+    const permission = await requestMicrophonePermission();
+    if (!permission) return;
 
-    setUserTranscript("");
+    setIsProcessing(true);
     setVoiceError("");
+    setUserTranscript("");
 
     try {
-      // Cấu hình âm thanh
+      await Audio.requestPermissionsAsync();
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        staysActiveInBackground: true,
       });
 
-      // 3. Gọi Voice.start() sau khi đã chắc chắn service sẵn sàng
-      await Voice.start(question.targetLanguageCode);
-    } catch (e: any) {
-      console.error("Voice start error:", e);
-      setVoiceError(e.message || "Lỗi ghi âm");
-      Alert.alert("Lỗi", "Không thể bắt đầu ghi âm!");
-      // 4. Nếu có lỗi, destroy service để tránh crash lần sau
-      try {
-        await Voice.destroy();
-      } catch (destroyError) {
-        console.error("Voice destroy error:", destroyError);
-      }
+      const recording = new Audio.Recording();
+      recordingRef.current = recording;
+
+      const recordingOptions = {
+        android: {
+          extension: ".m4a",
+          outputFormat: 2, // MPEG_4
+          audioEncoder: 3, // AAC
+          sampleRate: 44100,
+          numberOfChannels: 1,
+          bitRate: 128000,
+        },
+        ios: {
+          extension: ".m4a",
+          audioQuality: 0, // HIGH
+          sampleRate: 44100,
+          numberOfChannels: 1,
+          bitRate: 128000,
+          linearPCMBitDepth: 16,
+          linearPCMIsBigEndian: false,
+          linearPCMIsFloat: false,
+        },
+        web: {},
+      };
+
+      await recording.prepareToRecordAsync(recordingOptions);
+      await recording.startAsync();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Start recording error:", err);
+      setVoiceError("Không thể bắt đầu ghi âm");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const stopRecording = async () => {
+    if (!recordingRef.current) return;
+
+    setIsProcessing(true);
     try {
-      await Voice.stop();
+      await recordingRef.current.stopAndUnloadAsync();
+      const uri = recordingRef.current.getURI();
+      console.log("Recorded file:", uri);
+
       setIsRecording(false);
-    } catch (e) {
-      console.error("Voice stop error:", e);
-      Alert.alert("Lỗi", "Không thể dừng ghi âm!");
+
+      if (!uri) {
+        setVoiceError("Không có file ghi âm");
+        return;
+      }
+
+      const base64Audio = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Gửi lên Google STT
+      const requestBody = JSON.stringify({
+        config: {
+          encoding: "OGG_OPUS", // Đổi từ "LINEAR16" sang "OGG_OPUS"
+          sampleRateHertz: 48000, // Thường OGG_OPUS có sampleRate 48000
+          languageCode: question.targetLanguageCode,
+          model: "default",
+        },
+        audio: { content: base64Audio },
+      });
+      const response = await fetch(
+        `https://speech.googleapis.com/v1/speech:recognize?key=${API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        }
+      );
+
+      const data = await response.json();
+      console.log("Google STT Response:", JSON.stringify(data, null, 2));
+
+      if (data.results?.length) {
+        const transcript = data.results[0].alternatives[0].transcript;
+        setUserTranscript(transcript);
+        onSelectedWords([transcript]);
+        onCheckAnswer();
+      } else {
+        setVoiceError("Không thể nhận dạng giọng nói");
+      }
+    } catch (err) {
+      console.error("Stop recording error:", err);
+      setVoiceError("Có lỗi khi dừng ghi âm hoặc gửi audio");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -264,10 +248,10 @@ const Pronunciation: React.FC<PronunciationProps> = ({
             styles.micButton,
             isRecording && { backgroundColor: "#ff7675" },
           ]}
-          onPress={startRecording}
-          disabled={!isVoiceServiceReady}
+          onPress={isRecording ? stopRecording : startRecording}
+          disabled={isProcessing}
         >
-          {isRecording ? (
+          {isProcessing ? (
             <ActivityIndicator
               size="small"
               color="#63c93eff"
@@ -304,7 +288,6 @@ const Pronunciation: React.FC<PronunciationProps> = ({
   );
 };
 
-// Styles giữ nguyên
 const styles = StyleSheet.create({
   container: {
     flex: 1,

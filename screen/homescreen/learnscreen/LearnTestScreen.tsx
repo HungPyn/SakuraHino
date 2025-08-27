@@ -118,15 +118,31 @@ export interface Question {
   audioUrl?: string | null;
   choices?: Choice[];
 }
+let currentSound: Audio.Sound | null = null;
+
 export const playCorrectSound = async (filePath: any) => {
   try {
-    const { sound } = await Audio.Sound.createAsync(filePath);
-    await sound.playAsync();
+    // Nếu đang có sound trước đó thì stop + unload trước
+    if (currentSound) {
+      await currentSound.stopAsync().catch(() => {});
+      await currentSound.unloadAsync().catch(() => {});
+      currentSound = null;
+    }
 
-    // Giải phóng bộ nhớ khi phát xong
-    sound.setOnPlaybackStatusUpdate((status) => {
+    // Tạo sound mới
+    const { sound } = await Audio.Sound.createAsync(
+      filePath,
+      { shouldPlay: true } // auto play
+    );
+
+    currentSound = sound;
+
+    sound.setOnPlaybackStatusUpdate(async (status) => {
       if (status.isLoaded && status.didJustFinish) {
-        sound.unloadAsync();
+        await sound.unloadAsync().catch(() => {});
+        if (currentSound === sound) {
+          currentSound = null;
+        }
       }
     });
   } catch (error) {
@@ -179,9 +195,8 @@ const LessonTestScreen = () => {
   //lưu kết quả lesson
   const createResultLessonTest = async () => {
     try {
-      const response = await questionService.createResultLessonTest(
-        correctAnswerCount
-      );
+      const response =
+        await questionService.createResultLessonTest(correctAnswerCount);
       console.log("Kết quả đã lưu:", response);
     } catch (error) {
       console.error("Lỗi khi lưu kết quả câu hỏi:", error);
@@ -319,7 +334,9 @@ const LessonTestScreen = () => {
 
         {/* Nút Quay lại */}
         <TouchableOpacity
-          onPress={() => navigation.navigate("LearningPathScreen")}
+          onPress={() =>
+            navigation.navigate("LearningPathScreen", { isTest: false })
+          }
           style={{
             marginTop: 20,
             padding: 15,
@@ -985,7 +1002,9 @@ const ProgressBar = ({
   return (
     <View style={styles.progressBarHeader}>
       <TouchableOpacity
-        onPress={() => navigation.navigate("LearningPathScreen")}
+        onPress={() =>
+          navigation.navigate("LearningPathScreen", { isTest: false })
+        }
         style={styles.closeButton}
       >
         <CloseSvg />
@@ -1048,7 +1067,9 @@ const QuitMessage = ({
         <View style={styles.quitButtonContainer}>
           <TouchableOpacity
             style={styles.quitQuitButton}
-            onPress={() => navigation.navigate("LearningPathScreen")}
+            onPress={() =>
+              navigation.navigate("LearningPathScreen", { isTest: false })
+            }
           >
             <Text style={styles.quitQuitButtonText}>Quit</Text>
           </TouchableOpacity>
@@ -1383,7 +1404,9 @@ const LessonFastForwardStart = ({
       </View>
       <View style={styles.fastForwardFooter}>
         <TouchableOpacity
-          onPress={() => navigation.navigate("LearningPathScreen")}
+          onPress={() =>
+            navigation.navigate("LearningPathScreen", { isTest: false })
+          }
           style={styles.fastForwardLaterButton}
         >
           <Text style={styles.fastForwardLaterButtonText}>Maybe later</Text>
@@ -1432,7 +1455,9 @@ const LessonFastForwardEndFail = ({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.continueButton}
-          onPress={() => navigation.navigate("LearningPathScreen")}
+          onPress={() =>
+            navigation.navigate("LearningPathScreen", { isTest: false })
+          }
         >
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
@@ -1466,7 +1491,7 @@ const LessonFastForwardEndPass = ({
     increaseXp(50); // Giả định XP cho Fast Forward
     addToday();
     increaseLingots(5); // Giả định lingots cho Fast Forward
-    navigation.navigate("LearningPathScreen");
+    navigation.navigate("LearningPathScreen", { isTest: false });
   };
 
   return (

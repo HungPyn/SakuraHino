@@ -98,7 +98,11 @@ const ResultScreen = () => {
   }, [scoreValue, correctValue, timeValue]);
 
   const handleGoToLearningPath = () => {
-    navigation.replace("LearningPathScreen");
+    if (isTest) {
+      navigation.navigate("LearningPathScreen", { isTest: true });
+    } else {
+      navigation.navigate("LearningPathScreen", { isTest: false });
+    }
   };
 
   // --- LOGIC MỚI: Dựa vào isTest để hiển thị kết quả

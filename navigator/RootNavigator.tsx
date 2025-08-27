@@ -17,6 +17,7 @@ import Alphabet from "../screen/homescreen/learnWriting/Alphabet";
 import WritingPractice from "../screen/homescreen/learningComponents/WritingPractice";
 import ShopScreen from "../screen/homescreen/shop/ShopScreen";
 import SettingsAccount from "../screen/profile/SettingsAccount";
+import Notification from "../screen/profile/notification";
 import ProfileScreen from "../screen/profile/ProfileScreen";
 import Lesson from "../screen/homescreen/learnscreen/LearnScreen";
 import LessonTestScreen from "../screen/homescreen/learnscreen/LearnTestScreen";
@@ -35,6 +36,11 @@ export default function RootNavigator() {
       <Stack.Screen
         name="Shop"
         component={ShopScreen} // Đảm bảo bạn đã tạo ShopScreen
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Notification"
+        component={Notification} // Đảm bảo bạn đã tạo ShopScreen
         options={{ headerShown: false }}
       />
       <Stack.Screen

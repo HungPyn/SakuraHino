@@ -21,6 +21,7 @@ interface RouteParams {
   isNewWord: boolean;
   isKanji: boolean;
   id: string;
+  wordType: string;
   word: string;
   furigana: string;
   romaji: string;
@@ -69,6 +70,7 @@ const WritingPractice = () => {
   const {
     isLearning,
     id,
+    wordType,
     isNewWord,
     isKanji,
     word,
@@ -119,6 +121,17 @@ const WritingPractice = () => {
 
   // -------------------------------------------------------------
   useEffect(() => {
+    console.log("isLearning:", isLearning);
+    console.log("id:", id);
+    console.log("isNewWord:", isNewWord);
+    console.log("isKanji:", isKanji);
+    console.log("word:", word);
+    console.log("wordType:", wordType);
+    console.log("furigana:", furigana);
+    console.log("romaji:", romaji);
+    console.log("meaning:", meaning);
+    console.log("audioUrl:", audioUrl);
+
     if (recognizedText) {
       console.log("Đã đọc chữ viết tay là:", recognizedText);
       if (recognizedText === word) {
@@ -136,14 +149,11 @@ const WritingPractice = () => {
             if (isNewWord) {
               const response = await alphabet.resultNewWord(id);
 
-              if (response) {
-                navigation.navigate("LearnWriting");
-              }
+              navigation.navigate("LearnWriting");
             } else {
               const response = await alphabet.resultOldWord(id);
-              if (response) {
-                navigation.navigate("LearnWriting");
-              }
+
+              navigation.navigate("LearnWriting");
             }
           })();
         }
@@ -183,7 +193,15 @@ const WritingPractice = () => {
 
       <View style={styles.wordInfoContainer}>
         <Text style={styles.bigTargetWord}>{word}</Text>
-        {isKanji && (
+
+        {/* Hiện wordType nếu có, bất kể Kanji hay không */}
+        {wordType ? (
+          <View style={styles.romajiRow}>
+            <Text style={styles.romajiText}>Loại chữ: {wordType}</Text>
+          </View>
+        ) : null}
+
+        {isKanji ? (
           <View style={styles.furiganaContainer}>
             <Text style={styles.furiganaText}>furigana: {furigana}</Text>
             <View style={styles.romajiRow}>
@@ -192,8 +210,7 @@ const WritingPractice = () => {
             </View>
             <Text style={styles.meaningText}>Ý nghĩa: {meaning}</Text>
           </View>
-        )}
-        {!isKanji && (
+        ) : (
           <View style={styles.romajiRow}>
             <Text style={styles.romajiText}>romaji: {romaji}</Text>
             <PlaySoundButton audioUrl={audioUrl} />

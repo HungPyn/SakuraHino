@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -94,14 +95,16 @@ const LeaderboardItem = ({
 
 // Component chính của màn hình profile
 const ProfileTopBar = ({ user }: { user: User | null }) => {
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+
   const navigation = useNavigation();
   return (
     <View style={styles.topBar}>
       <TouchableOpacity>
-        <Text style={styles.srOnly}>Settings</Text>
+        <Text style={styles.srOnly}>Settings sdsds</Text>
       </TouchableOpacity>
       <Text style={styles.topBarTitle}>Profile</Text>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate("Notification")}>
         <SettingsGearSvg />
         <Text style={styles.srOnly}>Settings</Text>
       </TouchableOpacity>
@@ -251,6 +254,7 @@ const ProfileStatsSection = ({ user }: { user: User | null }) => {
 
 const ProfileScreen = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Thêm trạng thái này
   const [streakUsersData, setStreakUsersData] = useState<User[]>([]);
   const [expUsersData, setExpUsersData] = useState<User[]>([]);
 
@@ -260,6 +264,8 @@ const ProfileScreen = () => {
       setUser(data);
     } catch (error) {
       console.error("Lỗi khi lấy thông tin người dùng:", error);
+    } finally {
+      setIsLoading(false); // Kết thúc tải, dù thành công hay thất bại
     }
   };
 
@@ -285,8 +291,23 @@ const ProfileScreen = () => {
     getUser();
     getTopStreakUsers();
     getTopExpUsers();
-  }, []);
+  }, []); // Đưa các câu lệnh kiểm tra loading lên trên cùng
 
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#9e9eaaff" />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Không thể tải dữ liệu người dùng.</Text>
+      </View>
+    );
+  }
   const sortedStreakUsers = streakUsersData.sort(
     (a, b) => b.longStreak - a.longStreak
   );

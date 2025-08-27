@@ -184,8 +184,8 @@ const TileIcon = ({
     status === "COMPLETE"
       ? COLORS.yellow500
       : status === "ACTIVE"
-      ? COLORS.green500
-      : COLORS.gray400;
+        ? COLORS.green500
+        : COLORS.gray400;
   if (!IconComponent) return null;
   return <IconComponent width={80} height={80} fill={iconColor} />;
 };
@@ -381,8 +381,8 @@ const WordSection = ({
                       COLOR_PALETTES[i % COLOR_PALETTES.length].borderColor,
                   }
                 : status === "PASSED"
-                ? { bg: COLORS.green500, border: COLORS.green500 }
-                : { bg: COLORS.gray200, border: COLORS.gray400 };
+                  ? { bg: COLORS.green500, border: COLORS.green500 }
+                  : { bg: COLORS.gray200, border: COLORS.gray400 };
           }
           return (
             <View
@@ -417,7 +417,12 @@ const WordSection = ({
           closeTooltip={() => setSelectedWordIndex(null)}
           status={getTileStatus("UNLOCKED")}
           description={
-            selectedWord.japaneseCharacter + " (" + selectedWord.meaning + ")"
+            selectedWord.japaneseCharacter +
+            " (" +
+            selectedWord.meaning +
+            ")" +
+            "\n" +
+            selectedWord.characterType
           }
           backgroundColor={
             COLOR_PALETTES[(selectedWordIndex ?? 0) % COLOR_PALETTES.length]
@@ -437,6 +442,7 @@ const WordSection = ({
               isNewWord: selectedTab === "learnNew",
               isKanji: false,
               id: selectedWord.id,
+              wordType: selectedWord.characterType,
               word: selectedWord.japaneseCharacter,
               romaji: selectedWord.meaning,
               audioUrl: selectedWord.audioURL,
@@ -498,6 +504,7 @@ const LearningPathScreen = () => {
         // Cùng ngày → dùng cache
         console.log("Dùng cache");
         response = JSON.parse(cachedData);
+        console.log("Dữ liệu là", JSON.stringify(cachedData, null, 2));
       } else {
         // Gọi API mới
         console.log("Gọi API mới");

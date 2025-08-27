@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 import { Audio } from "expo-av";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { QUnitType } from "dayjs";
+import { Sound } from "expo-av/build/Audio";
 
 export interface Choice {
   id: number;
@@ -58,7 +59,6 @@ const AudioChoice: React.FC<AudioChoiceProps> = ({
 }) => {
   const [selectedChoice, setSelectedChoice] = useState<Choice | null>(null);
   const scaleAnim = useState(new Animated.Value(1))[0];
-  const soundRef = useRef<Audio.Sound | null>(null);
 
   const handleSelect = async (choice: Choice) => {
     // Scale animation
@@ -77,35 +77,81 @@ const AudioChoice: React.FC<AudioChoiceProps> = ({
 
     setSelectedChoice(choice);
     onSelectAnswer(choice);
-  };
+  }; // khai báo
+  const soundRef = useRef<Sound | null>(null);
+  const preloadRef = useRef(false);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!question.audioUrl) return;
+      preloadRef.current = true;
+      try {
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: question.audioUrl },
+          { shouldPlay: false } // preload nhưng chưa play
+        );
+        if (!mounted) {
+          await sound.unloadAsync();
+          return;
+        }
+        soundRef.current = sound;
+      } catch (e) {
+        console.warn("Preload error:", e);
+      } finally {
+        preloadRef.current = false;
+      }
+    })();
+
+    return () => {
+      mounted = false;
+      if (soundRef.current) {
+        soundRef.current.unloadAsync().catch(() => {});
+        soundRef.current = null;
+      }
+    };
+  }, [question.audioUrl]);
 
   const handlePlayAudio = async () => {
     if (!question.audioUrl) return;
+    const s = soundRef.current;
+    if (!s) {
+      // chưa preload xong -> fallback: load & play
+      try {
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: question.audioUrl },
+          { shouldPlay: true }
+        );
+        // unload ngay sau finish
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (status?.isLoaded && status.didJustFinish) {
+            sound.unloadAsync().catch(() => {});
+          }
+        });
+        return;
+      } catch (e) {
+        console.warn(e);
+        return;
+      }
+    }
 
     try {
-      if (soundRef.current) {
-        await soundRef.current.stopAsync();
-        await soundRef.current.unloadAsync();
+      const status = await s.getStatusAsync();
+      if (!status.isLoaded) {
+        // load nếu chưa loaded
+        await s.loadAsync({ uri: question.audioUrl }, { shouldPlay: true });
+        return;
       }
-
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: question.audioUrl },
-        { shouldPlay: true }
-      );
-
-      soundRef.current = sound;
-
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync();
-          soundRef.current = null;
-        }
-      });
-    } catch (error) {
-      console.log("Lỗi phát âm thanh:", error);
+      if (typeof s.replayAsync === "function") {
+        await s.replayAsync();
+      } else {
+        await s.setPositionAsync(0);
+        await s.playAsync();
+      }
+    } catch (e) {
+      console.warn("Play error:", e);
     }
   };
-
   const renderItem = ({ item }: { item: Choice }) => {
     const isSelected = selectedChoice?.id === item.id;
     return (

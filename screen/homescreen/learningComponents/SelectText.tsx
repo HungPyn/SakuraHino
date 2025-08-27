@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -59,6 +59,48 @@ const SelectText: React.FC<SelectTextProps> = ({
   const scaleAnim = useState(new Animated.Value(1))[0];
   const soundRef = useRef<Audio.Sound | null>(null);
 
+  // Dọn dẹp khi rời màn hình
+  useEffect(() => {
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+    };
+  }, []);
+  const playSound = async (uri: string) => {
+    try {
+      // Nếu có sound cũ thì cleanup an toàn
+      if (soundRef.current) {
+        const status = await soundRef.current.getStatusAsync();
+        if (status.isLoaded) {
+          await soundRef.current.stopAsync();
+          await soundRef.current.unloadAsync();
+        }
+        soundRef.current.setOnPlaybackStatusUpdate(null); // cleanup listener
+        soundRef.current = null;
+      }
+
+      // Load sound mới
+      const { sound } = await Audio.Sound.createAsync(
+        { uri },
+        { shouldPlay: true }
+      );
+      soundRef.current = sound;
+
+      sound.setOnPlaybackStatusUpdate(async (status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          await sound.unloadAsync();
+          sound.setOnPlaybackStatusUpdate(null);
+          if (soundRef.current === sound) {
+            soundRef.current = null;
+          }
+        }
+      });
+    } catch (error) {
+      console.log("Lỗi phát âm thanh:", error);
+    }
+  };
   const handleSelect = async (choice: Choice) => {
     // Scale animation
     Animated.sequence([
@@ -77,31 +119,9 @@ const SelectText: React.FC<SelectTextProps> = ({
     setSelectedChoice(choice);
     onSelectAnswer(choice);
 
-    // Phát âm thanh nếu có
+    // Phát audio
     if (choice.audioUrlForeign) {
-      try {
-        // Nếu đang có âm thanh, dừng và unload
-        if (soundRef.current) {
-          await soundRef.current.stopAsync();
-          await soundRef.current.unloadAsync();
-        }
-
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: choice.audioUrlForeign },
-          { shouldPlay: true }
-        );
-
-        soundRef.current = sound;
-
-        sound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded && status.didJustFinish) {
-            sound.unloadAsync();
-            soundRef.current = null;
-          }
-        });
-      } catch (error) {
-        console.log("Lỗi phát âm thanh:", error);
-      }
+      await playSound(choice.audioUrlForeign);
     }
   };
 

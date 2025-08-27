@@ -72,6 +72,7 @@ const AlphabetCard = ({ kanaItem }: { kanaItem: Kana }) => {
       isNewWord: false,
       isKanji: false,
       id: 0,
+      wordType: "HIRAGANA",
       word: kanaItem.hira,
       romaji: kanaItem.romaji,
       audioUrl: kanaItem.audioUrl,

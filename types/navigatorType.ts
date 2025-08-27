@@ -33,6 +33,7 @@ export type RootStackParamList = {
     isNewWord: boolean;
     isKanji: boolean;
     id: number;
+    wordType: string;
     word: string;
     furigana: string;
     romaji: string;
@@ -43,7 +44,8 @@ export type RootStackParamList = {
   // LessonScreen: { practice: boolean } | undefined;
   Shop: undefined;
   QuickPractice: { type: PracticeType };
-  LearningPathScreen: undefined;
+  LearningPathScreen: { isTest?: boolean };
+  Notification: undefined;
   SettingsAccount: { user: User | null };
   ProfileScreen: undefined;
   Lesson: { lessonCode: string; topicCode: string; practice: boolean };

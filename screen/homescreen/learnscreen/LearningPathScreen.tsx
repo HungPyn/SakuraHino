@@ -9,8 +9,9 @@ import {
   Pressable,
   Animated,
   Image,
-  Modal,
   Alert,
+  Platform,
+  Modal,
 } from "react-native";
 import {
   GuidebookSvg,
@@ -33,9 +34,16 @@ import {
   ActiveDumbbellSvg,
   PracticeExerciseSvg,
 } from "../../../components/Svgs";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import { useBoundStore } from "../../../hooks/useBoundStore";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from "@react-navigation/native-stack";
 import { BottomBar } from "../../../components/custombar/BottomBar";
 import { Tab } from "../../../components/custombar/useBottomBarItems";
 import TopBar from "../../../components/TopBar";
@@ -43,7 +51,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { RootStackParamList } from "../../../types/navigatorType";
 import topicService from "../../../services/topicService";
 import profileService from "../../../services/profileService";
-
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import PushNotification from "react-native-push-notification";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 // --- Constants ---
 const COLORS = {
   white: "#FFFFFF",
@@ -118,6 +128,12 @@ const COLOR_PALETTES = [
   { backgroundColor: "#9CCC65", borderColor: "#7CB342", textColor: "#FFFFFF" }, // xanh lá nhạt
   { backgroundColor: "#F06292", borderColor: "#E91E63", textColor: "#FFFFFF" }, // hồng đậm
 ];
+type LearningPathScreenRouteProp = NativeStackScreenProps<
+  RootStackParamList,
+  "LearningPathScreen"
+>["route"];
+
+const STORAGE_KEY = "@reminder_time";
 
 // Định nghĩa chiều cao của một chủ đề ở đây để toàn bộ component có thể truy cập
 const TOPIC_HEIGHT = 400;
@@ -199,8 +215,8 @@ const TileIcon = ({
     status === "COMPLETE"
       ? COLORS.yellow500
       : status === "ACTIVE"
-      ? COLORS.green500
-      : COLORS.gray400;
+        ? COLORS.green500
+        : COLORS.gray400;
 
   if (!IconComponent) {
     return null;
@@ -440,8 +456,8 @@ const UnitSection = ({ topic }: { topic: Topic }) => {
                     border: topic.borderColor || "#46a302",
                   }
                 : status === "PASSED"
-                ? { bg: COLORS.green500, border: COLORS.green500 }
-                : { bg: COLORS.gray200, border: COLORS.gray400 };
+                  ? { bg: COLORS.green500, border: COLORS.green500 }
+                  : { bg: COLORS.gray200, border: COLORS.gray400 };
             return (
               <View
                 key={i}
@@ -515,6 +531,97 @@ const LearningPathScreen = () => {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const navigation = useNavigation();
+  const route = useRoute<LearningPathScreenRouteProp>();
+  const isTest = route.params?.isTest;
+
+  const [isTestPopupVisible, setTestPopupVisible] = useState(false);
+
+  // THÊM MỚI: State và hàm cho popup lịch hẹn
+  const [isReminderPickerVisible, setReminderPickerVisible] = useState(false);
+  const [selectedReminderTime, setSelectedReminderTime] = useState(new Date());
+
+  // THÊM MỚI: Hàm để hiện/ẩn DateTimePicker
+  const showReminderPicker = () => setReminderPickerVisible(true);
+  const hideReminderPicker = () => setReminderPickerVisible(false);
+
+  // THÊM MỚI: Hàm xử lý khi chọn thời gian
+  const handleReminderTimeConfirm = (date: Date) => {
+    setSelectedReminderTime(date);
+    hideReminderPicker();
+  };
+
+  // THÊM MỚI: Hàm để lên lịch thông báo
+  const scheduleNotification = async () => {
+    const now = new Date();
+    const fireDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      selectedReminderTime.getHours(),
+      selectedReminderTime.getMinutes(),
+      0
+    );
+
+    if (fireDate <= now) {
+      fireDate.setDate(fireDate.getDate() + 1);
+    }
+    await AsyncStorage.setItem(STORAGE_KEY, fireDate.toISOString());
+
+    PushNotification.localNotificationSchedule({
+      channelId: "reminder-channel",
+      title: "SakuraHino nhắc nhở học tập",
+      message: "Đến giờ học rồi! Hãy mở app và học thôi 🚀",
+      date: fireDate,
+      repeatType: "day",
+    });
+
+    Alert.alert(
+      "Đã lên lịch",
+      `Thông báo sẽ diễn ra lúc ${formatTime(selectedReminderTime)} mỗi ngày`
+    );
+    setTestPopupVisible(false); // Đóng popup hoàn thành bài kiểm tra
+  };
+
+  // THÊM MỚI: Hàm định dạng thời gian
+  const formatTime = (date: Date) => {
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    return `${hours < 10 ? "0" + hours : hours}:${
+      minutes < 10 ? "0" + minutes : minutes
+    }`;
+  };
+  useEffect(() => {
+    // THÊM MỚI: Tạo kênh thông báo cho Android
+    PushNotification.createChannel(
+      {
+        channelId: "reminder-channel",
+        channelName: "SakuraHino nhắc nhở học tập",
+        channelDescription: "Thông báo nhắc học",
+        importance: 4,
+        vibrate: true,
+      },
+      (created: boolean) => console.log("Channel created:", created)
+    );
+
+    // THÊM MỚI: Cấu hình PushNotification
+    PushNotification.configure({
+      onNotification: function (notification: any) {
+        console.log("NOTIFICATION:", notification);
+      },
+      requestPermissions: Platform.OS === "ios",
+    });
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Kiểm tra nếu có tham số isTest và giá trị là true
+      if (isTest) {
+        setTestPopupVisible(true);
+        // Sau khi hiển thị popup, reset tham số để tránh việc popup hiện lại
+        navigation.setParams({ isTest: undefined });
+      }
+    }, [isTest, navigation])
+  );
 
   const getUser = async () => {
     try {
@@ -618,6 +725,49 @@ const LearningPathScreen = () => {
           <UpArrowSvg />
         </TouchableOpacity>
       )}
+      {/* THÊM MỚI: Component popup lịch hẹn */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isTestPopupVisible}
+        onRequestClose={() => setTestPopupVisible(false)}
+      >
+        <View style={styles.popupContainer}>
+          <View style={styles.popupContent}>
+            <Text style={styles.popupTitle}>Giờ thông báo học hàng ngày</Text>
+            <TouchableOpacity
+              style={styles.clockButton}
+              onPress={showReminderPicker}
+            >
+              <Text style={styles.clockText}>
+                {formatTime(selectedReminderTime)}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.scheduleButton}
+              onPress={scheduleNotification}
+            >
+              <Text style={styles.scheduleButtonText}>Đặt nhắc nhở</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setTestPopupVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Đóng</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* THÊM MỚI: Component chọn thời gian */}
+      <DateTimePickerModal
+        isVisible={isReminderPickerVisible}
+        mode="time"
+        onConfirm={handleReminderTimeConfirm}
+        onCancel={hideReminderPicker}
+        is24Hour={true}
+      />
+
       <BottomBar selectedTab={selectedTab} />
     </SafeAreaView>
   );
@@ -632,6 +782,64 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 16,
+  },
+  popupContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  popupContent: {
+    backgroundColor: "#fff",
+    padding: 30,
+    borderRadius: 20,
+    width: "85%",
+    alignItems: "center",
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  popupTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  clockButton: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#9a9792ff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  clockText: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "white",
+  },
+  scheduleButton: {
+    backgroundColor: "#34db61ff",
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 12,
+    marginTop: 10,
+    width: "100%",
+    alignItems: "center",
+  },
+  scheduleButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  closeButton: {
+    marginTop: 20,
+  },
+  closeButtonText: {
+    color: "#6b7280",
+    fontSize: 16,
   },
   topBarTitle: { color: COLORS.white, fontSize: 20, fontWeight: "bold" },
   scrollViewContent: { alignItems: "center", padding: 16, paddingTop: 20 },
