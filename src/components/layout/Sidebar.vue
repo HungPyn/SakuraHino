@@ -42,7 +42,7 @@
             Lộ trình học cá nhân
           </router-link>
         </li> -->
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <router-link
             to="/admin/badges"
             class="nav-link"
@@ -51,8 +51,8 @@
             <i class="bi bi-award nav-icon"></i>
             Huy hiệu người dùng
           </router-link>
-        </li>
-        <li class="nav-item">
+        </li> -->
+        <!-- <li class="nav-item">
           <router-link
             to="/admin/reminders"
             class="nav-link"
@@ -61,7 +61,7 @@
             <i class="bi bi-bell nav-icon"></i>
             Nhắc nhở
           </router-link>
-        </li>
+        </li> -->
         <!-- <li class="nav-item">
           <router-link to="/admin/entertainment" class="nav-link" active-class="active">
             <i class="bi bi-controller nav-icon"></i>
@@ -79,18 +79,18 @@
           </router-link>
         </li>
 
-<li class="nav-item">
-  <router-link 
-    to="/admin/character" 
-    class="nav-link" 
-    active-class="active"
-  >
-    <i class="bi bi-pencil-square nav-icon"></i>
-    Luyện viết
-  </router-link>
-</li>
+        <li class="nav-item">
+          <router-link
+            to="/admin/character"
+            class="nav-link"
+            active-class="active"
+          >
+            <i class="bi bi-pencil-square nav-icon"></i>
+            Luyện viết
+          </router-link>
+        </li>
 
-<li class="nav-item">
+        <!-- <li class="nav-item">
   <router-link
     to="/admin/exam"
     class="nav-link"
@@ -99,10 +99,9 @@
     <i class="bi bi-journal-check nav-icon"></i>
    Thi
   </router-link>
-</li>
+</li> -->
 
-
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <router-link
             to="/admin/community"
             class="nav-link"
@@ -111,7 +110,7 @@
             <i class="bi bi-people nav-icon"></i>
             Cộng đồng
           </router-link>
-        </li>
+        </li> -->
 
         <!-- User Management Section -->
         <li class="nav-item category-title">Quản lý người dùng</li>

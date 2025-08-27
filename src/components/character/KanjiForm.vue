@@ -1,32 +1,51 @@
 <template>
   <div class="modal-header">
-    <h2 class="modal-title">{{ data ? 'Chỉnh sửa' : 'Thêm mới' }} Kanji</h2>
+    <h2 class="modal-title">{{ data ? "Chỉnh sửa" : "Thêm mới" }} Kanji</h2>
     <button @click="$emit('cancel')" class="close-btn">&times;</button>
   </div>
   <form @submit.prevent="handleSubmit">
     <div class="form-group">
       <label for="kanji-char">Ký tự Kanji:</label>
-      <input type="text" id="kanji-char" v-model="form.japaneseCharacter" required class="form-control" />
+      <input
+        type="text"
+        id="kanji-char"
+        v-model="form.japaneseCharacter"
+        required
+        class="form-control"
+      />
     </div>
     <div class="form-group">
       <label for="kanji-meaning">Ý nghĩa:</label>
-      <input type="text" id="kanji-meaning" v-model="form.meaning" required class="form-control" />
+      <input
+        type="text"
+        id="kanji-meaning"
+        v-model="form.meaning"
+        required
+        class="form-control"
+      />
     </div>
     <div class="form-group">
       <label for="kanji-status">Trạng thái:</label>
-      <select id="kanji-status" v-model="form.status" required class="form-control">
-        <option value="Active">Active</option>
-        <option value="Inactive">Inactive</option>
-        <option value="Draft">Draft</option>
+      <select
+        id="kanji-status"
+        v-model="form.status"
+        required
+        class="form-control"
+      >
+        <option value="PUBLISHED">Hoạt động</option>
+        <option value="PENDING">Chờ duyệt</option>
+        <option value="DELETED">Xóa</option>
       </select>
-    </div>
-    <div class="form-group">
-      <label for="kanji-audio">URL Audio:</label>
-      <input type="text" id="kanji-audio" v-model="form.audioURL" class="form-control" />
     </div>
     <div class="form-actions">
       <button type="submit" class="btn-primary">Lưu</button>
-      <button type="button" @click="$emit('cancel')" class="btn-outline-secondary">Hủy</button>
+      <button
+        type="button"
+        @click="$emit('cancel')"
+        class="btn-outline-secondary"
+      >
+        Hủy
+      </button>
     </div>
   </form>
 </template>
@@ -43,10 +62,10 @@ export default {
     return {
       form: {
         id: null,
-        japaneseCharacter: '',
-        meaning: '',
-        status: 'Draft',
-        audioURL: '',
+        japaneseCharacter: "",
+        meaning: "",
+        status: "PUBLISHED",
+        audioURL: "",
       },
     };
   },
@@ -58,10 +77,10 @@ export default {
         } else {
           this.form = {
             id: null,
-            japaneseCharacter: '',
-            meaning: '',
-            status: 'Draft',
-            audioURL: '',
+            japaneseCharacter: "",
+            meaning: "",
+            status: "PUBLISHED",
+            audioURL: "",
           };
         }
       },
@@ -70,7 +89,7 @@ export default {
   },
   methods: {
     handleSubmit() {
-      this.$emit('save', this.form);
+      this.$emit("save", this.form);
     },
   },
 };
