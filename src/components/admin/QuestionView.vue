@@ -1,18 +1,20 @@
 <template>
   <div class="container mt-4">
     <div class="card p-4">
+      <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0">Danh sách Câu hỏi</h3>
         <div>
           <button @click="openNewQuestionForm" class="btn btn-success me-2">
             <i class="bi bi-plus-circle"></i> Thêm câu hỏi mới
           </button>
-          <button @click="importFromExcel" class="btn btn-info">
+          <button @click="openExcelModal" class="btn btn-info">
             <i class="bi bi-file-earmark-excel"></i> Thêm bằng file Excel
           </button>
         </div>
       </div>
 
+      <!-- Table -->
       <div class="table-responsive">
         <div
           v-if="questions.length === 0"
@@ -27,7 +29,7 @@
             <tr>
               <th>#</th>
               <th>Loại câu hỏi</th>
-              <th>trạng thái</th>
+              <th>Trạng thái</th>
               <th>Câu hỏi</th>
               <th>Từ đích</th>
               <th>Số lựa chọn</th>
@@ -90,10 +92,9 @@
           </tbody>
         </table>
       </div>
-      <nav
-        aria-label="Page navigation example"
-        class="d-flex justify-content-center mt-4"
-      >
+
+      <!-- Pagination -->
+      <nav class="d-flex justify-content-center mt-4">
         <ul class="pagination">
           <li class="page-item" :class="{ disabled: currentPage === 0 }">
             <button
@@ -130,30 +131,91 @@
       </nav>
     </div>
 
-    <!-- Modal form -->
+    <!-- Modal QuestionForm -->
     <QuestionFormModal
       ref="questionModalRef"
       @question-saved="handleQuestionSaved"
     />
+
+    <!-- Modal Excel dùng teleport -->
+    <teleport to="body">
+      <div
+        class="modal fade"
+        id="excelUploadModal"
+        tabindex="-1"
+        aria-labelledby="excelUploadModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="excelUploadModalLabel">
+                Upload file Excel
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                @click="closeExcelModal"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <form @submit.prevent="submitExcel">
+                <div class="mb-3">
+                  <label for="excelFile" class="form-label"
+                    >Chọn file Excel</label
+                  >
+                  <input
+                    type="file"
+                    class="form-control"
+                    ref="excelFileInput"
+                    accept=".xlsx,.xls"
+                    required
+                  />
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                @click="closeExcelModal"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                @click="submitExcel"
+              >
+                Upload
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, nextTick, watch } from "vue";
 import { useRoute } from "vue-router";
 import QuestionFormModal from "../lesson/QuestionFormModal.vue";
 import questionService from "@/services/questionService";
 import Swal from "sweetalert2";
 import { useToast } from "vue-toastification";
-import { bs } from "date-fns/locale";
+import { Modal } from "bootstrap";
 
 const route = useRoute();
 const lessonId = ref(Number(route.params.lessonId));
 const questionModalRef = ref(null);
-const isEditing = ref(false);
 const questions = ref([]);
 const toast = useToast();
 
+const excelUploadModal = ref(null);
+const excelFileInput = ref(null);
+
+// Map các loại câu hỏi
 const questionTypeMap = {
   MULTIPLE_CHOICE_VOCAB_IMAGE: "Trắc nghiệm hình ảnh",
   MULTIPLE_CHOICE_TEXT_ONLY: "Trắc nghiệm văn bản",
@@ -165,7 +227,7 @@ const questionTypeMap = {
 
 const currentQuestion = ref({
   id: null,
-  lessonId: null, // thay cho lesson trong entity
+  lessonId: null,
   questionType: null,
   promptTextTemplate: "",
   targetWordNative: "",
@@ -187,35 +249,18 @@ const currentQuestion = ref({
   ],
 });
 const newQuestion = {
-  id: null,
-  lessonId: null, // thay cho lesson trong entity
+  ...currentQuestion.value,
   questionType: "MULTIPLE_CHOICE_TEXT_ONLY",
-  promptTextTemplate: "",
-  targetWordNative: "",
-  targetLanguageCode: "",
-  audioUrl: "",
   status: "PUBLISHED",
-  createdAt: null,
-  updatedAt: null,
-  choiceRequests: [
-    {
-      id: null,
-      textForeign: "",
-      textRomaji: "",
-      imageUrl: "",
-      audioUrlForeign: "",
-      isCorrect: false,
-      meaning: "",
-    },
-  ],
 };
 
 const getQuestionTypeName = (type) => questionTypeMap[type] || type;
 
+// QuestionForm
 const openNewQuestionForm = () => {
   currentQuestion.value = { ...newQuestion };
   questionModalRef.value.openModal({
-    currentQuestion: newQuestion.value,
+    currentQuestion: currentQuestion.value,
     lessonId: lessonId.value,
     isEditing: false,
   });
@@ -230,115 +275,98 @@ const editQuestion = (question) => {
     isEditing: true,
   });
 };
+
 const handleQuestionSaved = async (savedData) => {
   const { allImages, ...question } = savedData;
-  if (!question.id) {
-    const result = await Swal.fire({
-      title: `Xác nhận thêm câu hỏi không`,
+  const action = !question.id
+    ? questionService.createQuestion
+    : questionService.updateQuestion;
+  try {
+    const result = !question.id
+      ? await Swal.fire({
+          title: "Xác nhận thêm câu hỏi không",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Xác nhận",
+          cancelButtonText: "Hủy",
+        })
+      : await Swal.fire({
+          title: "Xác nhận cập nhật câu hỏi không",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Xác nhận",
+          cancelButtonText: "Hủy",
+        });
 
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Xác nhận",
-      cancelButtonText: "Hủy",
-    });
     if (result.isConfirmed) {
-      try {
-        const response = await questionService.createQuestion(
-          question,
-          allImages || []
-        );
+      if (!question.id) await action(question, allImages || []);
+      else await action(question.id, question, allImages || []);
 
-        getQuestions(); // Cập nhật danh sách câu hỏi sau khi thêm
-        if (response === false) {
-          return;
-        }
-
-        if (questionModalRef.value) {
-          questionModalRef.value.closeModal();
-        }
-      } catch (error) {
-        console.error("Lỗi khi thêm câu hỏi:", error);
-      }
+      getQuestions();
+      questionModalRef.value?.closeModal();
     }
-  } else {
-    const result = await Swal.fire({
-      title: `Xác nhận cập nhật câu hỏi không`,
-
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Xác nhận",
-      cancelButtonText: "Hủy",
-    });
-    if (result.isConfirmed) {
-      try {
-        const response = await questionService.updateQuestion(
-          question.id,
-          question,
-          allImages || []
-        );
-
-        getQuestions(); // Cập nhật danh sách câu hỏi sau khi thêm
-        if (response === false) {
-          return;
-        }
-
-        if (questionModalRef.value) {
-          questionModalRef.value.closeModal();
-        }
-      } catch (error) {
-        console.error("Lỗi khi thêm câu hỏi:", error);
-      }
-    }
+  } catch (err) {
+    console.error("Lỗi khi lưu câu hỏi:", err);
   }
 };
 
 const deleteQuestion = async (id) => {
   const result = await Swal.fire({
-    title: `Xác nhận xóa`,
-    text: `Bạn có chắc muốn xóa câu hỏi này?`,
+    title: "Xác nhận xóa",
+    text: "Bạn có chắc muốn xóa câu hỏi này?",
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "Xóa",
     cancelButtonText: "Hủy",
   });
-
   if (result.isConfirmed) {
     try {
       await questionService.deleteQuestion(id);
-
-      // Thông báo xóa thành công
-      toast.success(`Đã xóa câu hỏi thành công!`);
-      getQuestions(); // Cập nhật danh sách câu hỏi sau khi xóa
-    } catch (error) {
-      console.error("Lỗi khi xóa câu hỏi:", error);
+      toast.success("Đã xóa câu hỏi thành công!");
+      getQuestions();
+    } catch (err) {
+      console.error("Lỗi khi xóa câu hỏi:", err);
     }
   }
 };
 
-const importFromExcel = () => {
-  alert("Chức năng import sẽ được phát triển sau.");
+// Excel Modal
+const initExcelModal = async () => {
+  await nextTick();
+  const modalEl = document.getElementById("excelUploadModal");
+  if (modalEl && !excelUploadModal.value)
+    excelUploadModal.value = new Modal(modalEl, {
+      backdrop: "static",
+      keyboard: false,
+    });
 };
+const openExcelModal = async () => {
+  if (!excelUploadModal.value) await initExcelModal();
+  excelUploadModal.value.show();
+};
+const closeExcelModal = () => excelUploadModal.value?.hide();
 
-const goToPage = (newPage) => {
-  if (
-    newPage >= 0 &&
-    newPage < totalPages.value &&
-    newPage !== currentPage.value
-  ) {
-    currentPage.value = newPage;
-    getQuestions(); // fetch lại dữ liệu trang mới
-  } else if (
-    totalPages.value === 0 &&
-    newPage === 0 &&
-    currentPage.value !== 0
-  ) {
-    currentPage.value = 0;
-    getQuestions(); // vẫn gọi lại để đảm bảo dữ liệu
+const submitExcel = async () => {
+  const files = excelFileInput.value.files;
+  if (!files || files.length === 0) {
+    toast.error("Vui lòng chọn file Excel!");
+    return;
+  }
+  const file = files[0];
+
+  try {
+    const response = await questionService.importExcel(file);
+    getQuestions();
+    closeExcelModal();
+  } catch (err) {
+    console.error("Lỗi upload Excel:", err);
   }
 };
-const currentPage = ref(0); // Trang hiện tại (0-indexed để khớp với backend)
-const size = ref(10); // Kích thước trang
-const totalPages = ref(0); // Tổng số trang
+
+// Pagination
+const currentPage = ref(0);
+const size = ref(10);
+const totalPages = ref(0);
 const getQuestions = async () => {
   try {
     const { list, totalPages: tp } = await questionService.getQuestions({
@@ -346,28 +374,28 @@ const getQuestions = async () => {
       page: currentPage.value,
       size: size.value,
     });
-
     questions.value = list;
-
     totalPages.value = tp;
-
-    // console.log("Danh sách câu hỏi:", questions.value);
-    console.log("Tổng số trang:", totalPages.value);
   } catch (err) {
     console.error("Không lấy được câu hỏi:", err);
   }
 };
+watch(currentPage, () => getQuestions());
+const goToPage = (newPage) => {
+  if (
+    newPage >= 0 &&
+    newPage < totalPages.value &&
+    newPage !== currentPage.value
+  )
+    currentPage.value = newPage;
+};
 
-watch(currentPage, () => {
-  getQuestions();
-});
-onMounted(() => {
-  // Load mock data
-  console.log("id từ param là:", lessonId.value);
+onMounted(async () => {
+  await initExcelModal();
   getQuestions();
 });
 </script>
 
 <style scoped>
-/* Tùy chỉnh giao diện nếu cần */
+/* Giữ nguyên style cũ */
 </style>

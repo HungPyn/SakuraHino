@@ -94,7 +94,7 @@ const createQuestion = async (question, listImage = []) => {
     if (response.data.status === 200) {
       toast.success("Tạo câu hỏi thành công!");
     } else {
-      toast.error(response.data.error);
+      toast.error(response.data.data.errors[0].message);
       return false;
     }
 
@@ -148,7 +148,7 @@ const updateQuestion = async (questionId, question, listImage = []) => {
     if (response.data.status === 200) {
       toast.success("Cập nhật câu hỏi thành công!");
     } else {
-      toast.error(response.data.error);
+      toast.error(response.data.data.error[0].message);
       return false;
     }
 
@@ -160,9 +160,48 @@ const updateQuestion = async (questionId, question, listImage = []) => {
   }
 };
 
+const importExcel = async (fileExcel) => {
+  const token = localStorage.getItem("token");
+  if (!fileExcel) {
+    toast.error("Chưa chọn file Excel!");
+    return;
+  }
+  const formData = new FormData();
+  formData.append("file", fileExcel); // key "file" phải trùng với @RequestParam("file")
+
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/learning/admin/questions/excel`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    console.log("Kết quả trả về từ API:", response.data);
+
+    if (response.data.status !== 200 && response.data.error) {
+      // in ra đúng lỗi từ server
+      toast.error(response.data.error);
+    } else {
+      toast.success("Thêm thành công");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi upload Excel:", error);
+    toast.error("Upload thất bại. Vui lòng thử lại.");
+    throw error;
+  }
+};
+
 export default {
   getQuestions,
   deleteQuestion,
   createQuestion,
   updateQuestion,
+  importExcel,
 };
