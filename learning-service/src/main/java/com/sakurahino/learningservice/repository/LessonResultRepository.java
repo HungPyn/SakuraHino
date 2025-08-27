@@ -1,5 +1,6 @@
 package com.sakurahino.learningservice.repository;
 
+import com.sakurahino.learningservice.dto.result.ResponseStatsResultDTO;
 import com.sakurahino.learningservice.entity.LessonResult;
 import com.sakurahino.learningservice.enums.ResultStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -37,4 +38,27 @@ public interface LessonResultRepository  extends JpaRepository<LessonResult, Int
                                                                       Integer lessonId,
                                                                       ResultStatus status);
 
+    // lấy result
+    @Query("""
+        SELECT new com.sakurahino.learningservice.dto.result.ResponseStatsResultDTO(
+            lr.userId,
+            l.topic.name,
+            l.lessonName,
+            lr.score,
+            lr.durationSeconds,
+            lr.completedAt,
+            lr.status
+        )
+        FROM LessonResult lr
+        JOIN lr.lesson l
+        JOIN l.topic t
+    """)
+    List<ResponseStatsResultDTO> findAllUserStats();
+
+    // Lấy lesson result của nhiều userId
+    @Query("SELECT lr FROM LessonResult lr " +
+            "JOIN FETCH lr.lesson l " +
+            "JOIN FETCH l.topic t " +
+            "WHERE lr.userId IN :userIds")
+    List<LessonResult> findByUserIdIn(@Param("userIds") List<String> userIds);
 }

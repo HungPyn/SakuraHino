@@ -95,4 +95,5 @@ public interface UserRepository extends JpaRepository<User, String> {
     List<Object[]> countByMonth(@Param("start") LocalDateTime start,
                                 @Param("end") LocalDateTime end);
 
+     List<User> findByUsernameContainingIgnoreCase(String keyword);
 }

@@ -1,10 +1,16 @@
 package com.sakurahino.learningservice.service.impl;
 
+import com.sakurahino.clients.dto.InternalUserResponse;
+import com.sakurahino.clients.feign.UserServiceClients;
 import com.sakurahino.common.util.TimeUtils;
+import com.sakurahino.learningservice.dto.result.ResponseStatsResultDTO;
 import com.sakurahino.learningservice.dto.statics.RegistrationStatDto;
 import com.sakurahino.learningservice.dto.statics.TotalLessonResponseDTO;
+import com.sakurahino.learningservice.entity.LessonResult;
 import com.sakurahino.learningservice.enums.LearningStatus;
+import com.sakurahino.learningservice.enums.ResultStatus;
 import com.sakurahino.learningservice.repository.LessonRepository;
+import com.sakurahino.learningservice.repository.LessonResultRepository;
 import com.sakurahino.learningservice.service.LearningStaticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -21,7 +28,8 @@ import java.util.stream.IntStream;
 public class LearningStaticServiceImpl implements LearningStaticsService {
 
     private final LessonRepository lessonRepository;
-
+    private final LessonResultRepository lessonResultRepository;
+    private final UserServiceClients userServiceClients;
     @Override
     public TotalLessonResponseDTO getTotalLessonStatics() {
         // 00:00 hôm nay giờ VN
@@ -81,6 +89,67 @@ public class LearningStaticServiceImpl implements LearningStaticsService {
                         .count(monthCountMap.getOrDefault(m, 0L))
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ResponseStatsResultDTO> findAllUserStats() {
+        List<InternalUserResponse> listUser = userServiceClients.getAllUsersInternal();
+
+        Map<String, InternalUserResponse> userMap = listUser.stream()
+                .collect(Collectors.toMap(InternalUserResponse::getUserId, Function.identity()));
+
+        return lessonResultRepository.findAllUserStats()
+                .stream()
+                .map(lr -> {
+                    InternalUserResponse user = userMap.get(lr.getUserId());
+
+                    return ResponseStatsResultDTO.builder()
+                            .userId(lr.getUserId())
+                            .topicName(lr.getTopicName())
+                            .LessonName(lr.getLessonName())
+                            .score(lr.getScore())
+                            .durationSeconds(lr.getDurationSeconds())
+                            .completedAt(lr.getCompletedAt())
+                            .status(lr.getStatus()) // trả enum thẳng
+                            .build();
+                })
+                .toList();
+    }
+
+    @Override
+    public List<ResponseStatsResultDTO> findAllUserStatsByUser(String keyword) {
+        // 1️⃣ Gọi user-service để lấy user thỏa keyword
+        List<InternalUserResponse> listUser = userServiceClients.searchUsers(keyword);
+        if (listUser.isEmpty()) return List.of();
+
+        // 2️⃣ Tạo list userId
+        List<String> userIds = listUser.stream()
+                .map(InternalUserResponse::getUserId)
+                .toList();
+
+        // 3️⃣ Lấy lessonResult chỉ cho userId này
+        List<LessonResult> lessonResults = lessonResultRepository.findByUserIdIn(userIds);
+
+        // 4️⃣ Map userId -> InternalUserResponse
+        Map<String, InternalUserResponse> userMap = listUser.stream()
+                .collect(Collectors.toMap(InternalUserResponse::getUserId, Function.identity()));
+
+        // 5️⃣ Map sang DTO
+        return lessonResults.stream()
+                .map(lr -> {
+                    InternalUserResponse user = userMap.get(lr.getUserId());
+                    return ResponseStatsResultDTO.builder()
+                            .userId(lr.getUserId())
+                            .userName(user != null ? user.getUserName() : null)
+                            .topicName(lr.getLesson().getTopic().getName())
+                            .LessonName(lr.getLesson().getLessonName())
+                            .score(lr.getScore())
+                            .durationSeconds(lr.getDurationSeconds())
+                            .completedAt(lr.getCompletedAt())
+                            .status(lr.getStatus())
+                            .build();
+                })
+                .toList();
     }
 
 }

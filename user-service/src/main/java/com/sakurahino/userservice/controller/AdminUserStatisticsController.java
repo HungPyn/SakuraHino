@@ -42,12 +42,12 @@ public class AdminUserStatisticsController {
             return new SuccessResponse(response);
         }
 
-        @GetMapping("stats/long-streaks")
+        @GetMapping("/stats/long-streaks")
     public SuccessResponse getLongStreakStats() {
         var respones = userStaticService.getTop5UsserUserLongStreak();
         return new SuccessResponse(respones);
         }
-    @GetMapping("stats/exp-score")
+    @GetMapping("/stats/exp-score")
     public SuccessResponse getExpScoreStats() {
         var respones = userStaticService.getTop5UserExpScore();
         return new SuccessResponse(respones);

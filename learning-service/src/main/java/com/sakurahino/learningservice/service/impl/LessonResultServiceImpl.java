@@ -8,6 +8,7 @@ import com.sakurahino.common.ex.ExceptionCode;
 import com.sakurahino.common.security.AuthHelper;
 import com.sakurahino.learningservice.dto.result.LessonResultRequestDTO;
 import com.sakurahino.learningservice.dto.result.LessonResultResponseDTO;
+import com.sakurahino.learningservice.dto.result.ResponseStatsResultDTO;
 import com.sakurahino.learningservice.entity.Lesson;
 import com.sakurahino.learningservice.entity.LessonResult;
 import com.sakurahino.learningservice.entity.UserLessonStatus;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @Service
 @Slf4j

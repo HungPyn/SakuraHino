@@ -4,10 +4,7 @@ import com.sakurahino.common.retresponse.SuccessResponse;
 import com.sakurahino.learningservice.service.LearningStaticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -36,4 +33,14 @@ public class LearningStaticsController {
         return new SuccessResponse(response);
     }
 
+    @GetMapping()
+    public SuccessResponse getAllUserResultStats() {
+        var response = learningStaticsService.findAllUserStats();
+        return new SuccessResponse(response);
+    }
+    @GetMapping("/search")
+    public SuccessResponse getAllUserResultStats(@RequestParam(name = "keyword") String keyword) {
+        var response = learningStaticsService.findAllUserStatsByUser(keyword);
+        return new SuccessResponse(response);
+    }
 }
