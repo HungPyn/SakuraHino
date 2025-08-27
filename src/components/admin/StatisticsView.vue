@@ -131,7 +131,7 @@ const statCardsData = ref([
     emoji: "📝",
   },
   {
-    title: "Gói học đang hoạt động",
+    title: "Bài học hoạt động",
     value: "0",
     changePercentage: null,
     changePositive: true,
@@ -152,6 +152,24 @@ const statCardsData = ref([
   },
 ]);
 
+// Hàm load API cho card "Tổng người dùng"
+async function loadUserStatsThisMonth() {
+  try {
+    const res = await userService.getTotalUsersWithPercentThisMonth();
+    const data = res.data;
+
+    // update card 0
+    statCardsData.value[3].value = data.totalUsers.toLocaleString();
+    statCardsData.value[3].changePercentage = data.percentChange + "%";
+    statCardsData.value[3].changePositive = data.percentChange > 0;
+  } catch (err) {
+    console.error("Lỗi khi load thống kê người dùng:", err);
+  }
+}
+
+onMounted(() => {
+  loadUserStatsThisMonth();
+});
 // Hàm load API cho card "Tổng người dùng"
 async function loadUserStats() {
   try {
@@ -215,7 +233,7 @@ async function loadLessonStatsPublic() {
 }
 
 onMounted(() => {
-  loadLessonStats();
+  loadLessonStatsPublic();
 });
 // Dữ liệu cho CombinedBarLineChart
 const userGrowthData = ref({

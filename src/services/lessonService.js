@@ -148,12 +148,13 @@ const lessonService = {
 
   // API public không cần token
   getTotalLessonStaticsByPublic: async () => {
+    const token = localStorage.getItem("token"); // lấy token
     try {
       const response = await axios.get(
         `${baseUrl}/api/learning/admin/statics/lesson-public`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, // dùng token vừa lấy
           },
         }
       );

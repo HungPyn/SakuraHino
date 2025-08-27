@@ -20,177 +20,124 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, watch, onBeforeUnmount } from 'vue';
-import Chart from 'chart.js/auto'; // Auto-registers core Chart.js components
-
+import { defineComponent, ref, onMounted, watch, onBeforeUnmount } from "vue";
+import Chart from "chart.js/auto"; // Auto-registers core Chart.js components
+import userService from "@/services/userService";
 export default defineComponent({
-  name: 'ActivityChart',
+  name: "ActivityChart",
   setup() {
     const activityChartCanvas = ref(null);
     let activityChartInstance = null;
-    const selectedPeriod = ref('30days'); // Default selected period
+    const selectedPeriod = ref("7days"); // Default selected period
 
     const timePeriods = [
-      { label: '7 ngày', value: '7days' },
-      { label: '30 ngày', value: '30days' },
-      { label: '90 ngày', value: '90days' },
+      { label: "7 ngày", value: "7days" },
+      { label: "30 ngày", value: "30days" },
+      { label: "90 ngày", value: "90days" },
     ];
 
-    // Function to generate mock chart data based on the selected period
-    const fetchData = (period) => {
-      let labels = [];
-      let newUsersData = [];
-      let totalUsersData = [];
+    //chart con hiển thị người dùng đăng ký theo 7 ngày 30 ngày 90 ngày
+    const fetchData = async (period) => {
+      let rangeDays = period === "7days" ? 7 : period === "30days" ? 30 : 90;
+      const data = await userService.getTotalUsersRegistrations(rangeDays);
 
-      const today = new Date();
-      // Helper to format date as 'D/M'
-      const getFormattedDate = (date) => `${date.getDate()}/${date.getMonth() + 1}`;
+      // API trả về [{ period, count }, ...]
+      const labels = data.map((item) => item.period);
+      const newUsersData = data.map((item) => item.count);
 
-      if (period === '7days') {
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date(today);
-          d.setDate(today.getDate() - i);
-          labels.push(getFormattedDate(d));
-          newUsersData.push(Math.floor(Math.random() * 50) + 10);
-          totalUsersData.push(Math.floor(Math.random() * 70) + 20);
-        }
-      } else if (period === '30days') {
-        // Data points adjusted to visually match the provided image
-        labels = ['19/5', '', '30/5', '', '16/6']; // Labels from image
-        newUsersData = [120, 180, 160, 210, 190]; // Bar data
-        totalUsersData = [320, 360, 410, 450, 480]; // Line data
-      } else if (period === '90days') {
-        for (let i = 2; i >= 0; i--) { // 3 data points for 3 months
-          const d = new Date(today);
-          d.setMonth(today.getMonth() - i);
-          labels.push(`${d.getMonth() + 1}/${d.getFullYear()}`);
-          newUsersData.push(Math.floor(Math.random() * 200) + 100);
-          totalUsersData.push(Math.floor(Math.random() * 250) + 150);
-        }
+      return { labels, newUsersData };
+    };
+    const updateChart = async () => {
+      let { labels, newUsersData } = await fetchData(selectedPeriod.value);
+
+      // Chỉ đổi định dạng ngày nếu là 7 ngày (ngày)
+      if (selectedPeriod.value === "7days") {
+        labels = labels.map((dateStr) => {
+          const [year, month, day] = dateStr.split("-");
+          return `${day}-${month}-${year}`;
+        });
+      }
+      // Nếu là tuần hoặc tháng thì giữ nguyên
+      else if (selectedPeriod.value === "30days") {
+        labels = labels.map((weekStr) => `Tuần ${weekStr.slice(4)}`);
+      } else if (selectedPeriod.value === "90days") {
+        labels = labels.map((monthStr) => {
+          const [year, month] = monthStr.split("-");
+          return `${month}/${year}`; // 08/2025
+        });
       }
 
-      return { labels, newUsersData, totalUsersData };
+      const rootStyles = getComputedStyle(document.documentElement);
+      const textMedium = rootStyles.getPropertyValue("--text-medium").trim();
+      const fontFamilySans = rootStyles
+        .getPropertyValue("--font-family-sans")
+        .trim();
+      const borderColor = rootStyles.getPropertyValue("--border-color").trim();
+
+      if (activityChartInstance) {
+        activityChartInstance.data.labels = labels;
+        activityChartInstance.data.datasets[0].data = newUsersData;
+        activityChartInstance.update();
+      } else {
+        activityChartInstance = new Chart(activityChartCanvas.value, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                type: "bar",
+                label: "Người dùng mới",
+                data: newUsersData,
+                backgroundColor: "rgba(26, 115, 232, 0.8)",
+                borderRadius: 6,
+                barThickness: 25,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: "bottom",
+                labels: {
+                  usePointStyle: true,
+                  boxWidth: 8,
+                  boxHeight: 8,
+                  color: textMedium,
+                  font: { size: 14, family: fontFamilySans },
+                },
+              },
+              tooltip: {
+                backgroundColor: "rgba(0,0,0,0.8)",
+                titleColor: "#fff",
+                bodyColor: "#fff",
+                padding: 10,
+                cornerRadius: 8,
+                callbacks: {
+                  title: (context) => `Ngày ${context[0].label}`,
+                  label: (context) =>
+                    `${context.dataset.label}: ${context.parsed.y}`,
+                },
+              },
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                grid: { display: false },
+                ticks: { color: textMedium, font: { family: fontFamilySans } },
+              },
+              y: {
+                beginAtZero: true,
+                grid: { color: borderColor },
+                ticks: { color: textMedium, font: { family: fontFamilySans } },
+              },
+            },
+          },
+        });
+      }
     };
-const updateChart = () => {
-  const { labels, newUsersData, totalUsersData } = fetchData(selectedPeriod.value);
-
-  const rootStyles = getComputedStyle(document.documentElement);
-  const textMedium = rootStyles.getPropertyValue('--text-medium').trim();
-  const fontFamilySans = rootStyles.getPropertyValue('--font-family-sans').trim();
-  const borderColor = rootStyles.getPropertyValue('--border-color').trim();
-
-  if (activityChartInstance) {
-    activityChartInstance.data.labels = labels;
-    activityChartInstance.data.datasets[0].data = newUsersData;
-    activityChartInstance.data.datasets[1].data = totalUsersData;
-    activityChartInstance.update();
-  } else {
-    activityChartInstance = new Chart(activityChartCanvas.value, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            type: 'bar',
-            label: 'Người dùng mới',
-            data: newUsersData,
-            backgroundColor: 'rgba(26, 115, 232, 0.8)',
-            borderRadius: 6,
-            barThickness: 25,
-          },
-          {
-            type: 'line',
-            label: 'Tổng đăng nhập',
-            data: totalUsersData,
-            borderColor: '#28a745',
-            backgroundColor: 'transparent',
-            tension: 0.4,
-            pointBackgroundColor: '#28a745',
-            pointBorderColor: '#fff',
-            pointHoverBackgroundColor: '#fff',
-            pointHoverBorderColor: '#28a745',
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            fill: false,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: true,
-            position: 'bottom',
-            labels: {
-              usePointStyle: true,
-              boxWidth: 8,
-              boxHeight: 8,
-              color: textMedium,
-              font: {
-                size: 14,
-                family: fontFamilySans,
-              },
-            },
-          },
-          tooltip: {
-            backgroundColor: 'rgba(0,0,0,0.8)',
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            padding: 10,
-            cornerRadius: 8,
-            callbacks: {
-              title: function (context) {
-                return `Ngày ${context[0].label}`;
-              },
-              label: function (context) {
-                let label = context.dataset.label || '';
-                if (label) {
-                  label += ': ';
-                }
-                label += context.parsed.y;
-                return label;
-              },
-            },
-          },
-        },
-        scales: {
-          x: {
-            beginAtZero: true,
-            grid: {
-              display: false,
-            },
-            ticks: {
-              color: textMedium,
-              font: {
-                family: fontFamilySans,
-              },
-            },
-          },
-          y: {
-            beginAtZero: true,
-            grid: {
-              color: borderColor,
-            },
-            ticks: {
-              color: textMedium,
-              font: {
-                family: fontFamilySans,
-              },
-              callback: function (value) {
-                if (Number.isInteger(value)) {
-                  return value;
-                }
-                return null;
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-};
-
 
     const selectTimePeriod = (period) => {
       selectedPeriod.value = period;

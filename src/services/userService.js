@@ -107,10 +107,53 @@ const getTotalUsersWithPercent = async () => {
   }
 };
 
+const getTotalUsersWithPercentThisMonth = async () => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/users/admin/statistics/this-month`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    // response.data = { totalUsers: ..., percentChange: ... }
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy tổng user với phần trăm tăng:", error.message);
+    toast.error("Không lấy được thống kê user hôm nay");
+    throw error;
+  }
+};
+const getTotalUsersRegistrations = async (rangeDays = 7) => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/users/admin/statistics/registrations?range=${rangeDays}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // Backend trả về { status, error, data: [...] }
+    if (response.data && Array.isArray(response.data.data)) {
+      return response.data.data; // [{ period, count }, ...]
+    } else {
+      throw new Error("Dữ liệu trả về không hợp lệ");
+    }
+  } catch (error) {
+    console.error("Lỗi khi lấy thống kê user:", error);
+    toast.error("Không lấy được thống kê người dùng");
+    throw error;
+  }
+};
 export default {
   getUsers,
   deleteUser,
   updateUser,
   timKiem,
   getTotalUsersWithPercent,
+  getTotalUsersWithPercentThisMonth,
+  getTotalUsersRegistrations,
 };
