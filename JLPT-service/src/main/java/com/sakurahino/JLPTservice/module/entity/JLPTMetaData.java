@@ -1,5 +1,6 @@
 package com.sakurahino.JLPTservice.module.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.sakurahino.JLPTservice.enums.StatusEnum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -32,6 +33,9 @@ public class JLPTMetaData {
     @Column(name = "audio_url")
     private String audioUrl;
 
+    @Column(name = "text_reading")
+    private String textReading;
+
     @Column(name = "exam_time")
     private Integer examTime;
 
@@ -46,5 +50,6 @@ public class JLPTMetaData {
     private StatusEnum status;
 
     @OneToMany(mappedBy = "metaData", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<JLPTUserStatus> userStatus;
 }

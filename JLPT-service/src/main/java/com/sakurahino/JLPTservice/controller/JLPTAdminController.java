@@ -2,6 +2,7 @@ package com.sakurahino.JLPTservice.controller;
 
 import com.sakurahino.JLPTservice.module.dto.BaseResponseDTO;
 import com.sakurahino.JLPTservice.module.dto.request.AddNewExamRequest;
+import com.sakurahino.JLPTservice.module.dto.response.JLPTMetaDataResponseDTO;
 import com.sakurahino.JLPTservice.module.entity.JLPTMetaData;
 import com.sakurahino.JLPTservice.service.JLPTMetaDataService;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +25,10 @@ public class JLPTAdminController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<BaseResponseDTO<JLPTMetaData>> addNew(@ModelAttribute AddNewExamRequest addNewExamRequest){
+    public ResponseEntity<BaseResponseDTO<JLPTMetaDataResponseDTO>> addNew(@ModelAttribute AddNewExamRequest addNewExamRequest){
         return jlptMetaDataService.add(addNewExamRequest);
     }
+
 
     @PostMapping("/delete")
     public ResponseEntity<BaseResponseDTO<JLPTMetaData>> delete(@RequestParam Long id){

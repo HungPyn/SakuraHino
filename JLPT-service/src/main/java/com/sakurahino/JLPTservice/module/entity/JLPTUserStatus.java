@@ -1,5 +1,6 @@
 package com.sakurahino.JLPTservice.module.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,6 +44,7 @@ public class JLPTUserStatus {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "meta_data_id", referencedColumnName = "id")
+    @JsonBackReference
     private JLPTMetaData metaData;
 
 }

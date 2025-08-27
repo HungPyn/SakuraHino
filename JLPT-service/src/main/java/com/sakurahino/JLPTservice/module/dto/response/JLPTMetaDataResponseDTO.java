@@ -1,23 +1,20 @@
-package com.sakurahino.JLPTservice.module.dto.request;
+package com.sakurahino.JLPTservice.module.dto.response;
 
-import com.sakurahino.JLPTservice.enums.StatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class AddNewExamRequest {
+@NoArgsConstructor
+public class JLPTMetaDataResponseDTO {
     private Long id;
-    private MultipartFile file;
     private String examName;
-    private String status;
+    private String downloadUrl;
     private String audioUrl;
     private Integer examTime;
     private String textReading;
+    private String status;
 }
-

@@ -2,6 +2,7 @@ package com.sakurahino.JLPTservice.controller;
 
 import com.sakurahino.JLPTservice.module.dto.BaseResponseDTO;
 import com.sakurahino.JLPTservice.module.dto.request.UpdateResultJLPTExamRequest;
+import com.sakurahino.JLPTservice.module.dto.response.GetAudioAndTextReadingResponse;
 import com.sakurahino.JLPTservice.module.dto.response.GetByUserIdResponse;
 import com.sakurahino.JLPTservice.module.dto.response.ResultResponse;
 import com.sakurahino.JLPTservice.module.dto.response.UpdateResultJLPTExamResponse;
@@ -41,7 +42,7 @@ public class JLPTUserController {
     }
 
     @PostMapping("/getAudioUrl")
-    public ResponseEntity<BaseResponseDTO<String>> getAudioUrl(@RequestParam Long id){
+    public ResponseEntity<BaseResponseDTO<GetAudioAndTextReadingResponse>> getAudioUrl(@RequestParam Long id){
         return jlptMetaDataService.getAudioUrl(id);
     }
 }

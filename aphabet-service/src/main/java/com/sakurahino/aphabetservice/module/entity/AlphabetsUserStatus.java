@@ -1,5 +1,6 @@
 package com.sakurahino.aphabetservice.module.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.sakurahino.aphabetservice.enums.ProgressStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -48,5 +49,6 @@ public class AlphabetsUserStatus {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "alphabet_id")
+    @JsonBackReference
     private Alphabet alphabet;
 }

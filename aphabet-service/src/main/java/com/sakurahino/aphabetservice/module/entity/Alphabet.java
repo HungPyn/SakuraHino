@@ -1,5 +1,6 @@
 package com.sakurahino.aphabetservice.module.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.sakurahino.aphabetservice.enums.AlphabetsStatus;
 import com.sakurahino.aphabetservice.enums.CharacterType;
 import jakarta.persistence.*;
@@ -47,6 +48,7 @@ public class Alphabet {
     private CharacterType characterType;
 
     @OneToMany(mappedBy = "alphabet",fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<AlphabetsUserStatus> userStatuses;
 
     @Column(name = "meaning")
