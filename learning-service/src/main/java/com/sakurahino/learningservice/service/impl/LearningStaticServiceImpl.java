@@ -20,8 +20,9 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class LearningStaticServiceImpl implements LearningStaticsService {
 
-    private final LessonRepository lessonRepository
-            ;@Override
+    private final LessonRepository lessonRepository;
+
+    @Override
     public TotalLessonResponseDTO getTotalLessonStatics() {
         // 00:00 hôm nay giờ VN
         ZonedDateTime startOfToday = TimeUtils.startOfDayVietNam();
@@ -81,4 +82,5 @@ public class LearningStaticServiceImpl implements LearningStaticsService {
                         .build())
                 .collect(Collectors.toList());
     }
+
 }

@@ -1,6 +1,5 @@
 package com.sakurahino.learningservice.dto.result;
 
-import com.sakurahino.learningservice.enums.ProgressStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
