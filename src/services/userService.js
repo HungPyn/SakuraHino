@@ -87,9 +87,30 @@ const timKiem = async (page, size, tuKhoa, status) => {
   }
 };
 
+// --- MỚI: Lấy tổng user kèm % tăng hôm qua ---
+const getTotalUsersWithPercent = async () => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/users/admin/statistics/total-with-percent`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    // response.data = { totalUsers: ..., percentChange: ... }
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy tổng user với phần trăm tăng:", error.message);
+    toast.error("Không lấy được thống kê user hôm nay");
+    throw error;
+  }
+};
+
 export default {
   getUsers,
   deleteUser,
   updateUser,
   timKiem,
+  getTotalUsersWithPercent,
 };

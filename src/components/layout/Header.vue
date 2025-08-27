@@ -1,9 +1,9 @@
 <template>
   <header class="admin-header">
-    <div class="search-bar">
+    <!-- <div class="search-bar">
       <font-awesome-icon icon="fas fa-search" class="search-icon" />
       <input type="text" placeholder="Tìm kiếm..." class="search-input" />
-    </div>
+    </div> -->
 
     <div class="header-right">
       <span class="current-date">{{ currentDate }}</span>
@@ -74,7 +74,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .admin-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end; /* đẩy tất cả về phải */
   align-items: center;
   background-color: var(--card-background);
   padding: 15px 30px;

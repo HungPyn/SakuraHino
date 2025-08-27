@@ -126,6 +126,43 @@ const lessonService = {
       throw error;
     }
   },
+
+  // Thêm vào trong object lessonService
+  getTotalLessonStatics: async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(
+        `${baseUrl}/api/learning/admin/statics/total-lesson`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi lấy thống kê tổng số bài học:", error);
+      throw error;
+    }
+  },
+
+  // API public không cần token
+  getTotalLessonStaticsByPublic: async () => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}/api/learning/admin/statics/lesson-public`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi gọi API getTotalLessonStaticsByPublic:", error);
+      throw error;
+    }
+  },
 };
 
 export default lessonService;

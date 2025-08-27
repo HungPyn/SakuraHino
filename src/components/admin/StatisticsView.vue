@@ -95,8 +95,6 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-
 // Import các component biểu đồ và thống kê
 import CombinedBarLineChart from "@/components/dashboard/charts/CombinedBarLineChart.vue";
 import LevelDistributionChart from "@/components/dashboard/charts/LevelDistributionChart.vue";
@@ -106,16 +104,16 @@ import LeaderboardTable from "@/components/dashboard/statistics/LeaderboardTable
 import RecentActivitiesCard from "@/components/dashboard/statistics/RecentActivitiesCard.vue";
 import NewStatCards from "@/components/dashboard/statistics/NewStatCards.vue";
 
-// Import PendingTasksCard và loại bỏ MiniStatCards
-import PendingTasksCard from "@/components/dashboard/PendingTasksCard.vue";
-// import MiniStatCards from '@/components/dashboard/statistics/MiniStatCards.vue' // Đã loại bỏ dòng này
+import { ref, onMounted } from "vue";
+import userService from "@/services/userService";
+import lessonService from "@/services/lessonService";
 
-// Dữ liệu cho NewStatCards
+// Dữ liệu ban đầu (3 card sau fix cứng)
 const statCardsData = ref([
   {
     title: "Tổng người dùng",
-    value: "12,845",
-    changePercentage: "8.2%",
+    value: "0",
+    changePercentage: null,
     changePositive: true,
     icon: "fas fa-users",
     iconBgColor: "#e8f0fe",
@@ -123,9 +121,9 @@ const statCardsData = ref([
     emoji: "👥",
   },
   {
-    title: "Nội dung đã tạo",
-    value: "3,721",
-    changePercentage: "12.5%",
+    title: "Bài học đã tạo",
+    value: "0",
+    changePercentage: null,
     changePositive: true,
     icon: "fas fa-file-alt",
     iconBgColor: "#e6ffe6",
@@ -134,8 +132,8 @@ const statCardsData = ref([
   },
   {
     title: "Gói học đang hoạt động",
-    value: "24",
-    changePercentage: "3.8%",
+    value: "0",
+    changePercentage: null,
     changePositive: true,
     icon: "fas fa-graduation-cap",
     iconBgColor: "#fff0e6",
@@ -154,6 +152,71 @@ const statCardsData = ref([
   },
 ]);
 
+// Hàm load API cho card "Tổng người dùng"
+async function loadUserStats() {
+  try {
+    const res = await userService.getTotalUsersWithPercent();
+    const data = res.data;
+
+    // update card 0
+    statCardsData.value[0].value = data.totalUsers.toLocaleString();
+    statCardsData.value[0].changePercentage = data.percentChange + "%";
+    statCardsData.value[0].changePositive = data.percentChange > 0;
+  } catch (err) {
+    console.error("Lỗi khi load thống kê người dùng:", err);
+  }
+}
+
+onMounted(() => {
+  loadUserStats();
+});
+
+// Hàm load API cho card "Tổng bài học"
+async function loadLessonStats() {
+  try {
+    const res = await lessonService.getTotalLessonStatics();
+    const data = res.data;
+    console.log(res);
+    if (!data) {
+      console.warn("API trả về không có data cho bài học");
+      return;
+    }
+
+    statCardsData.value[1].value = data.totalLesson?.toLocaleString() || "0";
+    statCardsData.value[1].changePercentage =
+      data.percentChange != null ? data.percentChange.toFixed(1) + "%" : null;
+    statCardsData.value[1].changePositive = data.percentChange > 0;
+  } catch (err) {
+    console.error("Lỗi khi load thống kê bài học:", err);
+  }
+}
+
+onMounted(() => {
+  loadLessonStats();
+});
+// Hàm load API cho card "Tổng bài học public"
+async function loadLessonStatsPublic() {
+  try {
+    const res = await lessonService.getTotalLessonStaticsByPublic();
+    const data = res.data;
+    console.log(res);
+    if (!data) {
+      console.warn("API trả về không có data cho bài học");
+      return;
+    }
+
+    statCardsData.value[2].value = data.totalLesson?.toLocaleString() || "0";
+    statCardsData.value[2].changePercentage =
+      data.percentChange != null ? data.percentChange.toFixed(1) + "%" : null;
+    statCardsData.value[2].changePositive = data.percentChange > 0;
+  } catch (err) {
+    console.error("Lỗi khi load thống kê bài học:", err);
+  }
+}
+
+onMounted(() => {
+  loadLessonStats();
+});
 // Dữ liệu cho CombinedBarLineChart
 const userGrowthData = ref({
   labels: [
@@ -262,38 +325,6 @@ const leaderboardData = ref([
   { rank: 3, name: "Hoàng Ngọc Vương", score: 860 },
   { rank: 4, name: "Nguyễn Hữu Dũng", score: 900 },
 ]);
-
-// Dữ liệu cho MiniStatCards - Sẽ không còn được sử dụng trực tiếp trong template này
-// const miniStatCardsData = ref([
-//   {
-//     icon: 'bi-person-add',
-//     emoji: null,
-//     value: '120',
-//     label: 'Học viên mới',
-//     bg: 'linear-gradient(135deg, #42a5f5, #1e88e5)'
-//   },
-//   {
-//     icon: 'bi-book-fill',
-//     emoji: null,
-//     value: '85',
-//     label: 'Bài học hoàn thành',
-//     bg: 'linear-gradient(135deg, #66bb6a, #43a047)'
-//   },
-//   {
-//     icon: 'bi-hourglass-split',
-//     emoji: null,
-//     value: '2h 30m',
-//     label: 'Thời gian học',
-//     bg: 'linear-gradient(135deg, #ffb74d, #fb8c00)'
-//   },
-//   {
-//     icon: 'bi-patch-check-fill',
-//     emoji: null,
-//     value: '95%',
-//     label: 'Tiến độ hoàn thành',
-//     bg: 'linear-gradient(135deg, #ab47bc, #8e24aa)'
-//   }
-// ]);
 
 // Dữ liệu cho PendingTasksCard
 const pendingTasksData = ref([
