@@ -12,4 +12,6 @@ public class AddNewExamRequest {
     private MultipartFile file;
     private String examName;
     private String status;
+    private String audioUrl;
+    private Integer ExamTime;
 }

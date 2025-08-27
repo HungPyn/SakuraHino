@@ -10,9 +10,8 @@ import java.util.List;
 public interface JLPTMetaDataResponse extends JpaRepository<JLPTMetaData,Long > {
     @Query("""
     SELECT DISTINCT m FROM JLPTMetaData m
-    LEFT JOIN FETCH m.userStatus u
-         WITH u.userId = :userId
-    WHERE m.status = 'PUBLIC'
+    LEFT JOIN m.userStatus u ON u.userId = :userId
+    WHERE m.status = 'PUBLIC'       
 """)
     List<JLPTMetaData> findPublishedExamsWithUserStatus(@Param("userId") String userId);
 }

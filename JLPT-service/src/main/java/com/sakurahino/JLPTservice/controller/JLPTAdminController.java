@@ -28,8 +28,8 @@ public class JLPTAdminController {
         return jlptMetaDataService.add(addNewExamRequest);
     }
 
-    @PostMapping
-    public ResponseEntity<BaseResponseDTO<JLPTMetaData>> delete(@RequestBody Long id){
+    @PostMapping("/delete")
+    public ResponseEntity<BaseResponseDTO<JLPTMetaData>> delete(@RequestParam Long id){
         return jlptMetaDataService.delete(id);
     }
 }

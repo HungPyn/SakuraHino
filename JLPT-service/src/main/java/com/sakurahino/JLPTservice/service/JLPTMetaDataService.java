@@ -17,4 +17,5 @@ public interface JLPTMetaDataService {
 
     ResponseEntity<BaseResponseDTO<JLPTMetaData>> getById(Long id);
 
+    ResponseEntity<BaseResponseDTO<String>> getAudioUrl(Long id);
 }

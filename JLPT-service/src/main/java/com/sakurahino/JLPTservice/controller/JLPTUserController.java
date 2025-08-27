@@ -31,12 +31,17 @@ public class JLPTUserController {
     }
 
     @PostMapping("/result")
-    public ResponseEntity<BaseResponseDTO<UpdateResultJLPTExamResponse>> result(@RequestBody Long id){
+    public ResponseEntity<BaseResponseDTO<UpdateResultJLPTExamResponse>> result(@RequestParam Long id){
         return jlptUserStatusService.result(id);
     }
 
     @PostMapping("/getForUserWeb")
-    public ResponseEntity<BaseResponseDTO<JLPTMetaData>> getForUserWeb(@RequestBody Long id){
+    public ResponseEntity<BaseResponseDTO<JLPTMetaData>> getForUserWeb(@RequestParam Long id){
         return jlptMetaDataService.getById(id);
+    }
+
+    @PostMapping("/getAudioUrl")
+    public ResponseEntity<BaseResponseDTO<String>> getAudioUrl(@RequestParam Long id){
+        return jlptMetaDataService.getAudioUrl(id);
     }
 }

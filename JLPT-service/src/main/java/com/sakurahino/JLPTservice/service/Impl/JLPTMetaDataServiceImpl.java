@@ -48,6 +48,8 @@ public class JLPTMetaDataServiceImpl implements JLPTMetaDataService {
             JLPTMetaData jlptMetaData = JLPTMetaData.builder()
                     .examName(addNewExamRequest.getExamName())
                     .downloadUrl(response.getUrlExcelFile())
+                    .audioUrl(addNewExamRequest.getAudioUrl())
+                    .examTime(addNewExamRequest.getExamTime())
                     .status(statusEnum)
                     .createAt(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")))
                     .build();
@@ -66,7 +68,9 @@ public class JLPTMetaDataServiceImpl implements JLPTMetaDataService {
     public ResponseEntity<BaseResponseDTO<JLPTMetaData>> delete(Long id) {
         Optional<JLPTMetaData> jlptMetaData = jlptMetaDataResponse.findById(id);
         if (jlptMetaData.isPresent()){
-            jlptMetaDataResponse.delete(jlptMetaData.get());
+            JLPTMetaData jlptMetaData1 = jlptMetaData.get();
+            jlptMetaData1.setStatus(StatusEnum.LOCKED);
+            jlptMetaDataResponse.save(jlptMetaData1);
             return ResponseEntity.ok(BaseResponseDTO.<JLPTMetaData>builder()
                     .statusCode("200")
                     .errorMessage("Success")
@@ -90,6 +94,23 @@ public class JLPTMetaDataServiceImpl implements JLPTMetaDataService {
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
+    }
+
+    @Override
+    public ResponseEntity<BaseResponseDTO<String>> getAudioUrl(Long id) {
+        Optional<JLPTMetaData> jlptMetaData = jlptMetaDataResponse.findById(id);
+        if (jlptMetaData.isPresent()){
+            return ResponseEntity.ok(BaseResponseDTO.<String>builder()
+                    .statusCode("200")
+                    .errorMessage("Success")
+                    .Data(jlptMetaData.get().getAudioUrl())
+                    .build());
+        }
+        return ResponseEntity.ok(BaseResponseDTO.<String>builder()
+                .statusCode("400")
+                .errorMessage("Not Found")
+                .Data(jlptMetaData.get().getAudioUrl())
+                .build());
     }
 
 }
