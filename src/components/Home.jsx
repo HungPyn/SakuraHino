@@ -6,20 +6,17 @@ const JLPT_SERVICE_BASE = "http://localhost:8080";
 
 // Gọi API lấy thông tin bài thi từ backend
 async function fetchExamMeta(examId, token) {
-  const res = await fetch(
-    `${JLPT_SERVICE_BASE}/api/jlpt/user?examId=${examId}`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // truyền token vào
-      },
-    }
-  );
+  const res = await fetch(`${JLPT_SERVICE_BASE}/api/jlpt/user/getForUserWeb`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(examId),
+    method: "POST",
+  });
   if (!res.ok) throw new Error("Không lấy được thông tin bài thi");
   return res.json();
 }
-
-const userIdForTesting = "test-user-123";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -31,6 +28,7 @@ const Home = () => {
   const [availableSections, setAvailableSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [examName, setExamName] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -56,11 +54,16 @@ const Home = () => {
         const meta = await fetchExamMeta(examId, token);
 
         // meta trả ra có excelUrl
-        if (!meta.downloadUrl && !meta.excelUrl) {
+        if (!meta.Data.downloadUrl) {
           throw new Error("API không trả excelUrl");
         }
+        if (!meta.Data.examName) {
+          throw new Error("API không trả examName");
+        } else {
+          setExamName(meta.Data.examName);
+        }
 
-        const downloadUrl = meta.downloadUrl || meta.excelUrl;
+        const downloadUrl = meta.Data.downloadUrl;
 
         const merged = { ...meta, downloadUrl };
         setExamMeta(merged);
@@ -147,7 +150,7 @@ const Home = () => {
         }}
       >
         <h1 style={{ color: "#00ff00" }}>
-          {examMeta?.examName || "Đang tải bài thi..."}
+          {examName || "Đang tải bài thi..."}
         </h1>
         {!!examMeta && (
           <div
@@ -158,9 +161,8 @@ const Home = () => {
               marginTop: 10,
             }}
           >
-            <span>Cấp độ {examMeta?.level || "N/A"}</span>
-            <span>Thời gian: {examMeta?.time || "144 phút"}</span>
-            <span>Mã đề: {examMeta?.id}</span>
+            <span>Thời gian: {examMeta?.Data.examTime || "144 phút"}</span>
+            <span>Mã đề: {examMeta?.Data.id}</span>
           </div>
         )}
       </header>

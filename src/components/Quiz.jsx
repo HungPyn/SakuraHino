@@ -100,15 +100,30 @@ const Quiz = () => {
     sections.reduce((acc, section) => ({ ...acc, [section]: true }), {})
   );
   const [submitting, setSubmitting] = useState(false);
-  const [startedAt] = useState(() => new Date().toISOString());
+
+  // startedAt: lưu vào localStorage để giữ qua refresh
+  const lsStartedKey = `startedAt_${examMeta?.id || "unknown"}_${sectionId}`;
+  const [startedAt, setStartedAt] = useState(() => {
+    const fromLs = localStorage.getItem(lsStartedKey);
+    if (fromLs) return fromLs;
+    const now = new Date().toISOString();
+    localStorage.setItem(lsStartedKey, now);
+    return now;
+  });
 
   // Timer theo phần thi
-  const expiryTimestamp = new Date();
   const duration = sectionDurations[sectionId] || 3600;
+  const expiryTimestamp = new Date();
   expiryTimestamp.setSeconds(expiryTimestamp.getSeconds() + duration);
+
+  // endQuizRef để onExpire gọi đúng hàm (tránh vòng lặp hook)
+  const endQuizRef = useRef(null);
+
   const { seconds, minutes, hours, pause } = useTimer({
     expiryTimestamp,
-    onExpire: () => endQuiz(true),
+    onExpire: () => {
+      if (endQuizRef.current) endQuizRef.current(true);
+    },
   });
 
   // Tải câu hỏi (ưu tiên Excel từ backend, fallback local)
@@ -137,7 +152,9 @@ const Quiz = () => {
       sectionsList.forEach((section) => {
         const sectionQuestions = finalSource[level]?.[section];
         if (sectionQuestions) {
-          const withGroup = sectionQuestions.map((q) => ({
+          const withGroup = sectionQuestions.map((q, idx) => ({
+            // preserve id if exists, else fallback to deterministic key
+            id: q.id ?? `${section}_${idx}`,
             ...q,
             group: section,
           }));
@@ -176,16 +193,38 @@ const Quiz = () => {
     return -1;
   };
 
+  // Hàm kết thúc bài (được gán vào endQuizRef để onExpire gọi)
   const endQuiz = async (auto = false) => {
+    // đảm bảo pause timer
     pause();
 
-    // Tính điểm
+    // Build answerSheet và tính điểm
     let finalScore = 0;
+    let part1 = 0,
+      part2 = 0,
+      part3 = 0;
+
     const answerSheet = quizQuestions.map((q, idx) => {
       const chosen = answers[idx] ?? null;
       const correct = q.answer;
       const isCorrect = chosen === correct;
       if (isCorrect) finalScore += 1;
+
+      // phân loại điểm theo group
+      if (isCorrect) {
+        if (
+          q.group === "Kanji" ||
+          q.group === "Từ vựng" ||
+          q.group === "Ngữ pháp"
+        ) {
+          part1++;
+        } else if (q.group === "Đọc hiểu") {
+          part2++;
+        } else if (q.group === "Nghe hiểu") {
+          part3++;
+        }
+      }
+
       return {
         index: idx,
         group: q.group,
@@ -214,7 +253,12 @@ const Quiz = () => {
           startedAt,
           durationSeconds: duration,
           score: finalScore,
+          part1,
+          part2,
+          part3,
           autoSubmitted: !!auto,
+          // bạn có thể thêm answerSheet nếu muốn backend lưu đáp án chi tiết
+          // answerSheet
         };
 
         const res = await fetch(
@@ -231,22 +275,63 @@ const Quiz = () => {
           }
         );
 
-        if (!res.ok) throw new Error("Submit failed");
-        // Bạn có thể nhận về {score, rank, ...} nếu backend trả
-        // const result = await res.json();
+        if (!res.ok) {
+          // cố gắng parse lỗi nếu backend gửi json lỗi
+          let errText = await res.text();
+          throw new Error(`Submit failed: ${res.status} ${errText}`);
+        }
+
+        // Nếu backend trả JSON trong wrapper (BaseResponseDTO), lấy data nếu có
+        const json = await res.json().catch(() => null);
+        const backendData = json?.data ?? json;
+
+        // điều hướng sang trang kết quả cùng dữ liệu backend (nếu có)
+        navigate("/result", {
+          state: {
+            score: finalScore,
+            total: quizQuestions.length,
+            part1,
+            part2,
+            part3,
+            backend: backendData,
+          },
+        });
       } catch (e) {
         console.error("Submit error:", e);
-        // Không chặn điều hướng sang trang kết quả để UX mượt mà
+        // Nếu submit lỗi, vẫn điều hướng về trang kết quả với data client-side
+        navigate("/result", {
+          state: {
+            score: finalScore,
+            total: quizQuestions.length,
+            part1,
+            part2,
+            part3,
+            backend: null,
+            error: e.message,
+          },
+        });
       } finally {
         setSubmitting(false);
       }
+    } else {
+      // Nếu không có examMeta id thì vẫn chuyển trang kết quả client-side
+      navigate("/result", {
+        state: {
+          score: finalScore,
+          total: quizQuestions.length,
+          part1,
+          part2,
+          part3,
+          backend: null,
+        },
+      });
     }
-
-    // Điều hướng sang trang kết quả (giữ hành vi cũ của bạn)
-    navigate("/result", {
-      state: { score: finalScore, total: quizQuestions.length },
-    });
   };
+
+  // expose endQuiz to onExpire via ref
+  useEffect(() => {
+    endQuizRef.current = endQuiz;
+  }, [endQuiz, answers, quizQuestions, startedAt]);
 
   if (!sectionId) {
     return <p>Thiếu thông tin phần thi. Vui lòng quay lại trang Home.</p>;
@@ -316,6 +401,7 @@ const Quiz = () => {
             backgroundColor: "white",
             padding: "1rem",
             boxShadow: "2px 0 5px rgba(0,0,0,0.1)",
+            overflowY: "auto",
           }}
         >
           <h3 style={{ color: "#333", marginBottom: "1rem" }}>
@@ -397,7 +483,7 @@ const Quiz = () => {
           >
             {quizQuestions.map((q, index) => (
               <div
-                key={index}
+                key={q.id ?? index}
                 id={`question-${index}`}
                 style={{ marginBottom: "2rem" }}
               >
