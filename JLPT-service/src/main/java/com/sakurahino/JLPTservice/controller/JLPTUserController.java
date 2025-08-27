@@ -36,7 +36,7 @@ public class JLPTUserController {
         return jlptUserStatusService.result(id);
     }
 
-    @PostMapping("/getForUserWeb")
+    @GetMapping("/getForUserWeb")
     public ResponseEntity<BaseResponseDTO<JLPTMetaData>> getForUserWeb(@RequestParam Long id){
         return jlptMetaDataService.getById(id);
     }
