@@ -35,9 +35,11 @@ public class AlphabetsAdminController {
     }
 
     @GetMapping("/{character_type}")
-    public ResponseEntity<BaseResponeDTO<List<Alphabet>>> getByCharacterType(@RequestParam CharacterType character_type){
-        return alphabetService.getByCharacterType(character_type);
+    public ResponseEntity<BaseResponeDTO<List<Alphabet>>> getByCharacterType(
+            @PathVariable("character_type") CharacterType characterType) {
+        return alphabetService.getByCharacterType(characterType);
     }
+
     @GetMapping("/{japanese_character}")
     public ResponseEntity<BaseResponeDTO<List<Alphabet>>> getByJapaneseCharacter(@RequestParam String japaneseCharacter){
         return alphabetService.getByJapaneseCharacter(japaneseCharacter);
