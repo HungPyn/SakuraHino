@@ -264,24 +264,27 @@ const questionTypes = [
   { value: "PRONUNCIATION", text: "Luyện phát âm" },
   { value: "WRITING", text: "Luyện viết" },
 ];
-
 function closeModal() {
-  if (bsModal) {
-    bsModal.hide();
+  if (!bsModal) return;
 
-    bsModal = null;
-  }
-  // Reset dữ liệu khi đóng modal
-  Object.assign(question, {
-    id: null,
-    lessonId: null,
-    questionType: null,
-    promptTextTemplate: "",
-    targetWordNative: "",
-    status: null,
-    choiceRequests: [],
-  });
-  allImages.value = [];
+  // Reset dữ liệu **từng trường riêng**, giữ reactive object
+  question.id = null;
+  question.lessonId = null;
+  question.questionType = null;
+  question.promptTextTemplate = "";
+  question.targetWordNative = "";
+  question.status = null;
+
+  // Reset choices mà vẫn giữ reactive array
+  question.choiceRequests.splice(0, question.choiceRequests.length);
+  allImages.value.splice(0, allImages.value.length);
+
+  // Ẩn modal
+  bsModal.hide();
+
+  // Xóa backdrop ngay lập tức
+  const backdrop = document.querySelector(".modal-backdrop");
+  if (backdrop) backdrop.remove();
 }
 
 function openModal(data = {}) {
