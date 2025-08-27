@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 
-const JLPT_SERVICE_BASE = "http://localhost:8080";
+const isEmulator = /Android/i.test(navigator.userAgent);
+const JLPT_SERVICE_BASE = isEmulator
+  ? "http://10.0.2.2:8080"
+  : "http://localhost:8080";
 
 // Gọi API lấy thông tin bài thi từ backend
 async function fetchExamMeta(examId, token) {
@@ -34,9 +37,18 @@ const Home = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token1 = params.get("userToken");
-    const examId1 = params.get("examId");
-    const token = token1 || localStorage.getItem("userToken");
-    const examId = examId1 || localStorage.getItem("id");
+    const examId1 = params.get("id");
+    let token = token1 || localStorage.getItem("userToken");
+    let examId = examId1 || localStorage.getItem("id");
+    // let token = null;
+    // let examId = null;
+    // if (token1 === null && examId1 === null) {
+    //   token = token1 || localStorage.getItem("userToken");
+    //   examId = examId1 || localStorage.getItem("id");
+    // } else {
+    //   token = token1;
+    //   examId = examId1;
+    // }
 
     if (token) {
       setUserToken(token);

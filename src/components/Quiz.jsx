@@ -5,7 +5,10 @@ import { questions as fallbackQuestions } from "../data/questions";
 import { fetchAndProcessExcel } from "../data/fetchAndProcessExcel";
 
 // ==== ĐỔI CHO PHÙ HỢP BACKEND CỦA BẠN ====
-const RESULT_API_BASE = "http://localhost:8080";
+const isEmulator = /Android/i.test(navigator.userAgent);
+const RESULT_API_BASE = isEmulator
+  ? "http://10.0.2.2:8080"
+  : "http://localhost:8080";
 
 // Bản đồ phần thi
 const sectionMap = {
