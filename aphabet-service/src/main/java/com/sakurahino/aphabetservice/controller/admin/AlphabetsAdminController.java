@@ -11,9 +11,11 @@ import com.sakurahino.aphabetservice.module.dto.response.admin.UpdateListCharact
 import com.sakurahino.aphabetservice.module.entity.Alphabet;
 import com.sakurahino.aphabetservice.service.AlphabetService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -34,14 +36,24 @@ public class AlphabetsAdminController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{character_type}")
+    @GetMapping("/character/{character_type}")
     public ResponseEntity<BaseResponeDTO<List<Alphabet>>> getByCharacterType(
-            @PathVariable("character_type") CharacterType characterType) {
+            @PathVariable("character_type") String characterTypeStr) {
+
+        CharacterType characterType;
+        try {
+            characterType = CharacterType.valueOf(characterTypeStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid character type");
+        }
+
         return alphabetService.getByCharacterType(characterType);
     }
 
-    @GetMapping("/{japanese_character}")
-    public ResponseEntity<BaseResponeDTO<List<Alphabet>>> getByJapaneseCharacter(@RequestParam String japaneseCharacter){
+
+    @GetMapping("/japanese/{japanese_character}")
+    public ResponseEntity<BaseResponeDTO<List<Alphabet>>> getByJapaneseCharacter(
+            @PathVariable("japanese_character") String japaneseCharacter) {
         return alphabetService.getByJapaneseCharacter(japaneseCharacter);
     }
 

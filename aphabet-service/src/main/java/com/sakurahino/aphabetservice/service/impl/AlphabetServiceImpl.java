@@ -43,6 +43,7 @@ public class AlphabetServiceImpl implements AlphabetService {
 
     @Override
     public ResponseEntity<BaseResponeDTO<List<Alphabet>>> getByCharacterType(CharacterType characterType) {
+
         List<Alphabet> alphabetList = alphabetRepository.findAllByCharacterType(characterType);
         if (alphabetList.isEmpty()) {
             throw new IllegalArgumentException("No alphabet data found");
