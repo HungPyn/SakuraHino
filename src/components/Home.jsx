@@ -15,7 +15,7 @@ async function fetchExamMeta(examId, token) {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      method: "POST",
+      method: "GET",
     }
   );
   if (!res.ok) throw new Error("Không lấy được thông tin bài thi");
