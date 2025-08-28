@@ -90,16 +90,12 @@
           </router-link>
         </li>
 
-        <!-- <li class="nav-item">
-  <router-link
-    to="/admin/exam"
-    class="nav-link"
-    active-class="active"
-  >
-    <i class="bi bi-journal-check nav-icon"></i>
-   Thi
-  </router-link>
-</li> -->
+        <li class="nav-item">
+          <router-link to="/admin/exam" class="nav-link" active-class="active">
+            <i class="bi bi-journal-check nav-icon"></i>
+            Thi
+          </router-link>
+        </li>
 
         <!-- <li class="nav-item">
           <router-link

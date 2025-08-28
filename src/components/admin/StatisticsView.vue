@@ -13,7 +13,7 @@
 
     <NewStatCards :data="statCardsData" />
 
-    <v-card class="dashboard-card mt-12 pa-4 rounded-xl elevation-3">
+    <!-- <v-card class="dashboard-card mt-12 pa-4 rounded-xl elevation-3">
       <v-card-title class="card-title d-flex align-center">
         <span class="card-title-icon mr-2">📊</span>
         Biểu đồ tổng hợp - Người dùng & Bài học & Doanh thu
@@ -24,7 +24,7 @@
           style="height: 350px"
         />
       </v-card-text>
-    </v-card>
+    </v-card> -->
 
     <v-row class="mt-6">
       <v-col cols="12" md="6">
@@ -56,7 +56,7 @@
         <v-card class="dashboard-card pa-4 rounded-xl elevation-3">
           <v-card-title class="card-title d-flex align-center">
             <span class="card-title-icon mr-2">🏆</span>
-            Bảng hiệu suất chi tiết
+            Bảng xếp hạng chuỗi
           </v-card-title>
           <v-card-text>
             <PerformanceTable :data="performanceData" />
@@ -66,7 +66,7 @@
         <v-card class="dashboard-card mt-6 pa-4 rounded-xl elevation-3">
           <v-card-title class="card-title d-flex align-center">
             <span class="card-title-icon mr-2">👑</span>
-            Bảng xếp hạng học viên
+            Bảng xếp hạng exp
           </v-card-title>
           <v-card-text>
             <LeaderboardTable :data="leaderboardData" />
@@ -167,9 +167,6 @@ async function loadUserStatsThisMonth() {
   }
 }
 
-onMounted(() => {
-  loadUserStatsThisMonth();
-});
 // Hàm load API cho card "Tổng người dùng"
 async function loadUserStats() {
   try {
@@ -184,10 +181,6 @@ async function loadUserStats() {
     console.error("Lỗi khi load thống kê người dùng:", err);
   }
 }
-
-onMounted(() => {
-  loadUserStats();
-});
 
 // Hàm load API cho card "Tổng bài học"
 async function loadLessonStats() {
@@ -209,9 +202,6 @@ async function loadLessonStats() {
   }
 }
 
-onMounted(() => {
-  loadLessonStats();
-});
 // Hàm load API cho card "Tổng bài học public"
 async function loadLessonStatsPublic() {
   try {
@@ -232,9 +222,6 @@ async function loadLessonStatsPublic() {
   }
 }
 
-onMounted(() => {
-  loadLessonStatsPublic();
-});
 // Dữ liệu cho CombinedBarLineChart
 const userGrowthData = ref({
   labels: [
@@ -309,40 +296,39 @@ const recentActivitiesData = ref([
 ]);
 
 // Dữ liệu cho PerformanceTable
-const performanceData = ref([
-  {
-    name: "Hoàng Nguyên Phúc",
-    lessonsCompleted: 75,
-    accuracy: "95%",
-    speed: 88,
-  },
-  {
-    name: "Khổng Minh Tiến Anh",
-    lessonsCompleted: 60,
-    accuracy: "68%",
-    speed: 65,
-  },
-  {
-    name: "Nguyễn Trí Khôi",
-    lessonsCompleted: 40,
-    accuracy: "59%",
-    speed: 35,
-  },
-  {
-    name: "Lê Thu Huyền",
-    lessonsCompleted: 40,
-    accuracy: "59%",
-    speed: 35,
-  },
-]);
 
+const performanceData = ref([]);
+const getTopStreak = async () => {
+  const data = await userService.getLongStreaks(); // API trả về mảng người dùng
+
+  // Chuyển data API sang format giống leaderboardData
+  const mappedData = data.map((user, index) => ({
+    rank: index + 1,
+    name: user.name,
+    score: user.longStreak,
+  }));
+
+  // Gán vào leaderboardData
+  performanceData.value = mappedData;
+  console.log("LeaderboardData sau khi gán:", leaderboardData.value);
+};
+const leaderboardData = ref([]);
+
+const getTopExp = async () => {
+  const data = await userService.getExpScoreStats(); // API trả về mảng người dùng
+
+  // Chuyển data API sang format giống leaderboardData
+  const mappedData = data.map((user, index) => ({
+    rank: index + 1,
+    name: user.name,
+    score: user.expScore,
+  }));
+
+  // Gán vào leaderboardData
+  leaderboardData.value = mappedData;
+  console.log("LeaderboardData sau khi gán:", leaderboardData.value);
+};
 // Dữ liệu cho LeaderboardTable
-const leaderboardData = ref([
-  { rank: 1, name: "Nguyễn Thị Trinh", score: 980 },
-  { rank: 2, name: "Vũ Văn Hùng", score: 920 },
-  { rank: 3, name: "Hoàng Ngọc Vương", score: 860 },
-  { rank: 4, name: "Nguyễn Hữu Dũng", score: 900 },
-]);
 
 // Dữ liệu cho PendingTasksCard
 const pendingTasksData = ref([
@@ -351,6 +337,15 @@ const pendingTasksData = ref([
   { title: "Phản hồi bình luận của học viên", dueDate: "Ngày mai, 14:00" },
   { title: "Chuẩn bị tài liệu cho buổi webinar", dueDate: "Thứ 2, 09:00" },
 ]);
+
+onMounted(() => {
+  getTopExp();
+  loadUserStatsThisMonth();
+  loadUserStats();
+  loadLessonStats();
+  loadLessonStatsPublic();
+  getTopStreak();
+});
 </script>
 
 <style scoped>

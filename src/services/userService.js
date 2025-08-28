@@ -148,7 +148,66 @@ const getTotalUsersRegistrations = async (rangeDays = 7) => {
     throw error;
   }
 };
+
+// API 1: Top 5 người dùng có streak dài nhất
+export const getLongStreaks = async () => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/users/admin/statistics/stats/long-streaks`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data?.data || []; // trả về luôn mảng người dùng
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách streak dài:", error.message);
+    throw error;
+  }
+};
+
+// API 2: Top 5 người dùng có điểm EXP cao nhất
+export const getExpScoreStats = async () => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/api/users/admin/statistics/stats/exp-score`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("Full response.data:", response); // log toàn bộ response
+    console.log("Mảng người dùng:", response.data.data);
+
+    return response.data.data || []; // trả về mảng người dùng
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách EXP:", error);
+    throw error;
+  }
+};
+const getLichSuOnTap = async () => {
+  try {
+    const response = await axios.get(BASE_URL + "/api/learning/admin/statics", {
+      headers: {
+        // THÊM KHỐI HEADERS NÀY
+        Authorization: `Bearer ${token}`, // Định dạng Bearer Token
+      },
+    });
+    const data = response.data?.data || {};
+    console.log("Data lich su la", data, null, 2);
+
+    return data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách lịch su:", error.message);
+    throw error;
+  }
+};
 export default {
+  getLichSuOnTap,
   getUsers,
   deleteUser,
   updateUser,
@@ -156,4 +215,6 @@ export default {
   getTotalUsersWithPercent,
   getTotalUsersWithPercentThisMonth,
   getTotalUsersRegistrations,
+  getExpScoreStats,
+  getLongStreaks,
 };

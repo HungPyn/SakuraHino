@@ -122,6 +122,7 @@ const handleLogin = async () => {
       } else {
         localStorage.removeItem("rememberMe");
       }
+
       emits("login-success"); // Gửi event lên component cha
     } else {
       toast.error("Bạn không có quyền truy cập vào trang này!");
@@ -130,13 +131,6 @@ const handleLogin = async () => {
   } catch (error) {
     console.error("Lỗi đăng nhập:", error.message);
     toast.error(error.message || "Tên đăng nhập hoặc mật khẩu không đúng!");
-  }
-
-   if (username.value === "Ntrinh" && password.value === "052003") {
-     alert("Đăng nhập thành công!");
-    emits("login-success"); // Gửi event lên component cha
-   } else {
-    alert("Tên đăng nhập hoặc mật khẩu không đúng!");
   }
 };
 </script>
