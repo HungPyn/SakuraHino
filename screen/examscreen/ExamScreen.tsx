@@ -63,14 +63,17 @@ const handleOpenLink = async (exam: Exam) => {
 const ExamItem = ({ exam }: { exam: Exam }) => (
   <View style={examStyles.itemContainer}>
     <View style={examStyles.header}>
-      <Text style={examStyles.title}>{exam.examName}</Text>
-      {/* <View style={examStyles.badge}>
-        <Text style={examStyles.badgeText}>{exam.level}</Text>
-      </View> */}
+      {/* Nhóm tiêu đề và trạng thái vào một View */}
+      <View>
+        <Text style={examStyles.title}>{exam.examName}</Text>
+        <Text style={examStyles.stats}>Trạng thái: {exam.status}</Text>
+      </View>
 
-      <Text style={examStyles.stats}>Trạng thái: {exam.status}</Text>
+      {/* Nút "Xem kết quả" ở bên phải */}
+      <TouchableOpacity style={examStyles.resultButton}>
+        <Text style={examStyles.resultButtonText}>Xem kết quả</Text>
+      </TouchableOpacity>
     </View>
-
     <TouchableOpacity
       style={examStyles.button}
       onPress={() => handleOpenLink(exam)}
@@ -187,15 +190,32 @@ const examStyles = StyleSheet.create({
     borderColor: "#e0e0e0",
   },
   header: {
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: "row", // Sắp xếp các mục con theo hàng ngang
+    justifyContent: "space-between", // Đẩy các mục con về hai phía
+    alignItems: "center", // Căn giữa các mục con theo chiều dọc
     marginBottom: 8,
   },
   title: {
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.textColorPrimary,
+  },
+  stats: {
+    fontSize: 14,
+    color: COLORS.textColorSecondary,
+  },
+  resultButton: {
+    backgroundColor: COLORS.badgeColor,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  resultButtonText: {
+    color: COLORS.white,
+    fontWeight: "bold",
+    fontSize: 12,
   },
   badge: {
     backgroundColor: COLORS.badgeColor,
@@ -208,11 +228,7 @@ const examStyles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 12,
   },
-  stats: {
-    fontSize: 14,
-    color: COLORS.textColorSecondary,
-    marginBottom: 4,
-  },
+
   button: {
     flexDirection: "row",
     alignItems: "center",
